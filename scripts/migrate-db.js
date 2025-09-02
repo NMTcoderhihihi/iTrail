@@ -1,666 +1,755 @@
-const mongoose = require("mongoose");
-// Đảm bảo file .env.local của bạn có biến MongoDB_URI
-require("dotenv").config({ path: ".env" });
+// scripts/migrate-db.js
+import { Schema, mongoose } from "mongoose";
+import dotenv from "dotenv";
 
-const ScheduledJob =
-  mongoose.models.scheduledjob ||
-  mongoose.model("scheduledjob", new mongoose.Schema({}, { strict: false }));
+dotenv.config({ path: ".env" });
 
-const ArchivedJob =
-  mongoose.models.archivedjob ||
-  mongoose.model("archivedjob", new mongoose.Schema({}, { strict: false }));
-
-const Customer =
-  mongoose.models.customer ||
-  mongoose.model("customer", new mongoose.Schema({}, { strict: false }));
-
-// --- START: Định nghĩa Schema cho các collection cần di trú ---
-
-const ZaloAccountSchema = new mongoose.Schema(
-  {
-    rateLimitPerHour: { type: Number, default: 30 },
-    actionsUsedThisHour: { type: Number, default: 0 },
-    rateLimitHourStart: { type: Date, default: () => new Date() },
-    rateLimitPerDay: { type: Number, default: 200 },
-    actionsUsedThisDay: { type: Number, default: 0 },
-    rateLimitDayStart: { type: Date, default: () => new Date() },
-    isLocked: { type: Boolean, default: false },
-  },
-  { strict: false }, // Dùng strict: false để Mongoose không báo lỗi với các trường đã có sẵn
+// =================================================================
+// === CONFIGURATION (CẤU HÌNH) ===
+// =================================================================
+const DEFAULT_CARE_PROGRAM_ID = new mongoose.Types.ObjectId();
+// !!! QUAN TRỌNG: Hãy thay thế ID này bằng một ID Admin thực tế trong DB của bạn
+const DEFAULT_ADMIN_ID = new mongoose.Types.ObjectId(
+  "6865fe3ccdec836f29fabe4f",
 );
+const LHU_API_DATASOURCE_ID = new mongoose.Types.ObjectId();
 
-const StatusSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true, unique: true },
-    description: { type: String },
-  },
-  { strict: false },
+// =================================================================
+// === OLD SCHEMA DEFINITIONS (ĐỊNH NGHĨA SCHEMA CŨ ĐỂ ĐỌC) ===
+// =================================================================
+const CustomerOldSchema = new Schema(
+  {},
+  { strict: false, collection: "customers" },
 );
-const ActionHistorySchema = new mongoose.Schema(
-  {
-    "actionDetail.scheduleId": { type: mongoose.Schema.Types.Mixed }, // Cho phép đọc cả String và ObjectId
-  },
-  { strict: false },
+const StatusOldSchema = new Schema({}, { strict: false, collection: "status" });
+const HistoryOldSchema = new Schema(
+  {},
+  { strict: false, collection: "actionhistories" },
 );
-// --- END: Định nghĩa Schema ---
+const LabelOldSchema = new Schema({}, { strict: false, collection: "labels" });
 
-// --- START: Khai báo Models ---
-// ** MODIFIED: Thêm khai báo model User
+const Customer_Old =
+  mongoose.models.Customer_Old ||
+  mongoose.model("Customer_Old", CustomerOldSchema);
+const Status_Old =
+  mongoose.models.Status_Old || mongoose.model("Status_Old", StatusOldSchema);
+const History_Old =
+  mongoose.models.History_Old ||
+  mongoose.model("History_Old", HistoryOldSchema);
+const Label_Old =
+  mongoose.models.Label_Old || mongoose.model("Label_Old", LabelOldSchema);
+
+// =================================================================
+// === NEW SCHEMA DEFINITIONS (ĐỊNH NGHĨA SCHEMA MỚI ĐỂ GHI) ===
+// =================================================================
 const User =
   mongoose.models.user ||
-  mongoose.model("user", new mongoose.Schema({}, { strict: false }));
+  mongoose.model(
+    "user",
+    new Schema({}, { strict: false, collection: "users" }),
+  );
+const Tag =
+  mongoose.models.tag ||
+  mongoose.model(
+    "tag",
+    new Schema(
+      { name: String, detail: String, createdBy: mongoose.Types.ObjectId },
+      { collection: "tags" },
+    ),
+  );
+const StageSchema = new Schema({
+  _id: mongoose.Types.ObjectId,
+  name: String,
+  level: Number,
+  description: String,
+});
+const StatusSchema = new Schema({
+  _id: mongoose.Types.ObjectId,
+  name: String,
+  description: String,
+});
+const CareProgramSchema = new Schema(
+  {
+    _id: {
+      type: mongoose.Types.ObjectId,
+      default: () => new mongoose.Types.ObjectId(),
+    },
+    name: String,
+    description: String,
+    isActive: Boolean,
+    users: [{ type: mongoose.Types.ObjectId, ref: "user" }],
+    stages: [StageSchema],
+    statuses: [StatusSchema],
+  },
+  { collection: "careprograms" },
+);
 
-const ZaloAccount =
-  mongoose.models.zaloaccount ||
-  mongoose.model("zaloaccount", ZaloAccountSchema);
+const FieldDefinitionSchema = new Schema(
+  {},
+  { strict: false, collection: "fielddefinitions" },
+);
+const DataSourceSchema = new Schema(
+  {},
+  { strict: false, collection: "datasources" },
+);
 
-const Status = mongoose.models.status || mongoose.model("status", StatusSchema);
+const AttributeValueSchema = new Schema(
+  {
+    definitionId: {
+      type: mongoose.Types.ObjectId,
+      ref: "fieldDefinition",
+      required: true,
+    },
+    value: { type: [mongoose.Schema.Types.Mixed], required: true },
+    createdBy: { type: mongoose.Types.ObjectId, ref: "user", required: true },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
+
+const ProgramEnrollmentSchema = new Schema(
+  {
+    programId: {
+      type: mongoose.Types.ObjectId,
+      ref: "careProgram",
+      required: true,
+    },
+    stageId: { type: mongoose.Types.ObjectId },
+    statusId: { type: mongoose.Types.ObjectId },
+    dataStatus: { type: String },
+    programData: [AttributeValueSchema],
+    enrolledAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
+
+const CustomerSchema = new Schema(
+  {
+    name: { type: String, trim: true },
+    phone: { type: String, required: true, unique: true, trim: true },
+    citizenId: { type: String, trim: true },
+    tags: [{ type: mongoose.Types.ObjectId, ref: "tag" }],
+    users: [{ type: mongoose.Types.ObjectId, ref: "user" }],
+    uid: [
+      new Schema(
+        {
+          zaloId: { type: mongoose.Types.ObjectId, ref: "zaloaccount" },
+          uid: String,
+        },
+        { _id: false },
+      ),
+    ],
+    comments: [
+      new Schema({
+        user: { type: mongoose.Types.ObjectId, ref: "user" },
+        detail: String,
+        time: Date,
+      }),
+    ],
+    action: [
+      new Schema(
+        { job: { type: mongoose.Types.ObjectId, ref: "scheduledjob" } },
+        { _id: false, strict: false },
+      ),
+    ],
+    customerAttributes: [AttributeValueSchema],
+    programEnrollments: [ProgramEnrollmentSchema],
+  },
+  { timestamps: true, collection: "customers_new" },
+);
+
+const KeyDefinitionSchema = new Schema(
+  { name: String, type: String },
+  { _id: false },
+);
+const ActionTypeDefinitionSchema = new Schema(
+  {
+    actionType: String,
+    description: String,
+    requiredContextKeys: [KeyDefinitionSchema],
+    requiredDetailKeys: [KeyDefinitionSchema],
+  },
+  { collection: "actiontypedefinitions" },
+);
+
+const ValueEntrySchema = new Schema(
+  { key: String, value: [mongoose.Schema.Types.Mixed], type: String },
+  { _id: false },
+);
+const ActionHistorySchema = new Schema(
+  {
+    actionTypeId: mongoose.Types.ObjectId,
+    actorId: { type: mongoose.Types.ObjectId, ref: "user" },
+    context: [ValueEntrySchema],
+    detail: [ValueEntrySchema],
+    time: Date,
+  },
+  { collection: "actionhistories_new" },
+);
+
+const MessageTemplateSchema = new Schema(
+  {},
+  { strict: false, collection: "messagetemplates" },
+);
+
+const CareProgram =
+  mongoose.models.careProgram ||
+  mongoose.model("CareProgram", CareProgramSchema);
+const FieldDefinition =
+  mongoose.models.fieldDefinition ||
+  mongoose.model("FieldDefinition", FieldDefinitionSchema);
+const DataSource =
+  mongoose.models.dataSource || mongoose.model("DataSource", DataSourceSchema);
+const Customer =
+  mongoose.models.Customer || mongoose.model("Customer", CustomerSchema);
+const ActionTypeDefinition =
+  mongoose.models.actionTypeDefinition ||
+  mongoose.model("ActionTypeDefinition", ActionTypeDefinitionSchema);
 const ActionHistory =
-  mongoose.models.actionhistory ||
-  mongoose.model("actionhistory", ActionHistorySchema);
-// --- END: Khai báo Models ---
+  mongoose.models.actionHistory ||
+  mongoose.model("ActionHistory", ActionHistorySchema);
+const MessageTemplate =
+  mongoose.models.messageTemplate ||
+  mongoose.model("MessageTemplate", MessageTemplateSchema);
 
-async function migrateCustomerUids() {
-  console.log("\n--- BẮT ĐẦU DI TRÚ & LÀM SẠCH DỮ LIỆU UID KHÁCH HÀNG ---");
+// =================================================================
+// === MIGRATION LOGIC (LOGIC DI TRÚ) ===
+// =================================================================
 
-  // --- Bước 1: Làm sạch các khách hàng có uid: null ---
-  const nullUidQuery = { uid: null };
-  const nullCount = await Customer.countDocuments(nullUidQuery);
-  if (nullCount > 0) {
-    console.log(
-      `🔍 Tìm thấy ${nullCount} khách hàng có uid: null. Đang sửa...`,
+async function migrateInitialSetup() {
+  console.log("\n--- Bước 1: Thiết lập dữ liệu nền tảng ---");
+  // 1. Tạo chương trình chăm sóc mặc định
+  await CareProgram.updateOne(
+    { _id: DEFAULT_CARE_PROGRAM_ID },
+    {
+      $setOnInsert: {
+        name: "Chương trình Tuyển sinh Mặc định",
+        description: "Chương trình chăm sóc được di trú từ hệ thống cũ.",
+        isActive: true,
+        stages: [
+          { _id: new mongoose.Types.ObjectId(), name: "Chưa có", level: 0 },
+          { _id: new mongoose.Types.ObjectId(), name: "Chăm sóc", level: 1 },
+          { _id: new mongoose.Types.ObjectId(), name: "OTP", level: 2 },
+          { _id: new mongoose.Types.ObjectId(), name: "Nhập học", level: 3 },
+        ],
+      },
+    },
+    { upsert: true },
+  );
+  console.log("   -> ✅ Đã tạo/đảm bảo CareProgram mặc định tồn tại.");
+
+  // 2. Tạo Data Source cho API Tuyển sinh
+  await DataSource.updateOne(
+    { _id: LHU_API_DATASOURCE_ID },
+    {
+      $setOnInsert: {
+        name: "API Tuyển sinh LHU",
+        connectorType: "api",
+        configParams: {
+          params: [
+            {
+              key: "url",
+              value: "https://tapi.lhu.edu.vn/TS/AUTH/XetTuyen_TraCuu",
+            },
+          ],
+        },
+        createdBy: DEFAULT_ADMIN_ID,
+      },
+    },
+    { upsert: true },
+  );
+  console.log("   -> ✅ Đã tạo/đảm bảo DataSource API Tuyển sinh tồn tại.");
+
+  // 3. Định nghĩa các trường dữ liệu động cho chương trình Tuyển sinh
+  const fieldDefinitions = [
+    {
+      fieldName: "DienThoai",
+      fieldLabel: "Di động (API)",
+      fieldType: "string",
+    },
+    { fieldName: "MaDangKy", fieldLabel: "Mã Đăng ký", fieldType: "string" },
+    { fieldName: "CMND", fieldLabel: "CMND/CCCD (API)", fieldType: "string" },
+    { fieldName: "NgayDK", fieldLabel: "Ngày Đăng ký", fieldType: "date" },
+    { fieldName: "TruongTHPT", fieldLabel: "Trường THPT", fieldType: "string" },
+    {
+      fieldName: "TenNganh",
+      fieldLabel: "Ngành Xét tuyển",
+      fieldType: "string",
+    },
+    { fieldName: "TongDiem", fieldLabel: "Tổng Điểm", fieldType: "number" },
+    {
+      fieldName: "TenPhuongThuc",
+      fieldLabel: "Phương thức XT",
+      fieldType: "string",
+    },
+    {
+      fieldName: "TinhTrang",
+      fieldLabel: "Tình trạng XT",
+      fieldType: "string",
+    },
+  ];
+  for (const field of fieldDefinitions) {
+    await FieldDefinition.updateOne(
+      { fieldName: field.fieldName },
+      {
+        $set: {
+          ...field,
+          isCommonAttribute: false,
+          programIds: [DEFAULT_CARE_PROGRAM_ID],
+          dataSourceIds: [LHU_API_DATASOURCE_ID],
+          createdBy: DEFAULT_ADMIN_ID,
+        },
+      },
+      { upsert: true },
     );
-    const result = await Customer.updateMany(nullUidQuery, {
-      $set: { uid: [] },
+  }
+  console.log(
+    `   -> ✅ Đã tạo/cập nhật ${fieldDefinitions.length} FieldDefinitions cho chương trình tuyển sinh.`,
+  );
+
+  // 4. Định nghĩa đầy đủ các loại hành động
+  const actionTypes = [
+    // =================================================================
+    // === NHÓM HÀNH ĐỘNG: TƯƠNG TÁC VỚI KHÁCH HÀNG (CUSTOMER) ===
+    // =================================================================
+    {
+      actionType: "update_customer_core_info",
+      description:
+        "Cập nhật các trường thông tin cố định của khách hàng (name, phone, citizenId).",
+      contextKeys: [{ name: "customerId", type: "objectId" }],
+      detailKeys: [
+        { name: "fieldName", type: "string" },
+        { name: "oldValue", type: "string" },
+        { name: "newValue", type: "string" },
+      ],
+    },
+    {
+      actionType: "update_customer_common_attribute",
+      description:
+        "Cập nhật một thuộc tính chung trong mảng customerAttributes.",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "fieldDefinitionId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "oldValue", type: "array_string" },
+        { name: "newValue", type: "array_string" },
+      ],
+    },
+    {
+      actionType: "assign_customer_tag",
+      description: "Gán một tag cho khách hàng.",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "tagId", type: "objectId" },
+      ],
+    },
+    {
+      actionType: "unassign_customer_tag",
+      description: "Gỡ một tag khỏi khách hàng.",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "tagId", type: "objectId" },
+      ],
+    },
+    {
+      actionType: "assign_customer_user",
+      description: "Gán một nhân viên chăm sóc cho khách hàng.",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "assignedUserId", type: "objectId" },
+      ],
+    },
+    {
+      actionType: "unassign_customer_user",
+      description: "Gỡ một nhân viên chăm sóc khỏi khách hàng.",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "assignedUserId", type: "objectId" },
+      ],
+    },
+    {
+      actionType: "add_customer_comment",
+      description: "Thêm một bình luận mới cho khách hàng.",
+      contextKeys: [{ name: "customerId", type: "objectId" }],
+      detailKeys: [{ name: "commentId", type: "objectId" }],
+    },
+
+    // =================================================================
+    // === NHÓM HÀNH ĐỘNG: TƯƠNG TÁC VỚI CHƯƠNG TRÌNH (PROGRAM) ===
+    // =================================================================
+    {
+      actionType: "enroll_customer_in_program",
+      description: "Ghi danh một khách hàng vào một chương trình chăm sóc.",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "programId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "stageId", type: "objectId" },
+        { name: "statusId", type: "objectId" },
+      ],
+    },
+    {
+      actionType: "update_customer_enrollment",
+      description:
+        "Cập nhật thông tin ghi danh của KH (stage, status, dataStatus).",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "programId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "fieldName", type: "string" },
+        { name: "oldValue", type: "string" }, // Có thể là ObjectId hoặc string
+        { name: "newValue", type: "string" },
+      ],
+    },
+    {
+      actionType: "update_customer_program_data",
+      description: "Cập nhật dữ liệu động của KH trong một chương trình.",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "programId", type: "objectId" },
+        { name: "fieldDefinitionId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "oldValue", type: "array_string" },
+        { name: "newValue", type: "array_string" },
+      ],
+    },
+
+    // =================================================================
+    // === NHÓM HÀNH ĐỘNG: LỊCH TRÌNH & TÁC VỤ (SCHEDULE) ===
+    // =================================================================
+    {
+      actionType: "create_scheduled_task",
+      description: "Tạo một tác vụ (gửi tin, kết bạn...) trong một lịch trình.",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "zaloAccountId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "scheduleId", type: "objectId" },
+        { name: "scheduledFor", type: "date" }, // Thời điểm task sẽ chạy
+      ],
+    },
+    {
+      actionType: "delete_scheduled_task",
+      description: "Xóa một tác vụ khỏi một lịch trình.",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "zaloAccountId", type: "objectId" },
+      ],
+      detailKeys: [{ name: "scheduleId", type: "objectId" }],
+    },
+    {
+      actionType: "execute_scheduled_task",
+      description: "CRON Job thực thi một tác vụ đã được lên lịch.",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "zaloAccountId", type: "objectId" },
+        { name: "scheduleId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "finalMessage", type: "string" }, // Lời chào khi kết bạn, hoặc tin nhắn đã được biến thể
+        { name: "scriptResult", type: "string" }, // Kết quả JSON thô từ script
+      ],
+    },
+    {
+      actionType: "auto_cancel_scheduled_task",
+      description:
+        "Hệ thống tự động hủy một tác vụ do lỗi (giới hạn, token...).",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "zaloAccountId", type: "objectId" },
+        { name: "scheduleId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "reasonRoot", type: "string" }, // Kết quả JSON thô của hành động gây ra lỗi
+        { name: "description", type: "string" }, // Diễn giải lý do
+      ],
+    },
+
+    // =================================================================
+    // === NHÓM HÀNH ĐỘNG: QUẢN LÝ CẤU HÌNH HỆ THỐNG (CRUD) ===
+    // =================================================================
+    {
+      actionType: "create_document",
+      description: "Tạo một bản ghi mới trong một collection.",
+      contextKeys: [{ name: "collectionName", type: "string" }],
+      detailKeys: [
+        { name: "documentId", type: "objectId" },
+        { name: "documentName", type: "string" },
+      ],
+    },
+    {
+      actionType: "update_document",
+      description: "Cập nhật một bản ghi trong một collection.",
+      contextKeys: [
+        { name: "collectionName", type: "string" },
+        { name: "documentId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "fieldName", type: "string" },
+        { name: "oldValue", type: "string" }, // Dùng string để lưu Bất cứ kiểu dữ liệu nào
+        { name: "newValue", type: "string" },
+      ],
+    },
+    {
+      actionType: "delete_document",
+      description: "Xóa một bản ghi khỏi một collection.",
+      contextKeys: [{ name: "collectionName", type: "string" }],
+      detailKeys: [
+        { name: "documentId", type: "objectId" },
+        { name: "documentName", type: "string" },
+      ],
+    },
+  ];
+  for (const at of actionTypes) {
+    await ActionTypeDefinition.updateOne(
+      { actionType: at.actionType },
+      {
+        $set: {
+          description: at.description,
+          requiredContextKeys: at.contextKeys || [],
+          requiredDetailKeys: at.detailKeys || [],
+        },
+      },
+      { upsert: true },
+    );
+  }
+  console.log("   -> ✅ Đã tạo/cập nhật đầy đủ ActionTypeDefinitions.");
+}
+
+async function migrateStatusesAndTemplates() {
+  console.log("\n--- Bước 2: Di trú Trạng thái & Mẫu tin ---");
+  const oldStatuses = await Status_Old.find().lean();
+  if (oldStatuses.length > 0) {
+    const newStatuses = oldStatuses.map((s) => ({
+      _id: s._id,
+      name: s.name,
+      description: s.description || "",
+    }));
+    await CareProgram.findByIdAndUpdate(DEFAULT_CARE_PROGRAM_ID, {
+      $addToSet: { statuses: { $each: newStatuses } },
     });
-    console.log(`✨ Đã sửa thành công ${result.modifiedCount} khách hàng.`);
+    console.log(`   -> ✅ Đã di trú ${newStatuses.length} trạng thái.`);
   } else {
-    console.log("✅ Không có khách hàng nào có uid: null.");
+    console.log("   -> ℹ️ Không có trạng thái cũ để di trú.");
   }
 
-  // --- Bước 2: Di trú các khách hàng có uid là string ---
-  const stringUidQuery = { uid: { $type: "string", $ne: "" } };
-  const customersToMigrate = await Customer.find(stringUidQuery).lean();
+  const db = mongoose.connection.db;
+  const labelsExist =
+    (await db.listCollections({ name: "labels" }).toArray()).length > 0;
 
-  if (customersToMigrate.length === 0) {
-    console.log("✅ Không tìm thấy khách hàng nào có UID cũ cần di trú.");
+  if (labelsExist) {
+    console.log(
+      "   -> ℹ️ Tìm thấy collection 'labels'. Bắt đầu di trú dữ liệu...",
+    );
+    const oldLabels = await Label_Old.find().lean();
+    if (oldLabels.length > 0) {
+      await MessageTemplate.deleteMany({}); // Xóa sạch collection mới trước khi chèn
+      await MessageTemplate.insertMany(oldLabels);
+      console.log(
+        `   -> ✅ Đã sao chép ${oldLabels.length} bản ghi từ 'labels' sang 'messagetemplates'.`,
+      );
+      await db.collection("labels").drop();
+      console.log("   -> ✅ Đã xóa collection 'labels' cũ.");
+    } else {
+      console.log("   -> ℹ️ Collection 'labels' rỗng, không có gì để di trú.");
+    }
+  } else {
+    console.log("   -> ℹ️ Collection 'labels' không tồn tại, bỏ qua bước này.");
+  }
+}
+
+async function migrateCustomers() {
+  console.log("\n--- Bước 3: Di trú Khách hàng (Customers) ---");
+  const oldCustomers = await Customer_Old.find().lean();
+  if (oldCustomers.length === 0) {
+    console.log("   -> ℹ️ Không có khách hàng cũ.");
     return;
   }
 
-  console.log(
-    `🔍 Tìm thấy ${customersToMigrate.length} khách hàng cần di trú UID...`,
-  );
+  const defaultProgram = await CareProgram.findById(
+    DEFAULT_CARE_PROGRAM_ID,
+  ).lean();
+  const newCustomers = oldCustomers.map((oldC) => {
+    const oldStatusId = oldC.status;
+    const newStatus = defaultProgram.statuses.find((s) =>
+      s._id.equals(oldStatusId),
+    );
+    const oldStageLevel = oldC.stageLevel || 0;
+    const newStage = defaultProgram.stages.find(
+      (s) => s.level === oldStageLevel,
+    );
 
-  const customerIds = customersToMigrate.map((c) => c._id);
+    const newComments = (oldC.comments || []).map((c) => ({
+      user: c.user,
+      detail: c.detail,
+      time: c.time,
+    }));
 
-  // 2. Tìm tất cả lịch sử tìm UID liên quan đến các khách hàng này
-  const histories = await ActionHistory.find({
-    customer: { $in: customerIds },
-    action: "DO_SCHEDULE_FIND_UID",
-    "status.status": "SUCCESS",
-  })
-    .sort({ time: -1 })
+    return {
+      _id: oldC._id,
+      name: oldC.name,
+      phone: oldC.phone,
+      citizenId: oldC.CMND || null,
+      tags: [],
+      users: oldC.users || [],
+      uid: oldC.uid || [],
+      comments: newComments,
+      action: oldC.action || [],
+      customerAttributes: [],
+      programEnrollments: [
+        {
+          programId: DEFAULT_CARE_PROGRAM_ID,
+          stageId: newStage?._id || null,
+          statusId: newStatus?._id || null,
+          dataStatus: "migrated",
+          programData: [],
+          enrolledAt: oldC.createdAt || new Date(),
+        },
+      ],
+      createdAt: oldC.createdAt,
+      updatedAt: oldC.updatedAt,
+    };
+  });
+
+  await Customer.deleteMany({});
+  await Customer.insertMany(newCustomers);
+  console.log(`   -> ✅ Đã di trú ${newCustomers.length} khách hàng.`);
+}
+
+async function finalizeMigration() {
+  console.log("\n--- Bước 4: Hoàn tất Di trú ---");
+  const db = mongoose.connection.db;
+  const renameAndDrop = async (oldName, newName) => {
+    try {
+      const collections = await db.listCollections({ name: oldName }).toArray();
+      if (collections.length > 0) {
+        await db
+          .collection(oldName)
+          .rename(`${oldName}_old`, { dropTarget: true });
+        console.log(`   -> ✅ Đã đổi tên ${oldName} -> ${oldName}_old`);
+      } else {
+        console.log(
+          `   -> ℹ️ Collection ${oldName} không tồn tại, bỏ qua đổi tên.`,
+        );
+      }
+    } catch (e) {
+      if (e.codeName === "NamespaceNotFound")
+        console.log(
+          `   -> ℹ️ Collection ${oldName} không tồn tại, bỏ qua đổi tên.`,
+        );
+      else throw e;
+    }
+    try {
+      const newCollections = await db
+        .listCollections({ name: newName })
+        .toArray();
+      if (newCollections.length > 0) {
+        await db.collection(newName).rename(oldName);
+        console.log(`   -> ✅ Đã đổi tên ${newName} -> ${oldName}`);
+      }
+    } catch (e) {
+      if (e.codeName !== "NamespaceNotFound") throw e;
+    }
+  };
+
+  await renameAndDrop("customers", "customers_new");
+  try {
+    const statusesCollection = await db
+      .listCollections({ name: "statuses" })
+      .toArray();
+    if (statusesCollection.length > 0) {
+      await db.collection("statuses").drop();
+      console.log("   -> ✅ Đã xóa collection 'statuses' cũ.");
+    }
+  } catch (e) {
+    if (e.codeName !== "NamespaceNotFound") throw e;
+  }
+}
+
+async function verifyMigration() {
+  console.log("\n--- ⭐ Bước 5: Kiểm tra dữ liệu sau khi di trú ---");
+  const randomCustomer = await Customer.findOne()
+    .populate([
+      { path: "programEnrollments.programId", select: "name statuses stages" },
+      { path: "users", select: "name" },
+    ])
     .lean();
 
-  // 3. Tạo một map để tra cứu lịch sử nhanh: Map<customerId, history>
-  const historyMap = new Map();
-  for (const history of histories) {
-    const customerId = history.customer.toString();
-    // Chỉ lưu lịch sử gần nhất cho mỗi khách hàng
-    if (!historyMap.has(customerId)) {
-      historyMap.set(customerId, history);
-    }
-  }
-
-  // 4. Chuẩn bị các lệnh cập nhật hàng loạt (bulk write)
-  const bulkOperations = customersToMigrate.map((customer) => {
-    const latestHistory = historyMap.get(customer._id.toString());
-    if (latestHistory && latestHistory.zalo) {
-      const newUidArray = [{ zaloId: latestHistory.zalo, uid: customer.uid }];
-      return {
-        updateOne: {
-          filter: { _id: customer._id },
-          update: { $set: { uid: newUidArray } },
+  if (randomCustomer) {
+    console.log("   -> Dữ liệu một khách hàng ngẫu nhiên:");
+    console.log(
+      JSON.stringify(
+        {
+          _id: randomCustomer._id,
+          name: randomCustomer.name,
+          phone: randomCustomer.phone,
+          users: (randomCustomer.users || []).map((u) => u.name),
+          program: randomCustomer.programEnrollments[0]?.programId.name,
         },
-      };
-    } else {
-      return {
-        updateOne: {
-          filter: { _id: customer._id },
-          update: { $set: { uid: [] } },
-        },
-      };
-    }
-  });
-
-  // 5. Thực thi các lệnh cập nhật
-  if (bulkOperations.length > 0) {
-    const result = await Customer.bulkWrite(bulkOperations);
-    console.log(
-      `✨ Di trú thành công ${result.modifiedCount} bản ghi khách hàng!`,
+        null,
+        2,
+      ),
     );
-  }
-}
 
-/**
- * Logic để di trú dữ liệu cho collection 'zaloaccounts'.
- * Thêm các trường còn thiếu và sửa các giá trị mặc định bị sai.
- */
-async function migrateZaloAccounts() {
-  console.log("\n--- BẮT ĐẦU DI TRÚ TÀI KHOẢN ZALO ---");
-
-  // Logic cũ để tìm và sửa các tài khoản Zalo
-  const query = {
-    $or: [
-      { rateLimitPerDay: { $exists: false } },
-      { actionsUsedThisDay: { $exists: false } },
-      { rateLimitDayStart: { $exists: false } },
-    ],
-  };
-  const count = await ZaloAccount.countDocuments(query);
-
-  if (count === 0) {
-    console.log(
-      "✅ Tất cả các tài khoản Zalo đã được đồng bộ. Không cần di trú.",
-    );
-    return;
-  }
-
-  console.log(`🔍 Tìm thấy ${count} tài khoản Zalo cần được cập nhật...`);
-  const updateOperation = {
-    $set: {
-      rateLimitPerDay: 200,
-      actionsUsedThisDay: 0,
-      rateLimitDayStart: new Date(),
-    },
-  };
-  const result = await ZaloAccount.updateMany(query, updateOperation);
-  console.log(`✨ Cập nhật thành công ${result.modifiedCount} tài khoản Zalo!`);
-}
-
-/**
- * Logic để di trú dữ liệu cho collection 'statuses'.
- * Tự động định dạng lại tên các trạng thái theo chuẩn QTxx| <tên>.
- */
-// ** MODIFIED: Cập nhật toàn bộ hàm migrateStatuses
-async function migrateStatuses() {
-  console.log("\n--- BẮT ĐẦU DI TRÚ TRẠNG THÁI ---");
-
-  // Bước 1: Tìm tất cả các trạng thái CHƯA có định dạng chuẩn (QTxx|)
-  const statusesToMigrate = await Status.find({
-    name: { $not: /^QT\d+\|/ },
-  }).lean();
-
-  if (statusesToMigrate.length === 0) {
-    console.log("✅ Không có trạng thái nào cần di trú. Dữ liệu đã chuẩn.");
-    return;
-  }
-
-  console.log(
-    `🔍 Tìm thấy ${statusesToMigrate.length} trạng thái cần xử lý...`,
-  );
-
-  // Bước 2: Tìm số thứ tự QT lớn nhất đã tồn tại trong DB (để đánh số cho các trạng thái mới)
-  const allStatuses = await Status.find({ name: /^QT\d+\|/ }).lean();
-  let maxOrder = 0;
-  allStatuses.forEach((status) => {
-    const match = status.name.match(/^QT(\d+)\|/);
-    if (match) {
-      const order = parseInt(match[1], 10);
-      if (order > maxOrder) {
-        maxOrder = order;
-      }
-    }
-  });
-
-  console.log(`📈 Số thứ tự QT lớn nhất hiện tại là: ${maxOrder}`);
-
-  // Bước 3: Chuẩn bị các lệnh cập nhật hàng loạt
-  const bulkOperations = statusesToMigrate.map((status) => {
-    let newName = "";
-    const oldName = status.name.trim();
-
-    // Regex để tìm định dạng cũ, ví dụ: "QT1: Ten trang thai"
-    const oldFormatMatch = oldName.match(/^QT(\d+):\s*(.*)/);
-
-    if (oldFormatMatch) {
-      // TRƯỜNG HỢP 1: Chuyển đổi từ định dạng cũ
-      const orderNumber = parseInt(oldFormatMatch[1], 10);
-      const cleanName = oldFormatMatch[2].trim();
-
-      // Đảm bảo số thứ tự luôn có 2 chữ số (01, 02, ..., 11)
-      const paddedOrder = String(orderNumber).padStart(2, "0");
-      newName = `QT${paddedOrder}| ${cleanName}`;
-
-      console.log(`  -> CHUYỂN ĐỔI: "${oldName}"  ==>  "${newName}"`);
-    } else {
-      // TRƯỜNG HỢP 2: Thêm mới tiền tố cho trạng thái chưa có
-      maxOrder++; // Tăng số thứ tự lên cho trạng thái mới
-      const paddedOrder = String(maxOrder).padStart(2, "0");
-      newName = `QT${paddedOrder}| ${oldName}`;
-
-      console.log(`  -> THÊM MỚI:   "${oldName}"  ==>  "${newName}"`);
-    }
-
-    return {
-      updateOne: {
-        filter: { _id: status._id },
-        update: { $set: { name: newName } },
-      },
-    };
-  });
-
-  // Bước 4: Thực thi lệnh
-  if (bulkOperations.length > 0) {
-    const result = await Status.bulkWrite(bulkOperations);
-    console.log(`✨ Cập nhật thành công ${result.modifiedCount} trạng thái!`);
-  }
-}
-
-async function migrateScheduleIds() {
-  console.log("\n--- BẮT ĐẦU DI TRÚ SCHEDULE ID ---");
-  // Tìm tất cả các bản ghi có actionDetail.scheduleId là kiểu STRING
-  const query = { "actionDetail.scheduleId": { $type: "string" } };
-
-  const historiesToMigrate = await ActionHistory.find(query).lean();
-
-  if (historiesToMigrate.length === 0) {
-    console.log("✅ Không có scheduleId nào cần di trú. Dữ liệu đã chuẩn.");
-    return;
-  }
-
-  console.log(
-    `🔍 Tìm thấy ${historiesToMigrate.length} bản ghi lịch sử cần chuyển đổi scheduleId...`,
-  );
-
-  const bulkOperations = historiesToMigrate
-    .map((history) => {
-      // Chỉ thực hiện nếu chuỗi là một ObjectId hợp lệ
-      if (mongoose.Types.ObjectId.isValid(history.actionDetail.scheduleId)) {
-        return {
-          updateOne: {
-            filter: { _id: history._id },
-            update: {
-              $set: {
-                "actionDetail.scheduleId": new mongoose.Types.ObjectId(
-                  history.actionDetail.scheduleId,
-                ),
-              },
-            },
-          },
-        };
-      }
-      return null; // Bỏ qua các chuỗi không hợp lệ
-    })
-    .filter(Boolean); // Lọc ra các giá trị null
-
-  if (bulkOperations.length > 0) {
-    const result = await ActionHistory.bulkWrite(bulkOperations);
-    console.log(
-      `✨ Chuyển đổi thành công ${result.modifiedCount} scheduleId từ String sang ObjectId!`,
-    );
-  } else {
-    console.log("✅ Không có scheduleId hợp lệ nào để chuyển đổi.");
-  }
-}
-
-/**
- * @description Sửa lỗi gán sai scheduleId cho các action DO_... bằng cách
- * đối chiếu với action CREATE_... gần nhất của cùng một khách hàng.
- */
-async function fixMismatchedHistoryIds() {
-  console.log("\n--- BẮT ĐẦU SỬA LỖI GÁN SAI SCHEDULE ID ---");
-
-  // 1. Tìm tất cả các hành động DO_... để kiểm tra
-  const doActions = await ActionHistory.find({ action: /^DO_/ }).lean();
-
-  if (doActions.length === 0) {
-    console.log("✅ Không tìm thấy hành động DO_... nào để kiểm tra.");
-    return;
-  }
-
-  // 2. Lấy tất cả các hành động CREATE_... để tra cứu
-  const createActions = await ActionHistory.find({ action: /^CREATE_/ }).lean();
-  const createActionsMap = new Map();
-  // Tạo một map lồng nhau để tra cứu nhanh: Map<customerId, Array<createAction>>
-  for (const action of createActions) {
-    if (!action.customer) continue;
-    const customerId = action.customer.toString();
-    if (!createActionsMap.has(customerId)) {
-      createActionsMap.set(customerId, []);
-    }
-    createActionsMap.get(customerId).push(action);
-  }
-
-  // Sắp xếp các hành động CREATE của mỗi khách hàng theo thời gian giảm dần
-  for (const actions of createActionsMap.values()) {
-    actions.sort((a, b) => new Date(b.time) - new Date(a.time));
-  }
-
-  console.log(
-    `🔍 Tìm thấy ${doActions.length} hành động DO_... để kiểm tra và sửa chữa.`,
-  );
-
-  const bulkOperations = [];
-  let updatedCount = 0;
-
-  for (const doAction of doActions) {
-    if (!doAction.customer) continue;
-
-    const customerId = doAction.customer.toString();
-    const doActionTime = new Date(doAction.time);
-    const potentialCreateActions = createActionsMap.get(customerId);
-
-    if (potentialCreateActions) {
-      // 3. Tìm hành động CREATE gần nhất xảy ra TRƯỚC hành động DO
-      const correctCreateAction = potentialCreateActions.find(
-        (createAction) => new Date(createAction.time) < doActionTime,
+    const enrollment = randomCustomer.programEnrollments[0];
+    if (enrollment) {
+      const status = (enrollment.programId.statuses || []).find((s) =>
+        s._id.equals(enrollment.statusId),
       );
-
-      if (correctCreateAction && correctCreateAction.actionDetail.scheduleId) {
-        const correctId = correctCreateAction.actionDetail.scheduleId;
-        const currentId = doAction.actionDetail.scheduleId?.toString();
-
-        // 4. Chỉ cập nhật nếu ID hiện tại đang thiếu hoặc bị sai
-        if (!currentId || currentId !== correctId.toString()) {
-          bulkOperations.push({
-            updateOne: {
-              filter: { _id: doAction._id },
-              update: { $set: { "actionDetail.scheduleId": correctId } },
-            },
-          });
-          updatedCount++;
-        }
-      }
-    }
-  }
-
-  if (bulkOperations.length > 0) {
-    await ActionHistory.bulkWrite(bulkOperations);
-    console.log(
-      `✨ Sửa chữa và cập nhật thành công ${updatedCount} liên kết lịch sử.`,
-    );
-  } else {
-    console.log("✅ Không tìm thấy liên kết lịch sử nào cần sửa chữa.");
-  }
-}
-
-// ++ ADDED: Hàm di trú và dọn dẹp các job bị treo
-async function migrateAndCleanupHungJobs() {
-  console.log(
-    "\n--- BẮT ĐẦU DI TRÚ & DỌN DẸP JOB BỊ TREO (PHIÊN BẢN HOÀN THIỆN) ---",
-  );
-
-  // --- Bước 1: Quét và thu thập dữ liệu từ các job bị treo ---
-  const hungJobs = await ScheduledJob.find({}).lean();
-
-  if (hungJobs.length === 0) {
-    console.log("✅ Không tìm thấy job nào bị treo trong 'scheduledjobs'.");
-    return;
-  }
-
-  console.log(`🔍 Tìm thấy ${hungJobs.length} job bị treo cần xử lý...`);
-
-  const jobsToArchive = [];
-  const allHungJobIds = hungJobs.map((job) => job._id);
-
-  // --- Bước 2: Tính toán lại Thông số & Chuẩn bị Di trú ---
-  for (const job of hungJobs) {
-    console.log(`  -> Đang xử lý Job: "${job.jobName}" (${job._id})`);
-
-    const stats = job.statistics || { total: 0, completed: 0, failed: 0 };
-
-    // Đếm số task chưa hoàn thành (bị treo)
-    const pendingOrProcessingTasks = (job.tasks || []).filter(
-      (task) => task.status === "pending" || task.status === "processing",
-    ).length;
-
-    // Tính toán lại thống kê một cách chính xác
-    const recalculatedStats = {
-      total: stats.total || (job.tasks || []).length,
-      completed: stats.completed || 0,
-      // **LOGIC CHUẨN**: failed mới = failed cũ + số lượng bị treo
-      failed: (stats.failed || 0) + pendingOrProcessingTasks,
-    };
-
-    const archiveData = {
-      ...job,
-      _id: job._id,
-      status: "failed", // Coi như toàn bộ job đã thất bại do bị dừng
-      statistics: recalculatedStats,
-      completedAt: new Date(),
-    };
-    delete archiveData.tasks;
-
-    jobsToArchive.push(archiveData);
-    console.log(
-      `     - Thống kê cũ:      Completed: ${stats.completed}, Failed: ${stats.failed}`,
-    );
-    console.log(`     - Task bị treo:     ${pendingOrProcessingTasks}`);
-    console.log(
-      `     - Thống kê MỚI:     Completed: ${recalculatedStats.completed}, Failed: ${recalculatedStats.failed}`,
-    );
-  }
-
-  // --- Bước 3: Dọn dẹp và Di trú ---
-  const session = await mongoose.startSession();
-  try {
-    session.startTransaction();
-    console.log("\n🔄 Bắt đầu giao dịch di trú và dọn dẹp...");
-
-    // 1. Di trú các job đã chuẩn hóa
-    if (jobsToArchive.length > 0) {
-      await ArchivedJob.insertMany(jobsToArchive, { session });
+      const stage = (enrollment.programId.stages || []).find((s) =>
+        s._id.equals(enrollment.stageId),
+      );
       console.log(
-        `  [1/3] ✅ Đã di trú ${jobsToArchive.length} job sang 'archivedjobs'.`,
+        `   -> Trạng thái di trú: ${
+          status ? `OK (${status.name})` : "⚠️ LỖI hoặc không có"
+        }`,
+      );
+      console.log(
+        `   -> Giai đoạn di trú: ${
+          stage ? `OK (Cấp ${stage.level})` : "⚠️ LỖI hoặc không có"
+        }`,
       );
     }
-
-    // 2. **LOGIC CHUẨN**: Dọn dẹp TOÀN BỘ tham chiếu action liên quan đến các job bị treo
-    const customerUpdateResult = await Customer.updateMany(
-      { "action.job": { $in: allHungJobIds } }, // Tìm tất cả customer có action liên quan
-      { $pull: { action: { job: { $in: allHungJobIds } } } },
-      { session },
-    );
-    console.log(
-      `  [2/3] ✅ Đã dọn dẹp tham chiếu 'action' cho ${customerUpdateResult.modifiedCount} khách hàng.`,
-    );
-
-    // 3. Xóa các job gốc
-    const deleteResult = await ScheduledJob.deleteMany(
-      { _id: { $in: allHungJobIds } },
-      { session },
-    );
-    console.log(
-      `  [3/3] ✅ Đã xóa ${deleteResult.deletedCount} job gốc khỏi 'scheduledjobs'.`,
-    );
-
-    await session.commitTransaction();
-    console.log("\n✨ Giao dịch hoàn tất! Dữ liệu đã được xử lý chính xác.");
-  } catch (error) {
-    await session.abortTransaction();
-    console.error(
-      "\n❌ Đã xảy ra lỗi trong giao dịch! Dữ liệu đã được khôi phục.",
-      error,
-    );
-  } finally {
-    session.endSession();
+  } else {
+    console.log("   -> ⚠️ Không tìm thấy khách hàng nào để kiểm tra.");
   }
 }
 
-/**
- * @description Chuẩn hóa lại các SĐT trong collection 'zaloaccounts' từ dạng +84/84 sang dạng 0.
- */
-async function migrateZaloPhoneNumbers() {
-  console.log("\n--- BẮT ĐẦU CHUẨN HÓA SỐ ĐIỆN THOẠI ZALO ---");
-  const accountsToFix = await ZaloAccount.find({
-    $or: [{ phone: /^\+84/ }, { phone: /^84/ }],
-  }).lean();
+// =================================================================
+// === MAIN EXECUTION (HÀM CHẠY CHÍNH) ===
+// =================================================================
 
-  if (accountsToFix.length === 0) {
-    console.log("✅ Không có SĐT tài khoản Zalo nào cần chuẩn hóa.");
-    return;
-  }
-  console.log(
-    `🔍 Tìm thấy ${accountsToFix.length} tài khoản Zalo cần chuẩn hóa SĐT.`,
-  );
-
-  const bulkOps = accountsToFix.map((account) => {
-    let newPhone = account.phone;
-    if (newPhone.startsWith("+84")) {
-      newPhone = "0" + newPhone.substring(3);
-    } else if (newPhone.startsWith("84")) {
-      newPhone = "0" + newPhone.substring(2);
-    }
-    return {
-      updateOne: {
-        filter: { _id: account._id },
-        update: { $set: { phone: newPhone } },
-      },
-    };
-  });
-
-  const result = await ZaloAccount.bulkWrite(bulkOps);
-  console.log(
-    `✨ Chuẩn hóa thành công ${result.modifiedCount} số điện thoại Zalo.`,
-  );
-}
-
-/**
- * @description Đặt lại rate limit cho TẤT CẢ các tài khoản Zalo về giá trị chuẩn: 30/giờ và 200/ngày.
- */
-async function standardizeZaloLimits() {
-  console.log("\n--- BẮT ĐẦU CHUẨN HÓA GIỚI HẠN TÀI KHOẢN ZALO ---");
-
-  // Tìm tất cả các tài khoản không có giới hạn chuẩn
-  const query = {
-    $or: [{ rateLimitPerHour: { $ne: 30 } }, { rateLimitPerDay: { $ne: 200 } }],
-  };
-  const accountsToFix = await ZaloAccount.find(query).lean();
-
-  if (accountsToFix.length === 0) {
-    console.log("✅ Tất cả tài khoản Zalo đã có giới hạn chuẩn.");
-    return;
-  }
-
-  console.log(
-    `🔍 Tìm thấy ${accountsToFix.length} tài khoản Zalo cần chuẩn hóa giới hạn.`,
-  );
-
-  const result = await ZaloAccount.updateMany(query, {
-    $set: {
-      rateLimitPerHour: 30,
-      rateLimitPerDay: 200,
-    },
-  });
-
-  console.log(
-    `✨ Chuẩn hóa thành công giới hạn cho ${result.modifiedCount} tài khoản.`,
-  );
-}
-/**
- * @description Tìm tất cả user có role 'Teacher' và cập nhật thành 'Employee'.
- */
-async function migrateUserRoles() {
-  console.log("\n--- BẮT ĐẦU CHUẨN HÓA VAI TRÒ USER ---");
-  const query = { role: "Teacher" };
-  const usersToFix = await User.find(query).lean();
-
-  if (usersToFix.length === 0) {
-    console.log("✅ Không có user nào có vai trò 'Teacher'. Dữ liệu đã chuẩn.");
-    return;
-  }
-  console.log(`🔍 Tìm thấy ${usersToFix.length} user cần chuẩn hóa vai trò.`);
-
-  const result = await User.updateMany(query, {
-    $set: { role: "Employee" },
-  });
-
-  console.log(
-    `✨ Chuẩn hóa thành công vai trò cho ${result.modifiedCount} user.`,
-  );
-}
-
-/**
- * @description Quét và thêm trường `isTokenActive: true` cho các tài khoản Zalo còn thiếu.
- */
-async function addIsTokenActiveField() {
-  console.log("\n--- BẮT ĐẦU THÊM TRƯỜNG isTokenActive ---");
-  const query = { isTokenActive: { $exists: false } };
-  const accountsToUpdate = await ZaloAccount.countDocuments(query);
-
-  if (accountsToUpdate === 0) {
-    console.log("✅ Tất cả tài khoản Zalo đã có trường isTokenActive.");
-    return;
-  }
-
-  console.log(
-    `🔍 Tìm thấy ${accountsToUpdate} tài khoản cần thêm trường isTokenActive.`,
-  );
-
-  const result = await ZaloAccount.updateMany(query, {
-    $set: { isTokenActive: true },
-  });
-
-  console.log(
-    `✨ Thêm trường isTokenActive thành công cho ${result.modifiedCount} tài khoản.`,
-  );
-}
-
-async function cleanupNullUids() {
-  console.log("\n--- BẮT ĐẦU LÀM SẠCH DỮ LIỆU UID BỊ NULL ---");
-
-  // 1. Tìm tất cả các customer có uid là null
-  const query = { uid: null };
-  const customersToFix = await Customer.find(query).lean();
-
-  if (customersToFix.length === 0) {
-    console.log("✅ Không tìm thấy khách hàng nào có uid: null. Dữ liệu sạch!");
-    return;
-  }
-
-  console.log(
-    `🔍 Tìm thấy ${customersToFix.length} khách hàng có uid: null cần sửa...`,
-  );
-
-  // 2. Cập nhật tất cả các document tìm thấy, đặt uid thành mảng rỗng
-  const result = await Customer.updateMany(query, { $set: { uid: [] } });
-
-  console.log(`✨ Đã cập nhật thành công ${result.modifiedCount} khách hàng!`);
-}
-
-/**
- * Hàm chính để chạy toàn bộ quá trình di trú.
- */
 async function runMigration() {
-  const mongoURI = process.env.MongoDB_URI;
+  const mongoURI = process.env.MONGODB_URI;
   if (!mongoURI) {
-    console.error("❌ Lỗi: Biến môi trường 'MongoDB_URI' chưa được thiết lập.");
+    console.error("❌ Lỗi: Biến môi trường 'MONGODB_URI' chưa được thiết lập.");
     return;
   }
-
   try {
     console.log("🔄 Đang kết nối đến MongoDB...");
     await mongoose.connect(mongoURI);
     console.log("✅ Kết nối thành công!");
-    // await addIsTokenActiveField();
-    // await migrateZaloAccounts();
-    // await migrateZaloPhoneNumbers();
-    // await standardizeZaloLimits();
-    // await migrateScheduleIds();
-    await fixMismatchedHistoryIds();
-    // await migrateAndCleanupHungJobs(); !!!
-    await migrateCustomerUids();
-    // await migrateUserRoles();
-    // await migrateStatuses();
-    // await cleanupNullUids();
+
+    await migrateInitialSetup();
+    await migrateStatusesAndTemplates();
+    await migrateCustomers();
+    // await migrateActionHistories(); // Tạm thời vô hiệu hóa vì phức tạp và không có dữ liệu cũ để test
+    await finalizeMigration();
+    await verifyMigration();
   } catch (error) {
-    console.error("❌ Đã xảy ra lỗi trong quá trình di trú:", error);
+    console.error(
+      "❌ Đã xảy ra lỗi nghiêm trọng trong quá trình di trú:",
+      error,
+    );
   } finally {
     await mongoose.disconnect();
-    console.log("🔌 Đã ngắt kết nối khỏi MongoDB.");
+    console.log("\n🔌 Đã ngắt kết nối khỏi MongoDB. Quá trình kết thúc.");
   }
 }
 
-// Chạy hàm di trú chính
-// runMigration();
+runMigration();

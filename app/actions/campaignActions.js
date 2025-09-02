@@ -2,7 +2,7 @@
 "use server";
 
 import connectDB from "@/config/connectDB";
-import Label from "@/models/label";
+import Label from "@/models/messageTemplate";
 import { revalidatePath } from "next/cache";
 import ScheduledJob from "@/models/schedule";
 import { getCurrentUser } from "@/lib/session";

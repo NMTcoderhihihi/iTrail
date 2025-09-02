@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Thư mục dump tạm thời cho việc sao chép DB
+dump_prod/

@@ -1,100 +1,77 @@
+// models/customer.js
 import { Schema, model, models } from "mongoose";
 
-// ++ ADDED: Định nghĩa schema con cho mỗi mục UID
+// Định nghĩa các schema con được kế thừa từ source code cũ
 const UidEntrySchema = new Schema(
   {
-    zaloId: {
-      type: Schema.Types.ObjectId,
-      ref: "zaloaccount",
-      required: true,
-    },
-    uid: {
-      type: String,
-      required: true,
-    },
+    zaloId: { type: Schema.Types.ObjectId, ref: "zaloaccount", required: true },
+    uid: { type: String, required: true },
   },
   { _id: false },
 );
+
+const CommentSchema = new Schema({
+  user: { type: Schema.Types.ObjectId, ref: "user", required: true },
+  detail: { type: String, required: true },
+  time: { type: Date, default: Date.now },
+});
 
 const ActionRefSchema = new Schema(
   {
     job: { type: Schema.Types.ObjectId, ref: "scheduledjob", required: true },
-    zaloAccount: {
+  },
+  { _id: false, strict: false }, // Giữ nguyên strict: false như bản gốc
+);
+
+// Schema con cho các giá trị thuộc tính động
+const AttributeValueSchema = new Schema(
+  {
+    definitionId: {
       type: Schema.Types.ObjectId,
-      ref: "zaloaccount",
+      ref: "fieldDefinition",
       required: true,
     },
-    actionType: {
-      type: String,
-      enum: ["sendMessage", "addFriend", "findUid"],
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ["pending", "processing", "completed", "failed"],
-      default: "pending",
-    },
+    value: { type: [Schema.Types.Mixed], required: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: "user", required: true },
+    createdAt: { type: Date, default: Date.now },
   },
   { _id: false },
 );
 
-/**
- * Schema con cho mỗi bình luận trong hồ sơ khách hàng.
- */
-const CommentSchema = new Schema({
-  // Người dùng (nhân viên) đã tạo bình luận.
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: "user",
-    required: true,
+// Schema con cho việc đăng ký tham gia chương trình
+const ProgramEnrollmentSchema = new Schema(
+  {
+    programId: {
+      type: Schema.Types.ObjectId,
+      ref: "careProgram",
+      required: true,
+    },
+    stageId: { type: Schema.Types.ObjectId }, // Sẽ tham chiếu đến carePrograms.stages._id
+    statusId: { type: Schema.Types.ObjectId }, // Sẽ tham chiếu đến carePrograms.statuses._id
+    dataStatus: { type: String },
+    programData: [AttributeValueSchema],
+    enrolledAt: { type: Date, default: Date.now },
   },
-  // Giai đoạn của khách hàng tại thời điểm bình luận.
-  stage: {
-    type: Number,
-    required: true,
-  },
-  // Nội dung chi tiết của bình luận.
-  detail: {
-    type: String,
-    required: true,
-  },
-  // Thời điểm tạo bình luận, mặc định là bây giờ.
-  time: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { _id: false },
+);
 
-/**
- * Schema chính cho Khách hàng (Customer).
- */
+// Schema chính của Customer
 const CustomerSchema = new Schema(
   {
-    name: { type: String },
-    phone: { type: String, required: true },
-    // ** MODIFIED: Thay đổi cấu trúc của trường uid
-    uid: {
-      type: [UidEntrySchema],
-      default: [],
-    },
-    status: {
-      type: Schema.Types.ObjectId,
-      ref: "status",
-    },
-    stageLevel: { type: Number, default: 0 },
-
-    // Mảng lưu trữ các bình luận/ghi chú về quá trình chăm sóc.
-    comments: [CommentSchema],
-
-    // Mảng chứa các nhân viên được gán để chăm sóc khách hàng này.
+    name: { type: String, trim: true },
+    phone: { type: String, required: true, unique: true, trim: true },
+    citizenId: { type: String, trim: true },
+    tags: [{ type: Schema.Types.ObjectId, ref: "tag" }],
     users: [{ type: Schema.Types.ObjectId, ref: "user" }],
+    uid: [UidEntrySchema],
+    comments: [CommentSchema],
     action: [ActionRefSchema],
+    customerAttributes: [AttributeValueSchema],
+    programEnrollments: [ProgramEnrollmentSchema],
   },
-  {
-    timestamps: true,
-    strict: false,
-  },
+  { timestamps: true, strict: false }, // Dùng strict: false để tương thích với các trường cũ có thể còn sót lại
 );
 
 const Customer = models.customer || model("customer", CustomerSchema);
+
 export default Customer;

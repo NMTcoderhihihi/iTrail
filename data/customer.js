@@ -3,7 +3,7 @@
 
 import connectDB from "@/config/connectDB";
 import Client from "@/models/customer";
-import Label from "@/models/label";
+import Label from "@/models/messageTemplate";
 import Status from "@/models/status";
 import User from "@/models/users";
 import { revalidateTag } from "next/cache";
