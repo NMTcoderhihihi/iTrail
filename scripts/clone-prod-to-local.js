@@ -126,4 +126,4 @@ async function runClone() {
 
 // Chạy hàm chính
 //!!!!!!! Chỉ chạy khi muốn sync hoàn toàn db từ production về local !!!!!!
-runClone();
+// runClone();

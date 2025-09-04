@@ -10,7 +10,7 @@ import React, {
 import { useRouter } from "next/navigation";
 import styles from "./index.module.css";
 import Loading from "@/components/(ui)/(loading)/loading";
-import { Re_Client, Re_History, Re_History_User } from "@/data/customer";
+import { Re_Client, Re_History, Re_History_User } from "@/app/data/customer";
 import Noti from "@/components/(features)/(noti)/noti";
 
 function Senmes({ data = [], labelOptions = [], label }) {

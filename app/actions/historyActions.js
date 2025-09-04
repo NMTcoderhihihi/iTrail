@@ -1,7 +1,7 @@
 // File: app/actions/historyActions.js
 "use server";
 
-import { logAction } from "@/data/history";
+import { logAction } from "@/app/data/history";
 import { getCurrentUser } from "@/lib/session";
 import connectDB from "@/config/connectDB";
 import mongoose from "mongoose";

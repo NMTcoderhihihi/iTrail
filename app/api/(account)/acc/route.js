@@ -3,7 +3,7 @@ import { google } from "googleapis";
 import connectToDatabase from "@/config/connectDB";
 import ZaloAccount from "@/models/zalo";
 import "@/models/users";
-import { Re_acc, Re_user } from "@/data/users";
+import { Re_acc, Re_user } from "@/app/data/users";
 
 const APPS_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbwcaXcpdsonX5eGRd0T-X_yJejKqD0krSSSV3rYDnpot23nWvXkzO3QnnvIo7UqYss1/exec";

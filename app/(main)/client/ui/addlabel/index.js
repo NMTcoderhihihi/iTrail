@@ -5,7 +5,7 @@ import styles from "./index.module.css";
 import Loading from "@/components/(ui)/(loading)/loading";
 import Noti from "@/components/(features)/(noti)/noti";
 import CenterPopup from "@/components/(features)/(popup)/popup_center";
-import { Re_Label } from "@/data/customer";
+import { Re_Label } from "@/app/data/customer";
 
 export default function AddLabelButton() {
   const [open, setOpen] = useState(false);

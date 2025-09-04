@@ -8,7 +8,7 @@ import connectDB from "@/config/connectDB";
 import users from "@/models/users";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getUserByEmailForAuth } from "@/data/users"; // Import hàm truy vấn mới
+import { getUserByEmailForAuth } from "@/app/data/users"; // Import hàm truy vấn mới
 import { logUserLogin } from "@/app/actions/historyActions"; // Import hàm ghi log
 import { headers } from "next/headers";
 

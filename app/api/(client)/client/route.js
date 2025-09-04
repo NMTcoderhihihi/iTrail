@@ -9,7 +9,7 @@ import { getCurrentUser } from "@/lib/session";
 import Status from "@/models/status";
 import User from "@/models/users";
 import jwt from "jsonwebtoken";
-import { Data_Client } from "@/data/customer";
+import { Data_Client } from "@/app/data/customer";
 import { revalidateAndBroadcast } from "@/lib/revalidation";
 
 import {

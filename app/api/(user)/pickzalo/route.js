@@ -4,7 +4,7 @@ import connectToDatabase from "@/config/connectDB";
 import User from "@/models/users";
 import ZaloAccount from "@/models/zalo";
 import authenticate from "@/utils/authenticate";
-import { Re_acc, Re_user } from "@/data/users";
+import { Re_acc, Re_user } from "@/app/data/users";
 
 export async function POST(request) {
   try {

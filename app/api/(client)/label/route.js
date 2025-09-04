@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/config/connectDB";
 import Label from "@/models/messageTemplate";
-import { Re_Label } from "@/data/customer";
+import { Re_Label } from "@/app/data/customer";
 
 /* ================================================================== */
 /* POST (Tạo mới)                        */
