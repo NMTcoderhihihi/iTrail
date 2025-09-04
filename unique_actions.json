@@ -1,0 +1,291 @@
+[
+  {
+    "_id": "68818d7fe42f21f229aab0e9",
+    "action": "ADD_COMMENT_CUSTOMER",
+    "user": "686dedef19abba5d454c47ca",
+    "status": {
+      "status": "SUCCESS",
+      "detail": null
+    },
+    "customer": "687c601e0539eeb5e38eaf34",
+    "actionDetail": {
+      "commentId": "68818d7fe42f21f229aab0e6"
+    },
+    "time": "2025-07-24T01:33:51.830Z",
+    "updatedAt": "2025-07-24T01:33:51.830Z",
+    "__v": 0
+  },
+  {
+    "_id": "68a40467954bc2bd40223de3",
+    "action": "AUTO_CANCEL_RATE_LIMIT",
+    "user": "6865fe3ccdec836f29fabe4f",
+    "status": {
+      "status": "FAILED",
+      "detail": {
+        "reason": "Tự động hủy do đạt giới hạn giờ"
+      }
+    },
+    "customer": "68a3e3ebe986b54217cf1960",
+    "zalo": "6878b6e9df65cb4a19d3364f",
+    "actionDetail": {
+      "scheduleId": "68a3f3c73990c11a2632ee6f",
+      "scheduleName": "Acc T.Sơn Tìm UID - Đăng ký NV LHU",
+      "cancelledAt": "2025-08-19T04:58:15.029Z",
+      "reasonMessage": "Tự động hủy do đạt giới hạn giờ"
+    },
+    "time": "2025-08-19T04:58:15.030Z",
+    "updatedAt": "2025-08-19T04:58:15.030Z",
+    "__v": 0
+  },
+  {
+    "_id": "689c3e503990c11a262c3452",
+    "action": "AUTO_CANCEL_ZALO_FAILURE",
+    "user": "6865fe3ccdec836f29fabe4f",
+    "status": {
+      "status": "FAILED",
+      "detail": {
+        "reason": "Tài khoản Zalo không hợp lệ",
+        "scriptError": "Lỗi hệ thống: SyntaxError: Unexpected end of JSON input699780862017972526"
+      }
+    },
+    "customer": "687c601e0539eeb5e38e9b76",
+    "zalo": "6871b944df65cb4a19d2c4eb",
+    "actionDetail": {
+      "scheduleId": "689c3e073990c11a262c311c",
+      "scheduleName": "tương tác 12/8",
+      "cancelledAt": "2025-08-13T07:27:12.036Z",
+      "reasonMessage": "Tự động hủy do tài khoản Zalo không hợp lệ"
+    },
+    "time": "2025-08-13T07:27:12.037Z",
+    "updatedAt": "2025-08-13T07:27:12.037Z",
+    "__v": 0
+  },
+  {
+    "_id": "68819d7ae3f17326675ea451",
+    "action": "CREATE_SCHEDULE_ADD_FRIEND",
+    "user": "686dedef19abba5d454c47ca",
+    "status": {
+      "status": "SUCCESS",
+      "detail": null
+    },
+    "customer": "687c601e0539eeb5e38eaf49",
+    "zalo": "686f6788f50c8b0342c928be",
+    "actionDetail": {
+      "scheduleId": "68819d7ae3f17326675ea44d",
+      "scheduleName": "Lịch trình ngày 24/7/2025",
+      "scheduledFor": "2025-07-24T02:42:02.305Z"
+    },
+    "time": "2025-07-24T02:42:02.377Z",
+    "updatedAt": "2025-07-24T02:42:02.377Z",
+    "__v": 0
+  },
+  {
+    "_id": "68818b93f0d0875a0445f6ec",
+    "action": "CREATE_SCHEDULE_FIND_UID",
+    "user": "6865fe3ccdec836f29fabe4f",
+    "status": {
+      "status": "SUCCESS",
+      "detail": null
+    },
+    "customer": "687c601e0539eeb5e38ea81f",
+    "zalo": "686b35db262f8a3ef136e711",
+    "actionDetail": {
+      "scheduleId": "68818b92f0d0875a0445f556",
+      "scheduleName": "Tim uid sáng 24/7",
+      "scheduledFor": "2025-07-24T01:26:50.710Z"
+    },
+    "time": "2025-07-24T01:25:39.260Z",
+    "updatedAt": "2025-07-24T01:25:39.260Z",
+    "__v": 0
+  },
+  {
+    "_id": "6881a5c8b64178be32899134",
+    "action": "CREATE_SCHEDULE_SEND_MESSAGE",
+    "user": "6865fe3ccdec836f29fabe4f",
+    "status": {
+      "status": "SUCCESS",
+      "detail": null
+    },
+    "customer": "686e22a1b71144315f838975",
+    "zalo": "6878b6e9df65cb4a19d3364f",
+    "actionDetail": {
+      "scheduleId": "6881a5c8b64178be32899130",
+      "scheduleName": "test tính năng gửi tin nhắn",
+      "scheduledFor": "2025-07-24T03:17:28.649Z",
+      "messageTemplate": "Chào em\nMình thấy em có đăng ký tại ĐH Lạc Hồng"
+    },
+    "time": "2025-07-24T03:17:28.727Z",
+    "updatedAt": "2025-07-24T03:17:28.727Z",
+    "__v": 0
+  },
+  {
+    "_id": "688330d98bcd422dbba6f522",
+    "action": "DELETE_SCHEDULE_FIND_UID",
+    "user": "6865fe3ccdec836f29fabe4f",
+    "status": {
+      "status": "SUCCESS",
+      "detail": null
+    },
+    "customer": "686e22a0b71144315f836e97",
+    "zalo": "687f3c7fd309256bacf00c7b",
+    "actionDetail": {
+      "scheduleId": "6882fff08bcd422dbba6ad39",
+      "scheduleName": "Lịch trình ngày 25/7/2025",
+      "removedPerson": {
+        "name": "Nguyễn Minh Thành",
+        "phone": "0797053136"
+      }
+    },
+    "time": "2025-07-25T07:23:05.496Z",
+    "updatedAt": "2025-07-25T07:23:05.496Z",
+    "__v": 0
+  },
+  {
+    "_id": "6881ddb58bcd422dbba5c583",
+    "action": "DELETE_SCHEDULE_SEND_MESSAGE",
+    "user": "6865fe3ccdec836f29fabe4f",
+    "status": {
+      "status": "SUCCESS",
+      "detail": null
+    },
+    "customer": "687c601e0539eeb5e38e9e84",
+    "zalo": "68707b89f50c8b0342c928d8",
+    "actionDetail": {
+      "scheduleId": "6881dd8f8bcd422dbba5c187",
+      "scheduleName": "Lịch trình ngày 24/7/2025",
+      "removedPerson": {
+        "name": "Bùi Thị Thu Hằng",
+        "phone": "0325722372"
+      }
+    },
+    "time": "2025-07-24T07:16:05.124Z",
+    "updatedAt": "2025-07-24T07:16:05.124Z",
+    "__v": 0
+  },
+  {
+    "_id": "68819d86e3f17326675ea46b",
+    "action": "DO_SCHEDULE_ADD_FRIEND",
+    "user": "686dedef19abba5d454c47ca",
+    "status": {
+      "status": "FAILED",
+      "detail": {
+        "actionStatus": "error",
+        "actionMessage": "Cannot read properties of null (reading 'toString')"
+      }
+    },
+    "customer": "687c601e0539eeb5e38eaf49",
+    "zalo": "686f6788f50c8b0342c928be",
+    "actionDetail": {
+      "scheduleId": "68819d7ae3f17326675ea44d",
+      "scheduleName": "Lịch trình ngày 24/7/2025",
+      "executedAt": "2025-07-24T02:42:14.718Z",
+      "resultMessage": "Cannot read properties of null (reading 'toString')"
+    },
+    "time": "2025-07-24T02:42:14.719Z",
+    "updatedAt": "2025-07-24T02:42:14.719Z",
+    "__v": 0
+  },
+  {
+    "_id": "68818e67e3f17326675e9b17",
+    "action": "DO_SCHEDULE_FIND_UID",
+    "user": "6865fe3ccdec836f29fabe4f",
+    "status": {
+      "status": "SUCCESS",
+      "detail": {
+        "uidStatus": "found_new",
+        "targetUid": "79559448235673918",
+        "actionStatus": "success",
+        "actionMessage": "Đã tìm thấy UID mới."
+      }
+    },
+    "customer": "687c601e0539eeb5e38ea4d7",
+    "zalo": "686b35db262f8a3ef136e711",
+    "actionDetail": {
+      "scheduleId": "68818b92f0d0875a0445f556",
+      "scheduleName": "Tim uid sáng 24/7",
+      "executedAt": "2025-07-24T01:37:43.212Z",
+      "resultMessage": "Đã tìm thấy UID mới.",
+      "uidStatus": "found_new",
+      "foundUid": "79559448235673918"
+    },
+    "time": "2025-07-24T01:37:43.214Z",
+    "updatedAt": "2025-07-24T01:37:43.214Z",
+    "__v": 0
+  },
+  {
+    "_id": "6881936ce3f17326675e9fef",
+    "action": "DO_SCHEDULE_SEND_MESSAGE",
+    "user": "686dedf919abba5d454c47ce",
+    "status": {
+      "status": "FAILED",
+      "detail": {
+        "uidStatus": "provided",
+        "targetUid": "3344398915236450801",
+        "actionStatus": "error",
+        "actionMessage": "Tham số không hợp lệ"
+      }
+    },
+    "customer": "687c601e0539eeb5e38eaf3f",
+    "zalo": "686f85c1f50c8b0342c928c6",
+    "actionDetail": {
+      "scheduleId": "68819359e3f17326675e9fda",
+      "scheduleName": "Lịch trình ngày 24/7/2025",
+      "executedAt": "2025-07-24T01:59:08.606Z",
+      "resultMessage": "Tham số không hợp lệ"
+    },
+    "time": "2025-07-24T01:59:08.608Z",
+    "updatedAt": "2025-07-24T01:59:08.608Z",
+    "__v": 0
+  },
+  {
+    "_id": "68833abc8bcd422dbba70389",
+    "action": "UPDATE_NAME_CUSTOMER",
+    "user": "686b35db262f8a3ef136e711",
+    "status": {
+      "status": "SUCCESS",
+      "detail": null
+    },
+    "customer": "687c601e0539eeb5e38eaf4c",
+    "actionDetail": {
+      "oldName": "Lê Trần Phùng Thị Cát Tường",
+      "newName": "Lê Trần Phùng Thị Cát Tường "
+    },
+    "time": "2025-07-25T08:05:16.577Z",
+    "updatedAt": "2025-07-25T08:05:16.577Z",
+    "__v": 0
+  },
+  {
+    "_id": "68818db2e42f21f229aab0f0",
+    "action": "UPDATE_STAGE_CUSTOMER",
+    "user": "686dedef19abba5d454c47ca",
+    "status": {
+      "status": "SUCCESS",
+      "detail": null
+    },
+    "customer": "687c601e0539eeb5e38eaf33",
+    "actionDetail": {
+      "oldStage": "Chưa có",
+      "newStage": "Chăm sóc"
+    },
+    "time": "2025-07-24T01:34:42.662Z",
+    "updatedAt": "2025-07-24T01:34:42.662Z",
+    "__v": 0
+  },
+  {
+    "_id": "68818f1de3f17326675e9b81",
+    "action": "UPDATE_STATUS_CUSTOMER",
+    "user": "686dedef19abba5d454c47ca",
+    "status": {
+      "status": "SUCCESS",
+      "detail": null
+    },
+    "customer": "687c601e0539eeb5e38eaf33",
+    "actionDetail": {
+      "oldStatus": "Chưa có",
+      "newStatus": "QT11: Không nghe máy"
+    },
+    "time": "2025-07-24T01:40:45.005Z",
+    "updatedAt": "2025-07-24T01:40:45.005Z",
+    "__v": 0
+  }
+]

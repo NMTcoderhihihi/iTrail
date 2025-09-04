@@ -4,8 +4,7 @@ import { Schema, model, models } from "mongoose";
 const ValueEntrySchema = new Schema(
   {
     key: { type: String, required: true },
-    value: { type: [Schema.Types.Mixed], required: true },
-    type: { type: String, required: true },
+    value: { type: Schema.Types.Mixed, required: true },
   },
   { _id: false },
 );
@@ -30,7 +29,7 @@ const ActionHistorySchema = new Schema(
       index: true,
     },
   },
-  { timestamps: false }, // Tắt timestamps mặc định vì đã có trường 'time'
+  { timestamps: false },
 );
 
 const ActionHistory =

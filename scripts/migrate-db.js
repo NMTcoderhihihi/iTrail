@@ -158,13 +158,33 @@ const CustomerSchema = new Schema(
   { timestamps: true, collection: "customers_new" },
 );
 
+// THAY THẾ KeyDefinitionSchema CŨ BẰNG ĐOẠN NÀY
 const KeyDefinitionSchema = new Schema(
-  { name: String, type: String },
+  {
+    name: { type: String, required: true },
+    // ** MODIFIED: Thêm trường `type` để định nghĩa kiểu dữ liệu
+    type: {
+      type: String,
+      required: true,
+      enum: [
+        "string",
+        "number",
+        "date",
+        "boolean",
+        "objectId",
+        "object",
+        "array_string",
+        "array_objectId",
+      ],
+    },
+  },
   { _id: false },
 );
+
+// THAY THẾ ActionTypeDefinitionSchema CŨ BẰNG ĐOẠN NÀY
 const ActionTypeDefinitionSchema = new Schema(
   {
-    actionType: String,
+    actionType: { type: String, unique: true, lowercase: true },
     description: String,
     requiredContextKeys: [KeyDefinitionSchema],
     requiredDetailKeys: [KeyDefinitionSchema],
@@ -172,13 +192,20 @@ const ActionTypeDefinitionSchema = new Schema(
   { collection: "actiontypedefinitions" },
 );
 
+// ** MODIFIED: value là Mixed, bỏ trường `type`
 const ValueEntrySchema = new Schema(
-  { key: String, value: [mongoose.Schema.Types.Mixed], type: String },
+  {
+    key: { type: String, required: true },
+    value: { type: mongoose.Schema.Types.Mixed, required: true },
+  },
   { _id: false },
 );
 const ActionHistorySchema = new Schema(
   {
-    actionTypeId: mongoose.Types.ObjectId,
+    actionTypeId: {
+      type: mongoose.Types.ObjectId,
+      ref: "actionTypeDefinition",
+    },
     actorId: { type: mongoose.Types.ObjectId, ref: "user" },
     context: [ValueEntrySchema],
     detail: [ValueEntrySchema],
@@ -204,13 +231,13 @@ const Customer =
   mongoose.models.Customer || mongoose.model("Customer", CustomerSchema);
 const ActionTypeDefinition =
   mongoose.models.actionTypeDefinition ||
-  mongoose.model("ActionTypeDefinition", ActionTypeDefinitionSchema);
+  mongoose.model("actionTypeDefinition", ActionTypeDefinitionSchema);
 const ActionHistory =
   mongoose.models.actionHistory ||
-  mongoose.model("ActionHistory", ActionHistorySchema);
+  mongoose.model("actionHistory", ActionHistorySchema);
 const MessageTemplate =
   mongoose.models.messageTemplate ||
-  mongoose.model("MessageTemplate", MessageTemplateSchema);
+  mongoose.model("messageTemplate", MessageTemplateSchema);
 
 // =================================================================
 // === MIGRATION LOGIC (LOGIC DI TRÚ) ===
@@ -307,11 +334,15 @@ async function migrateInitialSetup() {
     `   -> ✅ Đã tạo/cập nhật ${fieldDefinitions.length} FieldDefinitions cho chương trình tuyển sinh.`,
   );
 
+  // ** MODIFIED: Yêu cầu 4 - Rà soát và cập nhật toàn bộ ActionTypeDefinitions
+  console.log("   -> Đồng bộ hóa ActionTypeDefinitions...");
+
+  // 4. Định nghĩa đầy đủ các loại hành động
+  // scripts/migrate-db.js -> bên trong hàm migrateInitialSetup
+
   // 4. Định nghĩa đầy đủ các loại hành động
   const actionTypes = [
-    // =================================================================
-    // === NHÓM HÀNH ĐỘNG: TƯƠNG TÁC VỚI KHÁCH HÀNG (CUSTOMER) ===
-    // =================================================================
+    // === NHÓM 1: CẬP NHẬT KHÁCH HÀNG (GỘP CHUNG) ===
     {
       actionType: "update_customer_core_info",
       description:
@@ -324,118 +355,61 @@ async function migrateInitialSetup() {
       ],
     },
     {
-      actionType: "update_customer_common_attribute",
-      description:
-        "Cập nhật một thuộc tính chung trong mảng customerAttributes.",
-      contextKeys: [
-        { name: "customerId", type: "objectId" },
-        { name: "fieldDefinitionId", type: "objectId" },
-      ],
-      detailKeys: [
-        { name: "oldValue", type: "array_string" },
-        { name: "newValue", type: "array_string" },
-      ],
-    },
-    {
-      actionType: "assign_customer_tag",
-      description: "Gán một tag cho khách hàng.",
-      contextKeys: [
-        { name: "customerId", type: "objectId" },
-        { name: "tagId", type: "objectId" },
-      ],
-    },
-    {
-      actionType: "unassign_customer_tag",
-      description: "Gỡ một tag khỏi khách hàng.",
-      contextKeys: [
-        { name: "customerId", type: "objectId" },
-        { name: "tagId", type: "objectId" },
-      ],
-    },
-    {
-      actionType: "assign_customer_user",
-      description: "Gán một nhân viên chăm sóc cho khách hàng.",
-      contextKeys: [
-        { name: "customerId", type: "objectId" },
-        { name: "assignedUserId", type: "objectId" },
-      ],
-    },
-    {
-      actionType: "unassign_customer_user",
-      description: "Gỡ một nhân viên chăm sóc khỏi khách hàng.",
-      contextKeys: [
-        { name: "customerId", type: "objectId" },
-        { name: "assignedUserId", type: "objectId" },
-      ],
-    },
-    {
-      actionType: "add_customer_comment",
-      description: "Thêm một bình luận mới cho khách hàng.",
-      contextKeys: [{ name: "customerId", type: "objectId" }],
-      detailKeys: [{ name: "commentId", type: "objectId" }],
-    },
-
-    // =================================================================
-    // === NHÓM HÀNH ĐỘNG: TƯƠNG TÁC VỚI CHƯƠNG TRÌNH (PROGRAM) ===
-    // =================================================================
-    {
-      actionType: "enroll_customer_in_program",
-      description: "Ghi danh một khách hàng vào một chương trình chăm sóc.",
-      contextKeys: [
-        { name: "customerId", type: "objectId" },
-        { name: "programId", type: "objectId" },
-      ],
-      detailKeys: [
-        { name: "stageId", type: "objectId" },
-        { name: "statusId", type: "objectId" },
-      ],
-    },
-    {
       actionType: "update_customer_enrollment",
-      description:
-        "Cập nhật thông tin ghi danh của KH (stage, status, dataStatus).",
+      description: "Cập nhật thông tin ghi danh của KH (stage, status).",
       contextKeys: [
         { name: "customerId", type: "objectId" },
         { name: "programId", type: "objectId" },
       ],
       detailKeys: [
         { name: "fieldName", type: "string" },
-        { name: "oldValue", type: "string" }, // Có thể là ObjectId hoặc string
-        { name: "newValue", type: "string" },
+        { name: "oldValue", type: "objectId" },
+        { name: "newValue", type: "objectId" },
       ],
     },
     {
-      actionType: "update_customer_program_data",
-      description: "Cập nhật dữ liệu động của KH trong một chương trình.",
-      contextKeys: [
-        { name: "customerId", type: "objectId" },
-        { name: "programId", type: "objectId" },
-        { name: "fieldDefinitionId", type: "objectId" },
-      ],
-      detailKeys: [
-        { name: "oldValue", type: "array_string" },
-        { name: "newValue", type: "array_string" },
-      ],
+      actionType: "add_customer_comment",
+      contextKeys: [{ name: "customerId", type: "objectId" }],
+      detailKeys: [{ name: "commentId", type: "objectId" }],
     },
 
-    // =================================================================
-    // === NHÓM HÀNH ĐỘNG: LỊCH TRÌNH & TÁC VỤ (SCHEDULE) ===
-    // =================================================================
+    // === NHÓM 2: QUẢN LÝ LỊCH TRÌNH (TÁCH BIỆT) ===
     {
-      actionType: "create_scheduled_task",
-      description: "Tạo một tác vụ (gửi tin, kết bạn...) trong một lịch trình.",
+      actionType: "create_schedule_send_message",
       contextKeys: [
         { name: "customerId", type: "objectId" },
         { name: "zaloAccountId", type: "objectId" },
       ],
       detailKeys: [
         { name: "scheduleId", type: "objectId" },
-        { name: "scheduledFor", type: "date" }, // Thời điểm task sẽ chạy
+        { name: "scheduledFor", type: "date" },
+        { name: "messageTemplate", type: "string" },
       ],
     },
     {
-      actionType: "delete_scheduled_task",
-      description: "Xóa một tác vụ khỏi một lịch trình.",
+      actionType: "create_schedule_add_friend",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "zaloAccountId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "scheduleId", type: "objectId" },
+        { name: "scheduledFor", type: "date" },
+      ],
+    },
+    {
+      actionType: "create_schedule_find_uid",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "zaloAccountId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "scheduleId", type: "objectId" },
+        { name: "scheduledFor", type: "date" },
+      ],
+    },
+    {
+      actionType: "delete_schedule_send_message",
       contextKeys: [
         { name: "customerId", type: "objectId" },
         { name: "zaloAccountId", type: "objectId" },
@@ -443,74 +417,89 @@ async function migrateInitialSetup() {
       detailKeys: [{ name: "scheduleId", type: "objectId" }],
     },
     {
-      actionType: "execute_scheduled_task",
-      description: "CRON Job thực thi một tác vụ đã được lên lịch.",
+      actionType: "delete_schedule_find_uid",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "zaloAccountId", type: "objectId" },
+      ],
+      detailKeys: [{ name: "scheduleId", type: "objectId" }],
+    },
+
+    // === NHÓM 3: THỰC THI & HỦY TÁC VỤ (TÁCH BIỆT) ===
+    {
+      actionType: "do_schedule_send_message",
       contextKeys: [
         { name: "customerId", type: "objectId" },
         { name: "zaloAccountId", type: "objectId" },
         { name: "scheduleId", type: "objectId" },
       ],
       detailKeys: [
-        { name: "finalMessage", type: "string" }, // Lời chào khi kết bạn, hoặc tin nhắn đã được biến thể
-        { name: "scriptResult", type: "string" }, // Kết quả JSON thô từ script
+        { name: "status", type: "string" },
+        { name: "scriptResult", type: "object" },
+        { name: "finalMessage", type: "string" },
       ],
     },
     {
-      actionType: "auto_cancel_scheduled_task",
-      description:
-        "Hệ thống tự động hủy một tác vụ do lỗi (giới hạn, token...).",
+      actionType: "do_schedule_add_friend",
       contextKeys: [
         { name: "customerId", type: "objectId" },
         { name: "zaloAccountId", type: "objectId" },
         { name: "scheduleId", type: "objectId" },
       ],
       detailKeys: [
-        { name: "reasonRoot", type: "string" }, // Kết quả JSON thô của hành động gây ra lỗi
-        { name: "description", type: "string" }, // Diễn giải lý do
+        { name: "status", type: "string" },
+        { name: "scriptResult", type: "object" },
+      ],
+    },
+    {
+      actionType: "do_schedule_find_uid",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "zaloAccountId", type: "objectId" },
+        { name: "scheduleId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "status", type: "string" },
+        { name: "scriptResult", type: "object" },
+      ],
+    },
+    {
+      actionType: "auto_cancel_rate_limit",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "zaloAccountId", type: "objectId" },
+        { name: "scheduleId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "reasonRoot", type: "object" },
+        { name: "description", type: "string" },
+      ],
+    },
+    {
+      actionType: "auto_cancel_zalo_failure",
+      contextKeys: [
+        { name: "customerId", type: "objectId" },
+        { name: "zaloAccountId", type: "objectId" },
+        { name: "scheduleId", type: "objectId" },
+      ],
+      detailKeys: [
+        { name: "reasonRoot", type: "object" },
+        { name: "description", type: "string" },
       ],
     },
 
-    // =================================================================
-    // === NHÓM HÀNH ĐỘNG: QUẢN LÝ CẤU HÌNH HỆ THỐNG (CRUD) ===
-    // =================================================================
-    {
-      actionType: "create_document",
-      description: "Tạo một bản ghi mới trong một collection.",
-      contextKeys: [{ name: "collectionName", type: "string" }],
-      detailKeys: [
-        { name: "documentId", type: "objectId" },
-        { name: "documentName", type: "string" },
-      ],
-    },
-    {
-      actionType: "update_document",
-      description: "Cập nhật một bản ghi trong một collection.",
-      contextKeys: [
-        { name: "collectionName", type: "string" },
-        { name: "documentId", type: "objectId" },
-      ],
-      detailKeys: [
-        { name: "fieldName", type: "string" },
-        { name: "oldValue", type: "string" }, // Dùng string để lưu Bất cứ kiểu dữ liệu nào
-        { name: "newValue", type: "string" },
-      ],
-    },
-    {
-      actionType: "delete_document",
-      description: "Xóa một bản ghi khỏi một collection.",
-      contextKeys: [{ name: "collectionName", type: "string" }],
-      detailKeys: [
-        { name: "documentId", type: "objectId" },
-        { name: "documentName", type: "string" },
-      ],
-    },
+    // Mở rộng cho tương lai
+    { actionType: "assign_customer_user" },
+    { actionType: "enroll_customer_in_program" },
+    { actionType: "create_document" },
+    { actionType: "update_document" },
+    { actionType: "delete_document" },
   ];
   for (const at of actionTypes) {
     await ActionTypeDefinition.updateOne(
       { actionType: at.actionType },
       {
         $set: {
-          description: at.description,
           requiredContextKeys: at.contextKeys || [],
           requiredDetailKeys: at.detailKeys || [],
         },
@@ -518,7 +507,9 @@ async function migrateInitialSetup() {
       { upsert: true },
     );
   }
-  console.log("   -> ✅ Đã tạo/cập nhật đầy đủ ActionTypeDefinitions.");
+  console.log(
+    `   -> ✅ Đã đồng bộ hóa ${actionTypes.length} ActionTypeDefinitions.`,
+  );
 }
 
 async function migrateStatusesAndTemplates() {
@@ -620,103 +611,273 @@ async function migrateCustomers() {
   await Customer.insertMany(newCustomers);
   console.log(`   -> ✅ Đã di trú ${newCustomers.length} khách hàng.`);
 }
+async function cleanupEmptyComments() {
+  console.log("\n--- Bước Phụ: Dọn dẹp các comment rỗng ---");
+  // Sử dụng model Customer đã được định nghĩa để trỏ vào `customers_new`
+  const result = await Customer.updateMany(
+    { "comments.detail": { $in: [null, ""] } },
+    { $pull: { comments: { detail: { $in: [null, ""] } } } },
+  );
+  if (result.modifiedCount > 0) {
+    console.log(
+      `   -> ✅ Đã dọn dẹp comment rỗng từ ${result.modifiedCount} khách hàng.`,
+    );
+  } else {
+    console.log("   -> ℹ️ Không tìm thấy comment rỗng nào để dọn dẹp.");
+  }
+}
+
+// ** ADDED: Hàm di trú lịch sử
+// scripts/migrate-db.js
+
+async function migrateActionHistories() {
+  console.log("\n--- Bước 4: Di trú Lịch sử Hành động (ActionHistories) ---");
+
+  const oldHistories = await History_Old.find().lean();
+  if (oldHistories.length === 0) {
+    console.log("   -> ℹ️ Không có lịch sử cũ để di trú.");
+    return;
+  }
+  console.log(
+    `   -> Tìm thấy ${oldHistories.length} bản ghi lịch sử cũ. Bắt đầu xử lý...`,
+  );
+
+  const actionTypeDefs = await ActionTypeDefinition.find().lean();
+  const actionTypeMap = new Map(
+    actionTypeDefs.map((def) => [
+      def.actionType.toUpperCase().replace(/_/g, ""),
+      def._id,
+    ]),
+  );
+
+  const program = await CareProgram.findById(DEFAULT_CARE_PROGRAM_ID).lean();
+
+  // ++ ADDED: Safety Check to ensure the program document exists before proceeding.
+  if (!program) {
+    throw new Error(
+      `Lỗi nghiêm trọng: Không thể tìm thấy CareProgram mặc định với ID: ${DEFAULT_CARE_PROGRAM_ID}. ` +
+        `Vui lòng kiểm tra lại logic ở Bước 1 hoặc đảm bảo DB không bị thay đổi giữa các bước.`,
+    );
+  }
+
+  const statusMap = new Map(program.statuses.map((s) => [s.name, s._id]));
+  const stageMap = new Map(program.stages.map((s) => [s.name, s._id]));
+
+  const newHistories = [];
+  let skippedCount = 0;
+
+  // ** ADDED: Bản đồ ánh xạ tên hành động cũ sang tên mới theo quy ước
+  const ACTION_NAME_MAP = {
+    UPDATE_NAME_CUSTOMER: "update_customer_core_info",
+    UPDATE_STATUS_CUSTOMER: "update_customer_enrollment",
+    UPDATE_STAGE_CUSTOMER: "update_customer_enrollment",
+    ADD_COMMENT_CUSTOMER: "add_customer_comment",
+    CREATE_SCHEDULE_SEND_MESSAGE: "create_schedule_send_message",
+    CREATE_SCHEDULE_ADD_FRIEND: "create_schedule_add_friend",
+    CREATE_SCHEDULE_FIND_UID: "create_schedule_find_uid",
+    DELETE_SCHEDULE_SEND_MESSAGE: "delete_schedule_send_message",
+    DELETE_SCHEDULE_FIND_UID: "delete_schedule_find_uid",
+    DO_SCHEDULE_SEND_MESSAGE: "do_schedule_send_message",
+    DO_SCHEDULE_ADD_FRIEND: "do_schedule_add_friend",
+    DO_SCHEDULE_FIND_UID: "do_schedule_find_uid",
+    AUTO_CANCEL_RATE_LIMIT: "auto_cancel_rate_limit",
+    AUTO_CANCEL_ZALO_FAILURE: "auto_cancel_zalo_failure",
+  };
+
+  for (const oldLog of oldHistories) {
+    const newActionName = ACTION_NAME_MAP[oldLog.action];
+    if (!newActionName) {
+      skippedCount++;
+      continue;
+    }
+
+    const actionTypeId = actionTypeMap.get(
+      newActionName.toUpperCase().replace(/_/g, ""),
+    );
+    if (!actionTypeId) {
+      skippedCount++;
+      continue;
+    }
+
+    const newLog = {
+      _id: oldLog._id,
+      actionTypeId,
+      actorId: oldLog.user,
+      time: oldLog.time,
+      context: [],
+      detail: [],
+    };
+
+    if (oldLog.customer)
+      newLog.context.push({ key: "customerId", value: oldLog.customer });
+    if (oldLog.zalo)
+      newLog.context.push({ key: "zaloAccountId", value: oldLog.zalo });
+    if (oldLog.actionDetail?.scheduleId)
+      newLog.context.push({
+        key: "scheduleId",
+        value: oldLog.actionDetail.scheduleId,
+      });
+
+    switch (oldLog.action) {
+      case "UPDATE_NAME_CUSTOMER":
+        newLog.detail.push({ key: "fieldName", value: "name" });
+        newLog.detail.push({
+          key: "oldValue",
+          value: oldLog.actionDetail.oldName,
+        });
+        newLog.detail.push({
+          key: "newValue",
+          value: oldLog.actionDetail.newName,
+        });
+        break;
+      case "UPDATE_STATUS_CUSTOMER":
+      case "UPDATE_STAGE_CUSTOMER":
+        newLog.context.push({
+          key: "programId",
+          value: DEFAULT_CARE_PROGRAM_ID,
+        });
+        if (oldLog.action === "UPDATE_STATUS_CUSTOMER") {
+          newLog.detail.push({ key: "fieldName", value: "statusId" });
+          // ** FIXED: Xử lý giá trị undefined, gán null thay thế
+          newLog.detail.push({
+            key: "oldValue",
+            value: statusMap.get(oldLog.actionDetail.oldStatus) || null,
+          });
+          newLog.detail.push({
+            key: "newValue",
+            value: statusMap.get(oldLog.actionDetail.newStatus) || null,
+          });
+        } else {
+          newLog.detail.push({ key: "fieldName", value: "stageId" });
+          newLog.detail.push({
+            key: "oldValue",
+            value: stageMap.get(oldLog.actionDetail.oldStage) || null,
+          });
+          newLog.detail.push({
+            key: "newValue",
+            value: stageMap.get(oldLog.actionDetail.newStage) || null,
+          });
+        }
+        break;
+      case "ADD_COMMENT_CUSTOMER":
+        newLog.detail.push({
+          key: "commentId",
+          value: oldLog.actionDetail.commentId,
+        });
+        break;
+      case "CREATE_SCHEDULE_SEND_MESSAGE":
+      case "CREATE_SCHEDULE_ADD_FRIEND":
+      case "CREATE_SCHEDULE_FIND_UID":
+        newLog.detail.push({
+          key: "scheduledFor",
+          value: oldLog.actionDetail.scheduledFor,
+        });
+        if (oldLog.actionDetail.messageTemplate) {
+          newLog.detail.push({
+            key: "messageTemplate",
+            value: oldLog.actionDetail.messageTemplate,
+          });
+        }
+        break;
+      case "DO_SCHEDULE_SEND_MESSAGE":
+      case "DO_SCHEDULE_ADD_FRIEND":
+      case "DO_SCHEDULE_FIND_UID":
+        newLog.detail.push({ key: "status", value: oldLog.status.status });
+        newLog.detail.push({
+          key: "scriptResult",
+          value: oldLog.status.detail,
+        });
+        if (oldLog.actionDetail.finalMessage) {
+          newLog.detail.push({
+            key: "finalMessage",
+            value: oldLog.actionDetail.finalMessage,
+          });
+        }
+        break;
+      case "AUTO_CANCEL_RATE_LIMIT":
+      case "AUTO_CANCEL_ZALO_FAILURE":
+        newLog.detail.push({ key: "reasonRoot", value: oldLog.status.detail });
+        newLog.detail.push({
+          key: "description",
+          value: oldLog.actionDetail.reasonMessage,
+        });
+        break;
+    }
+    newHistories.push(newLog);
+  }
+
+  if (skippedCount > 0) {
+    console.log(
+      `   -> ⚠️  Đã bỏ qua ${skippedCount} bản ghi lịch sử không có định nghĩa hành động tương ứng.`,
+    );
+  }
+
+  if (newHistories.length > 0) {
+    await ActionHistory.deleteMany({});
+    await ActionHistory.insertMany(newHistories, { ordered: false }).catch(
+      (err) => {
+        // Ghi log lỗi chi tiết nếu có
+        console.error(
+          "Lỗi khi insertMany:",
+          err.writeErrors ? JSON.stringify(err.writeErrors, null, 2) : err,
+        );
+      },
+    );
+    console.log(
+      `   -> ✅ Đã di trú thành công ${newHistories.length} bản ghi lịch sử.`,
+    );
+  }
+}
 
 async function finalizeMigration() {
-  console.log("\n--- Bước 4: Hoàn tất Di trú ---");
+  console.log("\n--- Bước 5: Hoàn tất Di trú ---");
   const db = mongoose.connection.db;
-  const renameAndDrop = async (oldName, newName) => {
+
+  const renameCollection = async (oldName, newName, finalName) => {
     try {
+      // Drop _old collection if it exists from previous runs
+      try {
+        await db.collection(`${oldName}_old`).drop();
+        console.log(`   -> 🧹 Đã dọn dẹp collection cũ: ${oldName}_old`);
+      } catch (e) {
+        if (e.codeName !== "NamespaceNotFound") throw e;
+      }
+
+      // Rename current to _old
       const collections = await db.listCollections({ name: oldName }).toArray();
       if (collections.length > 0) {
-        await db
-          .collection(oldName)
-          .rename(`${oldName}_old`, { dropTarget: true });
+        await db.collection(oldName).rename(`${oldName}_old`);
         console.log(`   -> ✅ Đã đổi tên ${oldName} -> ${oldName}_old`);
-      } else {
-        console.log(
-          `   -> ℹ️ Collection ${oldName} không tồn tại, bỏ qua đổi tên.`,
-        );
       }
-    } catch (e) {
-      if (e.codeName === "NamespaceNotFound")
-        console.log(
-          `   -> ℹ️ Collection ${oldName} không tồn tại, bỏ qua đổi tên.`,
-        );
-      else throw e;
-    }
-    try {
+
+      // Rename _new to current
       const newCollections = await db
         .listCollections({ name: newName })
         .toArray();
       if (newCollections.length > 0) {
-        await db.collection(newName).rename(oldName);
-        console.log(`   -> ✅ Đã đổi tên ${newName} -> ${oldName}`);
+        await db.collection(newName).rename(finalName);
+        console.log(`   -> ✅ Đã đổi tên ${newName} -> ${finalName}`);
       }
     } catch (e) {
-      if (e.codeName !== "NamespaceNotFound") throw e;
+      if (e.codeName !== "NamespaceNotFound") {
+        console.error(`Lỗi khi đổi tên collection: ${e.message}`);
+        throw e;
+      }
     }
   };
 
-  await renameAndDrop("customers", "customers_new");
+  await renameCollection("customers", "customers_new", "customers");
+  await renameCollection(
+    "actionhistories",
+    "actionhistories_new",
+    "actionhistories",
+  );
+
   try {
-    const statusesCollection = await db
-      .listCollections({ name: "statuses" })
-      .toArray();
-    if (statusesCollection.length > 0) {
-      await db.collection("statuses").drop();
-      console.log("   -> ✅ Đã xóa collection 'statuses' cũ.");
-    }
+    await db.collection("status").drop();
+    console.log("   -> ✅ Đã xóa collection 'status' cũ.");
   } catch (e) {
     if (e.codeName !== "NamespaceNotFound") throw e;
-  }
-}
-
-async function verifyMigration() {
-  console.log("\n--- ⭐ Bước 5: Kiểm tra dữ liệu sau khi di trú ---");
-  const randomCustomer = await Customer.findOne()
-    .populate([
-      { path: "programEnrollments.programId", select: "name statuses stages" },
-      { path: "users", select: "name" },
-    ])
-    .lean();
-
-  if (randomCustomer) {
-    console.log("   -> Dữ liệu một khách hàng ngẫu nhiên:");
-    console.log(
-      JSON.stringify(
-        {
-          _id: randomCustomer._id,
-          name: randomCustomer.name,
-          phone: randomCustomer.phone,
-          users: (randomCustomer.users || []).map((u) => u.name),
-          program: randomCustomer.programEnrollments[0]?.programId.name,
-        },
-        null,
-        2,
-      ),
-    );
-
-    const enrollment = randomCustomer.programEnrollments[0];
-    if (enrollment) {
-      const status = (enrollment.programId.statuses || []).find((s) =>
-        s._id.equals(enrollment.statusId),
-      );
-      const stage = (enrollment.programId.stages || []).find((s) =>
-        s._id.equals(enrollment.stageId),
-      );
-      console.log(
-        `   -> Trạng thái di trú: ${
-          status ? `OK (${status.name})` : "⚠️ LỖI hoặc không có"
-        }`,
-      );
-      console.log(
-        `   -> Giai đoạn di trú: ${
-          stage ? `OK (Cấp ${stage.level})` : "⚠️ LỖI hoặc không có"
-        }`,
-      );
-    }
-  } else {
-    console.log("   -> ⚠️ Không tìm thấy khách hàng nào để kiểm tra.");
   }
 }
 
@@ -738,17 +899,21 @@ async function runMigration() {
     await migrateInitialSetup();
     await migrateStatusesAndTemplates();
     await migrateCustomers();
-    // await migrateActionHistories(); // Tạm thời vô hiệu hóa vì phức tạp và không có dữ liệu cũ để test
+    await cleanupEmptyComments();
+    await migrateActionHistories();
     await finalizeMigration();
-    await verifyMigration();
   } catch (error) {
     console.error(
       "❌ Đã xảy ra lỗi nghiêm trọng trong quá trình di trú:",
       error,
     );
   } finally {
-    await mongoose.disconnect();
-    console.log("\n🔌 Đã ngắt kết nối khỏi MongoDB. Quá trình kết thúc.");
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.disconnect();
+      console.log(
+        "\n🔌 Đã ngắt kết nối khỏi MongoDB. Quá trình di trú kết thúc.",
+      );
+    }
   }
 }
 

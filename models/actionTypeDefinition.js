@@ -7,7 +7,16 @@ const KeyDefinitionSchema = new Schema(
     type: {
       type: String,
       required: true,
-      enum: ["string", "number", "date", "boolean", "objectId"],
+      enum: [
+        "string",
+        "number",
+        "date",
+        "boolean",
+        "objectId",
+        "object",
+        "array_string",
+        "array_objectId",
+      ],
     },
   },
   { _id: false },
@@ -20,7 +29,7 @@ const ActionTypeDefinitionSchema = new Schema(
       required: true,
       unique: true,
       trim: true,
-      uppercase: true,
+      lowercase: true, // ** ADDED: Chuẩn hóa tên action
     },
     description: { type: String },
     requiredContextKeys: [KeyDefinitionSchema],
