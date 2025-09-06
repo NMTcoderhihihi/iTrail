@@ -3,7 +3,11 @@
 import { getZaloAccounts } from "@/app/actions/zaloAccountActions";
 import { getCurrentUser } from "@/lib/session";
 import ClientPage from "./client/index";
-import { Data_Client, Data_Label, Data_Status } from "@/app/data/customer";
+import {
+  Data_Client,
+  Data_Label,
+  Data_Status,
+} from "@/app/data/customer/customer.queries";
 
 export default async function Page({ searchParams }) {
   const [userData, labelResponse, statusResponse, zaloAccountsResponse] =

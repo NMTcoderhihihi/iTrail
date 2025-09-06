@@ -414,7 +414,10 @@ async function migrateInitialSetup() {
         { name: "customerId", type: "objectId" },
         { name: "zaloAccountId", type: "objectId" },
       ],
-      detailKeys: [{ name: "scheduleId", type: "objectId" }],
+      detailKeys: [
+        { name: "scheduleId", type: "objectId" },
+        { name: "scheduledFor", type: "date" },
+      ],
     },
     {
       actionType: "delete_schedule_find_uid",
@@ -422,7 +425,10 @@ async function migrateInitialSetup() {
         { name: "customerId", type: "objectId" },
         { name: "zaloAccountId", type: "objectId" },
       ],
-      detailKeys: [{ name: "scheduleId", type: "objectId" }],
+      detailKeys: [
+        { name: "scheduleId", type: "objectId" },
+        { name: "scheduledFor", type: "date" },
+      ],
     },
 
     // === NHÓM 3: THỰC THI & HỦY TÁC VỤ (TÁCH BIỆT) ===
