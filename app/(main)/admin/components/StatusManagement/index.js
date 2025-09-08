@@ -4,10 +4,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react"; // ++ ADDED: useMemo
 import { usePanels } from "@/contexts/PanelContext";
 import {
-  getStatuses,
-  createOrUpdateStatus,
-  deleteStatus,
-} from "@/app/actions/statusActions";
+  createOrUpdateTag as createOrUpdateStatus,
+  deleteTag as deleteStatus,
+} from "@/app/data/tag/tag.action.js";
+import { getTagsForFilter as getStatuses } from "@/app/data/tag/tag.queries.js";
 import StatusEditorPanel from "../Panel/StatusEditorPanel";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import PaginationControls from "../shared/PaginationControls";

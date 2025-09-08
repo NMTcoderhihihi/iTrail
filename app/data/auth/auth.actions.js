@@ -1,20 +1,25 @@
-// File: data/auth/auth.actions.js
+// [MOD] app/data/auth/auth.actions.js
+
 "use server";
 
 import { SignJWT } from "jose";
 import bcrypt from "bcryptjs";
 import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
+// [DEL] Bỏ import redirect vì client sẽ xử lý
 import connectDB from "@/config/connectDB";
 import User from "@/models/users";
-import { logAction } from "../history/history.actions.js"; // Cập nhật đường dẫn import nếu cần
+// [NOTE] Hàm logAction giữ nguyên, không thay đổi
+import { logAction } from "../history/history.actions.js";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 const COOKIE_NAME = "token";
 
 /**
  * Xử lý logic đăng nhập cho người dùng.
+ * @param {object} prevState - Trạng thái trước đó từ useFormState.
+ * @param {FormData} formData - Dữ liệu từ form.
  */
+// [MOD] Thay đổi chữ ký hàm để tương thích useFormState
 export async function loginUser(prevState, formData) {
   const email = formData.get("email");
   const password = formData.get("password");
@@ -27,12 +32,14 @@ export async function loginUser(prevState, formData) {
     await connectDB();
     const user = await User.findOne({ email }).lean();
     if (!user) {
-      throw new Error("Tài khoản không tồn tại!");
+      // [MOD] Trả về object lỗi thay vì ném lỗi
+      return { error: "Tài khoản không tồn tại!" };
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
-      throw new Error("Mật khẩu không chính xác!");
+      // [MOD] Trả về object lỗi thay vì ném lỗi
+      return { error: "Mật khẩu không chính xác!" };
     }
 
     const tokenData = { id: user._id.toString(), role: user.role };
@@ -48,16 +55,16 @@ export async function loginUser(prevState, formData) {
       maxAge: 5 * 60 * 60, // 5 giờ
     });
 
-    // Ghi log đăng nhập thành công
+    // [NOTE] Việc ghi log không thay đổi
     await logAction({
       actionType: "user_login",
       actorId: user._id,
       detail: { ipAddress, userAgent, status: "success" },
     });
 
+    // [MOD] Trả về object thành công để client xử lý redirect
     return { success: true, role: user.role };
   } catch (err) {
-    // Ghi log đăng nhập thất bại (nếu có thể lấy được user Id)
     const userForLog = await User.findOne({ email }).lean();
     if (userForLog) {
       await logAction({
@@ -73,7 +80,5 @@ export async function loginUser(prevState, formData) {
 /**
  * Xử lý logic đăng xuất.
  */
-export async function logoutUser() {
-  cookies().set(COOKIE_NAME, "", { maxAge: 0, path: "/" });
-  redirect("/login");
-}
+// [DEL] Xóa hàm logoutUser khỏi đây và chuyển vào file riêng để rõ ràng hơn
+// export async function logoutUser() { ... }

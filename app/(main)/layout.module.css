@@ -7,9 +7,22 @@
 .nav {
   width: 200px;
   flex-shrink: 0;
+  transition: width 0.3s ease-in-out; /* [ADD] Hiệu ứng co giãn */
 }
+
+/* [ADD] Style cho Nav khi thu gọn */
+.nav.navCollapsed {
+  width: 80px; /* Chiều rộng khi thu gọn */
+}
+
 .main {
   flex-grow: 1;
   overflow-y: auto;
   background-color: #f8fafc;
+  transition: width 0.3s ease-in-out; /* [ADD] Thêm hiệu ứng */
+}
+
+/* [ADD] Style cho nội dung chính khi Nav thu gọn (không bắt buộc nhưng để cho mượt) */
+.main.mainExpanded {
+  /* Có thể thêm logic tính toán width nếu cần, nhưng flex-grow là đủ */
 }

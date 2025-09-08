@@ -3,12 +3,9 @@
 
 import React, { useState, useEffect, useCallback, useTransition } from "react";
 import styles from "./DetailsPanel.module.css";
-import {
-  getUserDetails,
-  updateUserDetails,
-  createUser,
-} from "@/app/actions/userActions";
-import { getCustomerDetails } from "@/app/actions/customerActions"; // ++ ADDED
+import { getUserDetails } from "@/app/data/user/user.queries";
+import { createUser, updateUserDetails } from "@/app/data/user/user.actions";
+import { getCustomerDetails } from "@/app/data/customer/customer.actions";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import UserDisplay from "../shared/UserDisplay";
 import ZaloDisplay from "../shared/ZaloDisplay";

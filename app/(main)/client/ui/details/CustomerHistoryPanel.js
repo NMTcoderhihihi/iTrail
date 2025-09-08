@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useTransition } from "react";
 import styles from "./CustomerHistoryPanel.module.css";
-import { getHistoryForCustomer } from "@/app/actions/historyActions";
+import { getHistoryForCustomer } from "@/app/data/history/history.queries";
 
 const formatActionName = (action) => {
   const map = {

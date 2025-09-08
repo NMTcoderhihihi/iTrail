@@ -3,10 +3,8 @@
 
 import React, { useState, useEffect, useTransition } from "react";
 import styles from "./DetailsPanel.module.css";
-import {
-  getZaloAccounts,
-  toggleUserAccess,
-} from "@/app/actions/zaloAccountActions";
+import { toggleUserAccess } from "@/app/data/zalo/zalo.action";
+import { getUsersForFilter as getAllUsers } from "@/app/data/user/user.queries";
 import ZaloDisplay from "../shared/ZaloDisplay";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import { usePanels } from "@/contexts/PanelContext";

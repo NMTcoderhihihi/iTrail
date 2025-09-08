@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 // ** MODIFIED: Đổi tên prop và thêm logic xử lý mới cho nhất quán
 import styles from "./LabelEditorPanel.module.css"; // Tái sử dụng style
-import { createOrUpdateVariant } from "@/app/actions/variantActions";
+import { createOrUpdateVariant } from "@/app/data/variant/variant.actions";
 
 export default function VariantEditorPanel({
   initialData,

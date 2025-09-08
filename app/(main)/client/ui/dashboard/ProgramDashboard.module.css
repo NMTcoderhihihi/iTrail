@@ -1,0 +1,78 @@
+/* [ADD] app/(main)/client/ui/dashboard/ProgramDashboard.module.css */
+
+.container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: var(--boxshaw2);
+  margin-bottom: 16px;
+  transition: all 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+}
+
+.container:not(.collapsed) .header {
+  border-bottom-color: #e2e8f0;
+}
+
+.header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.collapseIcon {
+  transition: transform 0.3s ease-in-out;
+}
+
+.widgetsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 20px;
+  transition: all 0.3s ease-in-out;
+}
+
+.container.collapsed .widgetsGrid {
+  padding-top: 0;
+  padding-bottom: 0;
+  max-height: 0;
+  opacity: 0;
+}
+
+.widget {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.icon {
+  font-size: 24px;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+}
+
+.value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.title {
+  font-size: 13px;
+  color: #64748b;
+}

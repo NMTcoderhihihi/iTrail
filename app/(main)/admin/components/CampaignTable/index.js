@@ -11,7 +11,10 @@ import React, {
 import { usePanels } from "@/contexts/PanelContext";
 import ScheduleDetailPanel from "../Panel/ScheduleDetailPanel";
 import StackedProgressBar from "../shared/StackedProgressBar";
-import { getRunningJobs, getArchivedJobs } from "@/app/actions/campaignActions";
+import {
+  getRunningJobs,
+  getArchivedJobs,
+} from "@/app/data/schedule/schedule.queries";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import PaginationControls from "../shared/PaginationControls";
 import DataTable from "../datatable/DataTable";

@@ -2,11 +2,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react"; // ++ ADDED: useMemo
+import { getVariants } from "@/app/data/variant/variant.queries";
 import {
-  getVariants,
-  deleteVariant,
   createOrUpdateVariant,
-} from "@/app/actions/variantActions";
+  deleteVariant,
+} from "@/app/data/variant/variant.actions";
 import { usePanels } from "@/contexts/PanelContext";
 import VariantEditorPanel from "../Panel/VariantEditorPanel";
 import LoadingSpinner from "../shared/LoadingSpinner";

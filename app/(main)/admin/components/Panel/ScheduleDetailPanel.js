@@ -4,7 +4,7 @@
 import React, { useTransition } from "react";
 import styles from "./ScheduleDetailPanel.module.css";
 import { usePanels } from "@/contexts/PanelContext";
-import { stopSchedule } from "@/app/actions/campaignActions";
+import { stopSchedule } from "@/app/data/schedule/schedule.actions";
 import PendingQueuePanel from "./PendingQueuePanel";
 import ExecutionHistoryPanel from "./ExecutionHistoryPanel";
 import StackedProgressBar from "../shared/StackedProgressBar";

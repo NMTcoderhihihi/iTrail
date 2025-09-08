@@ -1,0 +1,27 @@
+/* [ADD] app/(main)/client/ui/table/UidStatusCell.module.css */
+
+.summaryContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Tăng khoảng cách cho dễ nhìn */
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.summaryItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge.found {
+  background-color: #22c55e; /* green */
+}
+
+.badge.error {
+  background-color: #ef4444; /* red */
+}
+
+.badge.pending {
+  background-color: #9ca3af; /* gray */
+}

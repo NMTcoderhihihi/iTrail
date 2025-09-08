@@ -15,7 +15,7 @@ import styles from "./index.module.css";
 import CenterPopup from "@/components/(features)/(popup)/popup_center";
 import RecipientList from "./RecipientList";
 import { useCampaigns } from "@/contexts/CampaignContext";
-import { getScheduleEstimation } from "@/app/actions/scheduleActions";
+import { getScheduleEstimation } from "@/app/data/schedule/schedule.actions";
 
 const AVAILABLE_ACTIONS = [
   { key: "sendMessage", name: "Gửi tin" },

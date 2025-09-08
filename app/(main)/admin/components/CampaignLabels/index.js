@@ -4,10 +4,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { usePanels } from "@/contexts/PanelContext";
 import {
-  getLabel,
-  createOrUpdateLabel,
-  deleteLabel,
-} from "@/app/actions/campaignActions";
+  getMessageTemplates as getLabel, // Đổi tên getMessageTemplates -> getLabel
+  createOrUpdateTemplate as createOrUpdateLabel, // Đổi tên cho phù hợp
+  deleteTemplate as deleteLabel, // Đổi tên cho phù hợp
+} from "@/app/data/messageTemplate/messageTemplate.js";
 import LabelEditorPanel from "../Panel/LabelEditorPanel";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import PaginationControls from "../shared/PaginationControls";

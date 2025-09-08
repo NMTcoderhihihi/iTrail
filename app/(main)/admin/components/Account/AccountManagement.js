@@ -6,7 +6,7 @@ import { usePanels } from "@/contexts/PanelContext";
 import {
   getZaloAccounts,
   deleteZaloAccount,
-} from "@/app/actions/zaloAccountActions";
+} from "@/app/data/zalo/zalo.action.js";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import PaginationControls from "../shared/PaginationControls";
 import DataTable from "../datatable/DataTable";

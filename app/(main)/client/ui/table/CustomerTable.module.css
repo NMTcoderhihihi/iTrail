@@ -1,0 +1,79 @@
+/* [MOD] app/(main)/client/ui/table/CustomerTable.module.css */
+
+.gridWrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: white;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.gridContainer {
+  flex-grow: 1;
+  overflow: auto;
+  display: grid;
+  align-content: flex-start;
+}
+
+.header,
+.gridRow {
+  display: contents;
+}
+
+.gridRow:hover > .cell {
+  background-color: #f8fafc;
+  cursor: pointer;
+}
+
+.headerCell,
+.cell {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  min-height: 48px; /* [MOD] Tăng chiều cao tối thiểu cho hàng */
+}
+
+.headerCell {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  /* [MOD] Áp dụng lại style cũ */
+  background-color: #0374da;
+  color: white;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  justify-content: center;
+  text-align: center;
+}
+.headerCell:last-child {
+  border-right: none;
+}
+/* [MOD] Ghi đè căn trái cho header cột Tên */
+.headerCell:nth-child(4) {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.bigCheckbox {
+  transform: scale(1.35);
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.activeRow > .cell {
+  background-color: #eef2ff;
+}
+.activeRow:hover > .cell {
+  background-color: #e0e7ff;
+}
+.activeRow > .cell:nth-child(2) {
+  box-shadow: inset 4px 0 0 0 #4f46e5;
+}

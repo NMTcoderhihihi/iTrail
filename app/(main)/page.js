@@ -1,41 +1,45 @@
 // app/(main)/page.js
-
-import { getZaloAccounts } from "@/app/actions/zaloAccountActions";
 import { getCurrentUser } from "@/lib/session";
-import ClientPage from "./client/index";
-import {
-  Data_Client,
-  Data_Label,
-  Data_Status,
-} from "@/app/data/customer/customer.queries";
+import ClientPage from "./client/ClientPage";
+import { getClientes } from "@/app/data/customer/customer.queries";
+import { getCareProgramsForFilter } from "@/app/data/careProgram/careProgram.queries";
+import { getTagsForFilter } from "@/app/data/tag/tag.queries";
+import { getZaloAccountsForFilter } from "@/app/data/zalo/zalo.queries";
 
 export default async function Page({ searchParams }) {
-  const [userData, labelResponse, statusResponse, zaloAccountsResponse] =
-    await Promise.all([
-      getCurrentUser(),
-      Data_Label(),
-      Data_Status(),
-      getZaloAccounts(),
-    ]);
+  const currentUser = await getCurrentUser();
 
-  // ** MODIFIED: Truyền thẳng searchParams, không truy cập trực tiếp
-  // Tạo một bản sao để có thể thêm thuộc tính zaloActive
-  const finalSearchParams = await { ...searchParams };
+  // Await searchParams để lấy giá trị
+  const params = await searchParams;
 
-  if (userData?.zaloActive?._id) {
-    finalSearchParams.zaloActive = userData.zaloActive._id.toString();
-  }
+  // Gán giá trị từ params vào filters
+  const filters = {
+    page: params.page,
+    limit: params.limit,
+    query: params.query,
+    tags: params.tags,
+    programId: params.program,
+    stageId: params.stageId,
+    statusId: params.statusId,
+    uidStatus: params.uidStatus,
+    uidFilterZaloId: params.uidFilterZaloId,
+  };
 
-  const clientResponse = await Data_Client(finalSearchParams);
+  const [clientResponse, tags, zaloAccounts, carePrograms] = await Promise.all([
+    getClientes(filters, currentUser),
+    getTagsForFilter(),
+    getZaloAccountsForFilter(currentUser),
+    getCareProgramsForFilter(currentUser),
+  ]);
 
   return (
     <ClientPage
       initialData={clientResponse.data}
       initialPagination={clientResponse.pagination}
-      initialLabels={labelResponse.data}
-      initialStatuses={statusResponse.data}
-      user={userData}
-      initialZaloAccounts={zaloAccountsResponse.data}
+      user={currentUser}
+      allTags={tags}
+      initialZaloAccounts={zaloAccounts}
+      carePrograms={carePrograms}
     />
   );
 }

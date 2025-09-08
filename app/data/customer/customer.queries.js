@@ -10,16 +10,18 @@ import { Types } from "mongoose";
 
 /**
  * Lấy danh sách khách hàng nâng cao, hỗ trợ nhiều bộ lọc phức tạp và join dữ liệu.
- * @param {object} searchParams - Các tham số lọc từ client.
+ * @param {object} filters - Các tham số lọc từ client (thay thế cho searchParams).
  * @param {object} currentUser - Thông tin người dùng đang đăng nhập (từ session).
  * @returns {Promise<object>} - Dữ liệu khách hàng và thông tin phân trang.
  */
-export async function getClientes(searchParams = {}, currentUser = null) {
+// [MOD] Thay đổi chữ ký hàm để nhận 'filters' object
+export async function getClientes(filters = {}, currentUser = null) {
   try {
     await connectDB();
 
-    const page = parseInt(searchParams.page) || 1;
-    const limit = parseInt(searchParams.limit) || 50;
+    // [MOD] Đọc giá trị từ object 'filters' thay vì 'searchParams'
+    const page = parseInt(filters.page) || 1;
+    const limit = parseInt(filters.limit) || 50;
     const skip = (page - 1) * limit;
 
     // --- Xây dựng bộ lọc $match mạnh mẽ ---
@@ -28,16 +30,12 @@ export async function getClientes(searchParams = {}, currentUser = null) {
     // 1. Phân quyền: Lọc theo user được gán
     if (currentUser && currentUser.role !== "Admin") {
       matchStage.users = new Types.ObjectId(currentUser.id);
-    } else if (
-      searchParams.userId &&
-      Types.ObjectId.isValid(searchParams.userId)
-    ) {
-      matchStage.users = new Types.ObjectId(searchParams.userId);
+    } else if (filters.userId && Types.ObjectId.isValid(filters.userId)) {
+      matchStage.users = new Types.ObjectId(filters.userId);
     }
 
-    // 2. Tìm kiếm cơ bản (name, phone, citizenId)
-    if (searchParams.query) {
-      const searchRegex = new RegExp(searchParams.query, "i");
+    if (filters.query) {
+      const searchRegex = new RegExp(filters.query, "i");
       matchStage.$or = [
         { name: searchRegex },
         { phone: searchRegex },
@@ -45,9 +43,8 @@ export async function getClientes(searchParams = {}, currentUser = null) {
       ];
     }
 
-    // 3. Lọc theo Tags
-    if (searchParams.tags) {
-      const tagIds = searchParams.tags
+    if (filters.tags) {
+      const tagIds = filters.tags
         .split(",")
         .map((id) => new Types.ObjectId(id));
       if (tagIds.length > 0) {
@@ -55,22 +52,15 @@ export async function getClientes(searchParams = {}, currentUser = null) {
       }
     }
 
-    // 4. Lọc theo Chương trình, Giai đoạn, Trạng thái
     const enrollmentFilters = {};
-    if (
-      searchParams.programId &&
-      Types.ObjectId.isValid(searchParams.programId)
-    ) {
-      enrollmentFilters.programId = new Types.ObjectId(searchParams.programId);
+    if (filters.programId && Types.ObjectId.isValid(filters.programId)) {
+      enrollmentFilters.programId = new Types.ObjectId(filters.programId);
     }
-    if (searchParams.stageId && Types.ObjectId.isValid(searchParams.stageId)) {
-      enrollmentFilters.stageId = new Types.ObjectId(searchParams.stageId);
+    if (filters.stageId && Types.ObjectId.isValid(filters.stageId)) {
+      enrollmentFilters.stageId = new Types.ObjectId(filters.stageId);
     }
-    if (
-      searchParams.statusId &&
-      Types.ObjectId.isValid(searchParams.statusId)
-    ) {
-      enrollmentFilters.statusId = new Types.ObjectId(searchParams.statusId);
+    if (filters.statusId && Types.ObjectId.isValid(filters.statusId)) {
+      enrollmentFilters.statusId = new Types.ObjectId(filters.statusId);
     }
     if (Object.keys(enrollmentFilters).length > 0) {
       matchStage.programEnrollments = { $elemMatch: enrollmentFilters };
@@ -78,12 +68,12 @@ export async function getClientes(searchParams = {}, currentUser = null) {
 
     // 5. Lọc theo UID và Zalo Account
     if (
-      searchParams.uidStatus &&
-      searchParams.uidFilterZaloId &&
-      Types.ObjectId.isValid(searchParams.uidFilterZaloId)
+      filters.uidStatus &&
+      filters.uidFilterZaloId &&
+      Types.ObjectId.isValid(filters.uidFilterZaloId)
     ) {
-      const zaloId = new Types.ObjectId(searchParams.uidFilterZaloId);
-      switch (searchParams.uidStatus) {
+      const zaloId = new Types.ObjectId(filters.uidFilterZaloId);
+      switch (filters.uidStatus) {
         case "found":
           matchStage.uid = { $elemMatch: { zaloId, uid: { $regex: /^\d+$/ } } };
           break;
@@ -194,7 +184,7 @@ export async function getClientes(searchParams = {}, currentUser = null) {
         page,
         limit,
         total: totalClients,
-        totalPages: Math.ceil(totalClients / limit),
+        totalPages: Math.ceil(totalClients / limit) || 1,
       },
     };
   } catch (error) {

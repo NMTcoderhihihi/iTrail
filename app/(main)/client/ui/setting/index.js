@@ -9,8 +9,8 @@ import styles from "./index.module.css";
 import { usePanels } from "@/contexts/PanelContext";
 import {
   setActiveZalo,
-  getAvailableZaloAccounts,
-} from "@/app/actions/zaloActions";
+  getZaloAccountsForFilter as getAvailableZaloAccounts, // [NOTE] Dùng hàm mới
+} from "@/app/data/zalo/zalo.action";
 import Noti from "@/components/(features)/(noti)/noti";
 import Loading from "@/components/(ui)/(loading)/loading";
 

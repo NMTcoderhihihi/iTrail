@@ -9,11 +9,8 @@ import React, {
   useRef,
 } from "react";
 import { usePanels } from "@/contexts/PanelContext";
-import {
-  getUsersWithDetails,
-  createUser,
-  deleteUser,
-} from "@/app/actions/userActions";
+import { getUsersWithDetails } from "@/app/data/user/user.queries";
+import { createUser, deleteUser } from "@/app/data/user/user.actions";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import PaginationControls from "../shared/PaginationControls";
 import DataTable from "../datatable/DataTable";

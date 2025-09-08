@@ -7,8 +7,8 @@ import {
   getZaloAccountDetails,
   updateZaloAccountDetails,
   createOrUpdateAccountByToken,
-  getZaloTokenByUid, // ++ ADDED
-} from "@/app/actions/zaloAccountActions";
+  getTokenFromSheetByUid as getZaloTokenByUid,
+} from "@/app/data/zalo/zalo.action";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import ZaloDisplay from "../shared/ZaloDisplay";
 import UserDisplay from "../shared/UserDisplay";

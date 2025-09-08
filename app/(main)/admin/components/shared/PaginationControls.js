@@ -16,7 +16,7 @@ export default function PaginationControls({ pagination, onPageChange }) {
   const handleGoToPage = (e) => {
     if (e.key === "Enter") {
       const pageNum = parseInt(pageInput, 10);
-      if (pageNum >= 1 && pageNum <= pagination.totalPages) {
+      if (pageNum >= 1 && pageNum <= (pagination?.totalPages || 1)) {
         onPageChange(pageNum, pagination.limit);
       } else {
         setPageInput(pagination.page);
@@ -28,17 +28,24 @@ export default function PaginationControls({ pagination, onPageChange }) {
     if (e.key === "Enter") {
       const newLimit = parseInt(e.target.value, 10);
       if (newLimit > 0) {
-        onPageChange(1, newLimit); // Reset về trang 1 khi đổi limit
+        onPageChange(1, newLimit);
       } else {
-        // ** MODIFIED: Cập nhật lại state cục bộ nếu giá trị không hợp lệ
-        setLimitInput(pagination.limit);
+        setLimitInput(pagination.limit || 10);
       }
     }
   };
 
   const currentPage = pagination?.page || 1;
-  const totalPages = pagination?.totalPages || 1;
   const totalItems = pagination?.total || 0;
+
+  // [MOD] Thêm logic kiểm tra an toàn để tránh NaN
+  const calculatedTotalPages = Math.ceil(
+    totalItems / (pagination?.limit || 10),
+  );
+  const totalPages =
+    isNaN(calculatedTotalPages) || calculatedTotalPages < 1
+      ? 1
+      : calculatedTotalPages;
 
   return (
     <div className={styles.pagination}>

@@ -1,10 +1,7 @@
-/* components/(layout)/nav/index.module.css (Đã tinh chỉnh) */
-
 .navContainer {
   display: flex;
   flex-direction: column;
   height: 100%;
-  /* Bảng màu mới: Xanh navy đậm, hiện đại hơn */
   background-color: #0d1b2a;
   padding: 16px;
   box-sizing: border-box;
@@ -13,90 +10,133 @@
 .logoSection {
   margin-bottom: 24px;
   padding: 0 8px;
+  display: flex; /* [ADD] */
+  justify-content: space-between; /* [ADD] */
+  align-items: center; /* [ADD] */
+  min-height: 40px; /* [ADD] Đảm bảo chiều cao không đổi */
 }
 
 .logoText {
   font-size: 28px;
   font-weight: 700;
-  /* Màu logo trắng để nổi bật trên nền đậm */
   color: #ffffff;
 }
 
 .menuSection {
   flex-grow: 1;
-  position: relative;
 }
 
-/* Hiệu ứng highlight mới: Nền xám mờ tinh tế */
-.highlight {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 56px;
-  /* Nền highlight mới: trong suốt nhẹ, tạo chiều sâu */
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 10px; /* Bo tròn nhiều hơn */
-  z-index: 1;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* [DEL] Bỏ hiệu ứng highlight cũ
+.highlight { ... }
+*/
+
+/* [ADD] Container cho mỗi mục menu cha */
+.navItemContainer {
+  margin-bottom: 4px;
 }
 
 .navItem {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 0 16px;
+  padding: 0; /* [MOD] Xóa padding ở đây */
   height: 56px;
   border-radius: 10px;
   cursor: pointer;
   text-decoration: none;
-  /* Màu chữ mặc định: Xám nhạt, dễ đọc trên nền tối */
   color: #a0aec0;
   position: relative;
   z-index: 2;
-  transition: color 0.3s ease;
+  transition: color 0.3s ease, background-color 0.3s ease;
 }
 
 .navItem:hover {
-  /* Khi hover, chữ chuyển sang màu trắng sáng */
   color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Trạng thái active mới: Chữ trắng sáng và đậm */
-.navItem.active {
+/* [MOD] Trạng thái active cho menu cha VÀ con */
+.navItem.active,
+.subNavItem.active {
   color: #ffffff;
   font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* [ADD] Style riêng cho menu cha khi con của nó active */
+.navItemContainer.activeParent > .navItem {
+  color: #ffffff;
 }
 
 .navLabel {
+  /* [ADD] Đảm bảo label chiếm hết không gian thừa */
+  flex-grow: 1;
   font-size: 15px;
 }
 
+/* [ADD] CSS cho Submenu */
+.subMenu {
+  padding-left: 28px; /* Thụt vào so với icon menu cha */
+  margin: 4px 0 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.subNavItem {
+  padding: 10px 16px;
+  font-size: 14px;
+  color: #a0aec0;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.subNavItem:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* [ADD] CSS cho icon Chevron */
+.chevron {
+  transition: transform 0.3s ease-in-out;
+  color: #a0aec0;
+}
+.chevronExpanded {
+  transform: rotate(90deg);
+}
+
+/* --- User Section (không đổi) --- */
 .userSection {
-  /* Viền ngăn cách màu xám mờ */
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-
 .userInfo {
   display: flex;
   flex-direction: column;
 }
-
 .userName {
   font-weight: 600;
-  /* Tên người dùng màu trắng */
   color: #ffffff;
 }
-
 .userRole {
   font-size: 13px;
-  /* Vai trò màu vàng cam nổi bật */
   color: #f59e0b;
 }
-
 .logoutButton {
   display: flex;
   align-items: center;
@@ -105,15 +145,78 @@
   height: 40px;
   border-radius: 50%;
   border: none;
-  /* Nền nút logout xám đậm hơn */
   background-color: rgba(255, 255, 255, 0.1);
-  /* Icon màu xám nhạt */
   color: #a0aec0;
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .logoutButton:hover {
   background-color: #fee2e2;
-  color: #ef4444; /* Chuyển màu đỏ đậm khi hover */
+  color: #ef4444;
+}
+
+.navLinkContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-grow: 1; /* Đảm bảo thẻ Link chiếm hết không gian */
+  text-decoration: none;
+  color: inherit; /* Thừa hưởng màu từ thẻ cha */
+}
+
+.navItem .navLinkContent {
+  padding: 0 16px; /* [ADD] Chuyển padding vào đây */
+  height: 100%;
+}
+
+.collapseButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px; /* [MOD] Đổi sang bo góc vuông */
+  width: 32px;
+  height: 32px;
+  color: #a0aec0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, background-color 0.2s ease;
+}
+.collapseButton:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* [MOD] Xóa transform rotate ở đây, chuyển nó vào icon bên trong */
+
+/* [ADD] Thêm style cho icon bên trong nút collapse */
+.collapseButton svg {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* [MOD] Sửa lại logic ẩn hiện khi thu gọn */
+.navContainer.collapsed .logoText,
+.navContainer.collapsed .navLabel,
+.navContainer.collapsed .chevron {
+  display: none;
+}
+.navContainer.collapsed .logoSection {
+  justify-content: center;
+}
+/* [MOD] Icon sẽ xoay 180 độ khi thu gọn */
+.navContainer.collapsed .collapseButton svg {
+  transform: rotate(180deg);
+}
+.navContainer.collapsed .navLabel,
+.navContainer.collapsed .chevron {
+  display: none;
+}
+.navContainer.collapsed .navItem {
+  justify-content: center;
+}
+.navContainer.collapsed .subMenu {
+  display: none;
+}
+.navContainer.collapsed .userSection {
+  justify-content: center;
 }
