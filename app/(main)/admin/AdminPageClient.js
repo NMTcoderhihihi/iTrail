@@ -12,8 +12,14 @@ import AssignFromSheet from "./components/AssignFromSheet";
 import VariantManagement from "./components/VariantManagement";
 import StatusManagement from "./components/StatusManagement";
 import UserManagement from "./components/UserManagement";
-// [MOD] Bỏ useRouter, usePathname vì Nav đã xử lý
+// [ADD] Import component mới
+import CareProgramManagement from "./components/CareProgramManagement";
+// [ADD] Import component mới
+import DataSourceManagement from "./components/DataSourceManagement";
+import FieldDefinitionManagement from "./components/FieldDefinitionManagement";
 import { useSearchParams } from "next/navigation";
+import TagManagement from "./components/TagManagement";
+import ReportManagement from "./components/ReportManagement";
 
 export default function AdminPageClient() {
   const searchParams = useSearchParams();
@@ -26,6 +32,17 @@ export default function AdminPageClient() {
   const renderActiveComponent = () => {
     // ... (logic switch/case không thay đổi)
     switch (activeTab) {
+      // [ADD] Thêm case mới
+      case "reports":
+        return <ReportManagement />;
+      case "tags":
+        return <TagManagement />;
+      case "fields":
+        return <FieldDefinitionManagement />;
+      case "datasources":
+        return <DataSourceManagement />;
+      case "programs":
+        return <CareProgramManagement />;
       case "labels":
         return <CampaignLabels />;
       case "variants":

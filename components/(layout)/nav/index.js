@@ -43,7 +43,13 @@ const NavItem = ({ item, isActive, isExpanded, onToggle }) => (
       className={`${styles.navItem} ${isActive ? styles.active : ""}`}
       onClick={item.subItems ? onToggle : undefined}
     >
-      <Link href={item.href} className={styles.navLinkContent}>
+      <Link
+        href={item.href}
+        className={styles.navLinkContent}
+        title={item.label}
+      >
+        {" "}
+        {/* [ADD] Thêm title */}
         <item.icon w={20} h={20} c={"currentColor"} />
         <span className={styles.navLabel}>{item.label}</span>
       </Link>
@@ -57,6 +63,7 @@ const SubNavItem = ({ item, isActive }) => (
   <Link
     href={item.href}
     className={`${styles.subNavItem} ${isActive ? styles.active : ""}`}
+    title={item.label} // [ADD] Thêm title cho tooltip
   >
     {item.label}
   </Link>
@@ -103,6 +110,11 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
     const adminSubItems = [
       { key: "labels", label: "🏷️ Nhãn & Mẫu tin" },
       { key: "variants", label: "🎨 Quản lý Biến thể" },
+      { key: "programs", label: "📋 Chương trình CS" },
+      { key: "fields", label: "📝 Trường dữ liệu" },
+      { key: "datasources", label: "🔌 Nguồn dữ liệu" },
+      { key: "tags", label: "🏷️ Quản lý Tag" },
+      { key: "reports", label: "📈 Quản lý Báo cáo" },
       { key: "statuses", label: "📊 Quản lý Trạng thái" },
       { key: "running", label: "🚀 Đang chạy" },
       { key: "archived", label: "🗂️ Lịch sử" },
@@ -117,7 +129,7 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
     return [
       {
         key: "care",
-        href: "/", // Link mặc định khi click vào menu cha
+        href: "/",
         icon: Svg_Student,
         label: "Chăm sóc",
         roles: ["Admin", "Employee"],
@@ -126,7 +138,7 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
       },
       {
         key: "admin",
-        href: "/admin?tab=running", // Link mặc định khi click vào menu cha
+        href: "/admin?tab=running",
         icon: Svg_Admin,
         label: "Admin",
         roles: ["Admin"],
@@ -177,7 +189,7 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
         </button>
       </div>
 
-      <div className={styles.menuSection}>
+      <div className={`${styles.menuSection} ${styles.customScroll}`}>
         {accessibleNavItems.map((item) => (
           <div key={item.key}>
             <NavItem

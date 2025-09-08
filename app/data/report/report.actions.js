@@ -7,6 +7,7 @@ import KpiResult from "@/models/kpiResult";
 import { executeDataSource } from "../dataSource/dataSource.service";
 import { revalidateAndBroadcast } from "@/lib/revalidation";
 import { getCurrentUser } from "@/lib/session";
+import { Types } from "mongoose";
 
 /**
  * Tạo mới hoặc cập nhật một layout báo cáo.
@@ -57,37 +58,56 @@ export async function executeReport({ layoutId, params }) {
 
     for (const widget of layout.widgets) {
       const widgetDataSources = widget.dataSources || [];
-      const dataSourcePromises = widgetDataSources.map((dsConfig) =>
+      const uniqueDataSourceIds = [
+        ...new Set(widgetDataSources.map((ds) => ds.dataSourceId.toString())),
+      ];
+
+      const dataSourcePromises = uniqueDataSourceIds.map((id) =>
         executeDataSource({
-          dataSourceId: dsConfig.dataSourceId,
-          params: { ...params, ...dsConfig.inputParams },
+          dataSourceId: id,
+          params: { ...params }, // Thêm các params động nếu cần
         }),
       );
 
       const results = await Promise.all(dataSourcePromises);
 
+      const resultsByDataSourceId = uniqueDataSourceIds.reduce(
+        (acc, id, index) => {
+          acc[id] = results[index];
+          return acc;
+        },
+        {},
+      );
+
       const mappedData = {};
       for (const mapping of widget.dataMapping) {
         const sourceInfo = mapping.source;
-        const dataSourceResult = results.find(
-          (r, i) =>
-            widgetDataSources[i].dataSourceId.toString() ===
-            sourceInfo.dataSourceId.toString(),
-        );
+        const dataSourceResult =
+          resultsByDataSourceId[sourceInfo.dataSourceId.toString()];
 
         if (dataSourceResult && !dataSourceResult.error) {
-          // Giả sử kết quả là một mảng, ta sẽ map qua nó
-          if (Array.isArray(dataSourceResult)) {
+          if (sourceInfo.fieldName === "result") {
+            // Trường hợp đặc biệt: lấy toàn bộ kết quả
+            mappedData[mapping.widgetParam] = dataSourceResult;
+          } else if (Array.isArray(dataSourceResult)) {
+            // Lấy một trường cụ thể từ mỗi item trong mảng kết quả
             mappedData[mapping.widgetParam] = dataSourceResult.map(
               (item) => item[sourceInfo.fieldName],
             );
-          } else {
+          } else if (
+            typeof dataSourceResult === "object" &&
+            dataSourceResult !== null
+          ) {
+            // Lấy một trường từ một kết quả object duy nhất
             mappedData[mapping.widgetParam] =
               dataSourceResult[sourceInfo.fieldName];
           }
+        } else {
+          mappedData[mapping.widgetParam] = null; // Hoặc giá trị mặc định
         }
       }
-      reportData[widget._id] = mappedData;
+      // Gán dữ liệu đã map cho widget. Vì chỉ có 1 widget nên ta gán thẳng vào reportData
+      Object.assign(reportData, mappedData);
     }
     return { success: true, data: reportData };
   } catch (error) {

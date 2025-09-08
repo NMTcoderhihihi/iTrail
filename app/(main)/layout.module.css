@@ -5,21 +5,22 @@
   overflow: hidden;
 }
 .nav {
-  width: 200px;
+  /* [MOD] Tăng chiều rộng từ 200px lên 250px */
+  width: 250px;
   flex-shrink: 0;
-  transition: width 0.3s ease-in-out; /* [ADD] Hiệu ứng co giãn */
+  transition: width 0.3s ease-in-out;
 }
 
 /* [ADD] Style cho Nav khi thu gọn */
 .nav.navCollapsed {
-  width: 80px; /* Chiều rộng khi thu gọn */
+  width: 80px;
 }
 
 .main {
   flex-grow: 1;
   overflow-y: auto;
   background-color: #f8fafc;
-  transition: width 0.3s ease-in-out; /* [ADD] Thêm hiệu ứng */
+  transition: width 0.3s ease-in-out;
 }
 
 /* [ADD] Style cho nội dung chính khi Nav thu gọn (không bắt buộc nhưng để cho mượt) */

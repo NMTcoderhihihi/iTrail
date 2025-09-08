@@ -14,6 +14,8 @@ const Row = React.memo(
     onRowClick,
     isSelected,
     onToggleSelect,
+    // [ADD] Thêm prop index
+    index,
   }) => (
     <div
       className={`${styles.gridRow} ${isSelected ? styles.activeRow : ""}`}
@@ -31,7 +33,8 @@ const Row = React.memo(
       {/* Data cells */}
       {columns.slice(1).map((col) => (
         <div key={col.key} className={styles.cell}>
-          {col.render(customer, zaloAccounts)}
+          {/* [MOD] Truyền index vào hàm render */}
+          {col.render(customer, zaloAccounts, index)}
         </div>
       ))}
     </div>

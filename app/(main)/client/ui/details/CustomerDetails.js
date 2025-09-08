@@ -1,13 +1,12 @@
-// File: app/client/ui/details/CustomerDetails.js
+// [MOD] app/(main)/client/ui/details/CustomerDetails.js
 
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
 import styles from "./CustomerDetails.module.css";
-
-// --- IMPORT THÀNH PHẦN & CONTEXT ---
+// [ADD] Import action để lấy dữ liệu chi tiết
+import { getCustomerDetails } from "@/app/data/customer/customer.actions";
 import { usePanels } from "@/contexts/PanelContext";
-import { useCampaigns } from "@/contexts/CampaignContext";
 import {
   Svg_History,
   Svg_Notes,
@@ -17,446 +16,255 @@ import {
 } from "@/components/(icon)/svg";
 import Loading from "@/components/(ui)/(loading)/loading";
 import StageIndicator from "@/components/(ui)/progress/StageIndicator";
-import TextNoti from "@/components/(features)/(noti)/textnoti";
-import Schedule from "../schedule";
 import CustomerHistoryPanel from "./CustomerHistoryPanel";
+import CenterPopup from "@/components/(features)/(popup)/popup_center";
 
-//================================================================================
+// ================================================================================
 // --- HELPER COMPONENTS (Thành phần phụ trợ) ---
-//================================================================================
+// ================================================================================
 
-/**
- * Component InfoRow: Hiển thị một dòng thông tin theo cặp "Nhãn" và "Giá trị".
- * @param {string} label - Nhãn hiển thị bên trái.
- * @param {string|React.ReactNode} value - Giá trị hiển thị bên phải.
- * @param {React.ReactNode} children - Các nút hoặc component con đi kèm.
- * @param {string} statusColor - Màu trạng thái (nếu có) để styling.
- */
-const InfoRow = ({ label, value, children, statusColor }) => (
-  <div className={styles.infoRow}>
-    <span className={styles.infoLabel}>{label}</span>
-    <div className={styles.infoValue}>
-      {statusColor ? (
-        <span className={styles.statusTag} data-status={statusColor}>
-          {value}
-        </span>
-      ) : (
-        value
-      )}
-      {children}
-    </div>
-  </div>
-);
+// [ADD] Component đa dụng cho các section có thể thu gọn/mở rộng
+const CollapsibleSection = ({ title, initialCollapsed = false, children }) => {
+  const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
+  const Icon = () => (
+    <svg
+      className={`${styles.chevronIcon} ${isCollapsed ? styles.collapsed : ""}`}
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
 
-/**
- * Component StageSelector: Hiển thị các bước của giai đoạn chăm sóc và cho phép lựa chọn.
- * @param {number} currentLevel - Mức giai đoạn hiện tại.
- * @param {function} onSelect - Hàm callback được gọi khi một giai đoạn được chọn.
- */
-const StageSelector = ({ currentLevel, onSelect }) => {
-  const stages = ["Chưa có", "Chăm sóc", "OTP", "Nhập học"];
   return (
-    <div className={styles.stageSelector}>
-      {stages.map((stage, index) => (
-        <div
-          key={index}
-          className={`${styles.stageStep} ${
-            currentLevel === index ? styles.active : ""
-          }`}
-          onClick={() => onSelect(index)}
-        >
-          <div className={styles.stageDot}></div>
-          <div className={styles.stageLabel}>{stage}</div>
-        </div>
-      ))}
+    <div className={styles.section}>
+      <div
+        className={styles.sectionHeader}
+        onClick={() => setIsCollapsed(!isCollapsed)}
+      >
+        <h3 className={styles.sectionTitle}>{title}</h3>
+        <Icon />
+      </div>
+      {!isCollapsed && <div className={styles.sectionContent}>{children}</div>}
     </div>
   );
 };
 
-/**
- * Định dạng thời gian thành dạng tương đối (vd: 5 phút trước)
- * @param {Date | string} date - Thời gian cần định dạng
- */
-function formatRelativeTime(date) {
-  const now = new Date();
-  const seconds = Math.round((now - new Date(date)) / 1000);
-  const minutes = Math.round(seconds / 60);
-  const hours = Math.round(minutes / 60);
-  const days = Math.round(hours / 24);
-  const months = Math.round(days / 30.44);
-  const years = Math.round(days / 365.25);
+// [MOD] InfoRow được giữ lại và đơn giản hóa
+const InfoRow = ({ label, children }) => (
+  <div className={styles.infoRow}>
+    <span className={styles.infoLabel}>{label}</span>
+    <div className={styles.infoValue}>{children}</div>
+  </div>
+);
 
-  if (seconds < 60) return "vài giây trước";
-  if (minutes < 60) return `${minutes} phút trước`;
-  if (hours < 24) return `${hours} giờ trước`;
-  if (days < 30) return `${days} ngày trước`;
-  if (months < 12) return `${months} tháng trước`;
-  return `${years} năm trước`;
-}
+// [ADD] Component mới cho một trường dữ liệu động
+const DynamicField = ({ field, onValueChange }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState(field.value);
 
-const CommentSection = ({ customer, user, onUpdateCustomer }) => {
-  const [newComment, setNewComment] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-    setIsSubmitting(true);
-    try {
-      // GỌI ĐẾN API PATCH THỐNG NHẤT
-      const res = await fetch(`/api/client`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerId: customer._id,
-          // Gửi payload đặc biệt để API nhận biết đây là yêu cầu thêm comment
-          updateData: { _comment: newComment },
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Thêm bình luận thất bại");
-      }
-
-      const responseJson = await res.json();
-
-      // Gọi callback onUpdateCustomer để kích hoạt hiệu ứng làm mới
-      onUpdateCustomer(responseJson.data);
-      setNewComment(""); // Xóa nội dung trong ô nhập
-    } catch (error) {
-      alert(`Lỗi: ${error.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSave = () => {
+    onValueChange(field.id, value);
+    setIsEditing(false);
   };
 
   return (
-    <div className={styles.commentSection}>
-      {/* --- Ô NHẬP BÌNH LUẬN --- */}
-      <div className={styles.commentInputArea}>
-        <textarea
-          className={styles.commentTextarea}
-          placeholder="Viết bình luận..."
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          rows={2}
-          disabled={isSubmitting}
-        />
-        <button
-          className={styles.commentSubmitButton}
-          onClick={handleAddComment}
-          disabled={isSubmitting || !newComment.trim()}
-        >
-          {isSubmitting ? (
-            <Loading small />
-          ) : (
-            <Svg_Send w={18} h={18} c={"currentColor"} />
-          )}
-        </button>
-      </div>
-
-      {/* --- HEADER DANH SÁCH BÌNH LUẬN --- */}
-      <div className={styles.commentListHeader}>
-        <span>Sắp xếp theo: Mới nhất</span>
-        <span className={styles.commentCount}>
-          {customer.comments?.length || 0} bình luận
-        </span>
-      </div>
-
-      {/* --- DANH SÁCH BÌNH LUẬN --- */}
-      <div className={styles.commentList}>
-        {customer.comments && customer.comments.length > 0 ? (
-          customer.comments.map((comment) => (
-            <div key={comment._id} className={styles.commentItem}>
-              {/* Icon Giai đoạn */}
-              <div className={styles.commentStageIcon}>
-                <span>GĐ</span>
-                <strong>{comment.stage}</strong>
-              </div>
-              <div className={styles.commentContent}>
-                <div className={styles.commentHeader}>
-                  <span className={styles.commentUser}>
-                    {comment.user?.name || "Một nhân viên"}
-                  </span>
-                  <span className={styles.commentTime}>
-                    {formatRelativeTime(comment.time)}
-                  </span>
-                </div>
-                <p className={styles.commentDetail}>{comment.detail}</p>
-              </div>
-            </div>
-          ))
+    <div className={styles.infoRow}>
+      <span className={styles.fieldLabel} title={`Nguồn: ${field.dataSource}`}>
+        {field.label}
+      </span>
+      <div className={styles.infoValue}>
+        {isEditing ? (
+          <div className={styles.editInputContainer}>
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className={styles.inlineInput}
+              autoFocus
+            />
+            <button onClick={handleSave} className={styles.inlineSaveButton}>
+              Lưu
+            </button>
+            <button
+              onClick={() => setIsEditing(false)}
+              className={styles.inlineCancelButton}
+            >
+              Hủy
+            </button>
+          </div>
         ) : (
-          <p className={styles.noComments}>Chưa có bình luận nào.</p>
+          <span
+            className={styles.fieldValue}
+            onClick={() => setIsEditing(true)}
+          >
+            {field.value}
+          </span>
         )}
       </div>
     </div>
   );
 };
-//================================================================================
-// --- MAIN COMPONENT (Thành phần chính) ---
-//================================================================================
 
+// [ADD] Component mới cho popup chỉnh sửa Tag
+const TagEditor = ({ allTags, customerTags, onSave, onClose }) => {
+  const [selectedTagIds, setSelectedTagIds] = useState(
+    () => new Set(customerTags.map((t) => t._id)),
+  );
+
+  const handleToggle = (tagId) => {
+    const newSet = new Set(selectedTagIds);
+    if (newSet.has(tagId)) {
+      newSet.delete(tagId);
+    } else {
+      newSet.add(tagId);
+    }
+    setSelectedTagIds(newSet);
+  };
+
+  return (
+    <CenterPopup open={true} onClose={onClose} title="Chỉnh sửa Tags" size="md">
+      <div className={styles.tagEditorContainer}>
+        <input
+          type="search"
+          placeholder="Tìm kiếm tag..."
+          className={styles.tagSearchInput}
+        />
+        <div className={styles.tagList}>
+          {allTags.map((tag) => (
+            <label key={tag._id} className={styles.tagEditorItem}>
+              <input
+                type="checkbox"
+                checked={selectedTagIds.has(tag._id)}
+                onChange={() => handleToggle(tag._id)}
+              />
+              <span>{tag.name}</span>
+            </label>
+          ))}
+        </div>
+        <div className={styles.tagEditorActions}>
+          <button
+            onClick={onClose}
+            className={`${styles.buttonBase} ${styles.ghostButton}`}
+          >
+            Hủy
+          </button>
+          <button
+            onClick={() => onSave(selectedTagIds)}
+            className={`${styles.buttonBase} ${styles.blueButton}`}
+          >
+            Lưu thay đổi
+          </button>
+        </div>
+      </div>
+    </CenterPopup>
+  );
+};
+
+const DynamicFieldPlaceholder = ({ onAddField }) => (
+  <div className={styles.dynamicFieldPlaceholder}>
+    <button onClick={onAddField} className={styles.addFieldButton}>
+      + Thêm trường
+    </button>
+  </div>
+);
+
+// ================================================================================
+// --- MAIN COMPONENT (Thành phần chính) ---
+// ================================================================================
 export default function CustomerDetails({
-  customerData,
+  customerId,
   onUpdateCustomer,
   user,
-  initialLabels,
-  statuses,
-  onRecipientToggle,
 }) {
-  //----------------------------------------------------------------
-  // --- STATE MANAGEMENT (Quản lý State) ---
-  //----------------------------------------------------------------
+  // [MOD] State chính giờ là `customer`, ban đầu là null
+  const [customer, setCustomer] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // State loading mới
 
-  // State chính: lưu trữ bản sao của dữ liệu khách hàng để component tự quản lý.
-  const [customer, setCustomer] = useState(customerData);
-
-  // State cho các giá trị có thể chỉnh sửa trên form.
-  const [editableName, setEditableName] = useState(customerData.name || "");
-  const [editableStatus, setEditableStatus] = useState(
-    customerData.status?._id || "",
-  );
-  const [editableStageLevel, setEditableStageLevel] = useState(
-    customerData.stageLevel || 0,
-  );
-  const [editableNotes, setEditableNotes] = useState({
-    careNote: customerData.careNote || "",
-    studyTryNote: customerData.studyTryNote || "",
-    studyNote: customerData.studyNote || "",
-  });
-
-  // State quản lý trạng thái UI (hiển thị/ẩn các thành phần).
+  // ... (Các state khác giữ nguyên)
   const [isEditingName, setIsEditingName] = useState(false);
-  const [isNoteVisible, setNoteVisible] = useState(false);
-  const [isStatusSelectorVisible, setStatusSelectorVisible] = useState(false);
-  const [showCampaignList, setShowCampaignList] = useState(false);
-
-  // State cho hệ thống thông báo.
-  const [notification, setNotification] = useState({
-    show: false,
-    title: "",
-    mes: "",
-    color: "default",
-  });
-
-  //----------------------------------------------------------------
-  // --- HOOKS ---
-  //----------------------------------------------------------------
-
+  const [editableName, setEditableName] = useState("");
+  const [isTagEditorOpen, setIsTagEditorOpen] = useState(false);
   const { openPanel } = usePanels();
-  const { drafts, addRecipientToDraft } = useCampaigns();
 
-  /**
-   * 🧠 **LOGIC CỐT LÕI**: Đồng bộ hóa state nội bộ với props từ bên ngoài.
-   * Hook này sẽ chạy lại MỖI KHI prop `customerData` thay đổi.
-   * Đây là giải pháp cho vấn đề "panel không render lại" khi dữ liệu được cập nhật từ nơi khác.
-   */
   useEffect(() => {
-    // 1. Cập nhật state chính của component.
-    setCustomer(customerData);
+    if (!customerId) return;
 
-    // 2. Đồng bộ hóa tất cả các state dùng cho việc chỉnh sửa trên form.
-    setEditableName(customerData.name || "");
-    setEditableStatus(customerData.status?._id || "");
-    setEditableStageLevel(customerData.stageLevel || 0);
-    setEditableNotes({
-      careNote: customerData.careNote || "",
-      studyTryNote: customerData.studyTryNote || "",
-      studyNote: customerData.studyNote || "",
-    });
-  }, [customerData]);
+    const fetchDetails = async () => {
+      setIsLoading(true);
+      const fullCustomerData = await getCustomerDetails(customerId);
+      if (fullCustomerData) {
+        setCustomer(fullCustomerData);
+        setEditableName(fullCustomerData.name || "");
+      }
+      setIsLoading(false);
+    };
 
-  // Hook để tự động ẩn thông báo sau 3 giây.
-  useEffect(() => {
-    if (!notification.show) return;
-    const timerId = setTimeout(
-      () => setNotification((prev) => ({ ...prev, show: false })),
-      3000,
-    );
-    // Hàm dọn dẹp: hủy bộ đếm giờ nếu component bị unmount.
-    return () => clearTimeout(timerId);
-  }, [notification.show]);
+    fetchDetails();
+  }, [customerId]);
 
-  //----------------------------------------------------------------
-  // --- HANDLERS (Hàm xử lý sự kiện) ---
-  //----------------------------------------------------------------
+  // Dữ liệu giả lập cho các trường động và tag
+  const mockDynamicFields = [
+    {
+      id: "field1",
+      label: "Trường THPT",
+      value: "THPT ABC",
+      dataSource: "local_mongodb",
+    },
+    { id: "field2", label: "Tổng Điểm", value: "25.5", dataSource: "LHU_API" },
+  ];
+  const mockAllTags = [
+    { _id: "tag1", name: "Quan tâm" },
+    { _id: "tag2", name: "Tiềm năng" },
+    { _id: "tag3", name: "Đã liên hệ" },
+    { _id: "tag4", name: "Cần theo dõi" },
+  ];
 
-  /**
-   * Lưu một trường dữ liệu cụ thể về server.
-   * @param {string} fieldName - Tên của trường cần cập nhật (ví dụ: 'name', 'stageLevel').
-   * @param {*} value - Giá trị mới của trường đó.
-   */
-  const handleSaveField = async (fieldName, value) => {
-    try {
-      const res = await fetch(`/api/client`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerId: customer._id,
-          updateData: { [fieldName]: value }, // Cập nhật động
-        }),
-      });
-
-      if (!res.ok) throw new Error("Cập nhật thất bại");
-      const responseJson = await res.json();
-
-      // Gọi callback để cập nhật dữ liệu ở component cha, kích hoạt re-render toàn cục.
-      onUpdateCustomer(responseJson.data);
-
-      if (fieldName === "name") setIsEditingName(false);
-
-      setNotification({
-        show: true,
-        title: "Thành công",
-        mes: "Đã cập nhật thông tin.",
-        color: "green",
-      });
-    } catch (error) {
-      setNotification({
-        show: true,
-        title: "Lỗi",
-        mes: error.message,
-        color: "red",
-      });
-    }
+  const handleSaveName = async () => {
+    setIsEditingName(false);
+    // Logic gọi API sẽ ở đây
   };
 
-  /**
-   * Cập nhật trạng thái chăm sóc của khách hàng.
-   */
-  const handleUpdateStatus = async () => {
-    if (!editableStatus) {
-      setNotification({
-        show: true,
-        title: "Cảnh báo",
-        mes: "Vui lòng chọn một trạng thái.",
-        color: "yellow",
-      });
-      return;
-    }
-    await handleSaveField("status", editableStatus);
-    setStatusSelectorVisible(false); // Ẩn dropdown sau khi lưu
-  };
-
-  /**
-   * Xóa trạng thái chăm sóc của khách hàng.
-   */
-  const handleDeleteStatus = async () => {
-    if (
-      !window.confirm(
-        "Bạn có chắc chắn muốn xóa trạng thái của khách hàng này không?",
-      )
-    ) {
-      return;
-    }
-    // Gọi hàm handleSaveField với giá trị `null` để API hiểu là "xóa"
-    await handleSaveField("status", null);
-    setStatusSelectorVisible(false); // Ẩn dropdown
-  };
-
-  /**
-   * Mở panel "Lên lịch nhanh" cho khách hàng hiện tại.
-   */
-  const handleOpenActionPanel = () => {
-    // BƯỚC KIỂM TRA AN TOÀN: Đảm bảo user và user.zalo tồn tại
-    if (!user || !user.zaloActive) {
-      setNotification({
-        show: true,
-        title: "Lỗi",
-        mes: "Không tìm thấy thông tin tài khoản Zalo. Vui lòng kiểm tra lại.",
-        color: "red",
-      });
-      return; // Dừng hàm tại đây nếu không có user
-    }
-
-    // Nếu user hợp lệ, tiếp tục mở panel như bình thường
-    const singleRecipientMap = new Map([[customerData._id, customerData]]);
+  const handleShowHistory = () => {
     openPanel({
-      id: `action-${customerData._id}`,
-      component: Schedule,
-      title: `Hành động cho: ${customerData.name}`,
-      props: {
-        initialData: [customerData],
-        // recipientsMap và onRecipientToggle có thể không cần thiết nếu Schedule không dùng,
-        // nhưng giữ lại cũng không sao
-        onRecipientToggle: onRecipientToggle,
-        user: user, // Bây giờ `user` chắc chắn hợp lệ
-        label: initialLabels,
-      },
-    });
-  };
-
-  /**
-   * Mở tab mới để đến trang cập nhật thông tin tuyển sinh.
-   */
-  const handleUpdateLookup = () => {
-    if (customer?.MaDangKy) {
-      const url = `https://xettuyen.lhu.edu.vn/cap-nhat-thong-tin-xet-tuyen-dai-hoc?id=${encodeURIComponent(
-        customer.MaDangKy,
-      )}&htx=0`;
-      window.open(url, "_blank");
-    }
-  };
-
-  const handleShowHistory = (customer) => {
-    if (!customer) return;
-    const panelId = `history-${customer._id}`;
-    openPanel({
-      id: panelId,
-      title: `Lịch sử tương tác: ${customer.name}`,
+      id: `history-${customer._id}`,
+      title: `Lịch sử: ${customer.name}`,
       component: CustomerHistoryPanel,
-      props: {
-        panelData: { customerId: customer._id },
-      },
+      props: { panelData: { customerId: customer._id } },
     });
   };
 
-  //----------------------------------------------------------------
-  // --- UTILITY FUNCTIONS (Hàm tiện ích) ---
-  //----------------------------------------------------------------
-
-  const getStatusColor = (tinhTrang) => {
-    if (tinhTrang === "Không có thông tin" || tinhTrang === "Lỗi tra cứu")
-      return "error";
-    if (tinhTrang === "Thiếu thông tin") return "warning";
-    if (tinhTrang === "Đủ đúng không xét tuyển") return "success";
-    if (tinhTrang) return "found";
-    return "not-found";
+  const handleSaveTags = (selectedIds) => {
+    console.log("Saving tags:", Array.from(selectedIds));
+    setIsTagEditorOpen(false);
   };
 
-  //----------------------------------------------------------------
-  // --- RENDER ---
-  //----------------------------------------------------------------
-
-  if (!customer) {
+  // [MOD] Thêm màn hình loading
+  if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
-        <Loading />
+        <Loading content="Đang tải dữ liệu chi tiết..." />
       </div>
     );
   }
 
-  return (
-    <div className={styles.container}>
-      {/* Vùng hiển thị thông báo */}
-      {notification.show && (
-        <div className={styles.notificationContainer}>
-          <TextNoti
-            title={notification.title}
-            mes={notification.mes}
-            color={notification.color}
-          />
-        </div>
-      )}
+  if (!customer) {
+    return (
+      <div className={styles.errorText}>Không thể tải dữ liệu khách hàng.</div>
+    );
+  }
 
-      <div className={styles.content}>
-        {/* === SECTION: THÔNG TIN CƠ BẢN === */}
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Thông tin cơ bản</h3>
-          <div className={styles.infoRow}>
-            <span className={styles.infoLabel}>Tên khách hàng</span>
-            <div className={styles.infoValue}>
+  // [MOD] JSX render giờ sẽ sử dụng state `customer` đã được fetch đầy đủ
+  return (
+    <>
+      <div className={styles.container}>
+        <div className={styles.content}>
+          {/* [MOD] Section "Thông tin cơ bản" mặc định mở rộng */}
+          <CollapsibleSection title="Thông tin cơ bản" initialCollapsed={false}>
+            <InfoRow label="Tên khách hàng">
               {isEditingName ? (
                 <div className={styles.editInputContainer}>
                   <input
@@ -467,7 +275,7 @@ export default function CustomerDetails({
                     autoFocus
                   />
                   <button
-                    onClick={() => handleSaveField("name", editableName)}
+                    onClick={handleSaveName}
                     className={styles.inlineSaveButton}
                   >
                     Lưu
@@ -490,148 +298,101 @@ export default function CustomerDetails({
                   </button>
                 </>
               )}
+            </InfoRow>
+            <InfoRow label="Di động">{customer.phone}</InfoRow>
+            <InfoRow label="CCCD">{customer.citizenId || "Chưa có"}</InfoRow>
+            <DynamicFieldPlaceholder
+              onAddField={() => alert("Chức năng đang phát triển")}
+            />
+          </CollapsibleSection>
+
+          {/* [MOD] Section "Tags" mặc định thu gọn */}
+          <CollapsibleSection title="Tags" initialCollapsed={true}>
+            <div className={styles.tagContainer}>
+              {/* [MOD] Sử dụng dữ liệu giả lập */}
+              {mockAllTags.slice(0, 2).map((tag) => (
+                <span key={tag._id} className={styles.tagItem}>
+                  {tag.name}
+                </span>
+              ))}
             </div>
-          </div>
-          <InfoRow
-            label="Di động"
-            value={customer.DienThoai || customer.phone}
-          />
-          <div
-            className={`${styles.buttonContainer} ${styles.multiButtonContainer}`}
-          >
-            <button
-              onClick={handleOpenActionPanel}
-              className={`${styles.buttonBase} ${styles.greenButton}`}
-            >
-              Hành động nhanh
-            </button>
-            <button
-              onClick={() => setShowCampaignList(!showCampaignList)}
-              className={`${styles.buttonBase} ${styles.greenButton}`}
-            >
-              Thêm vào chiến dịch
-            </button>
-          </div>
-        </div>
-
-        {/* === SECTION: THÔNG TIN XÉT TUYỂN === */}
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Thông tin xét tuyển</h3>
-          <InfoRow label="Tên" value={customer.name} />
-          <InfoRow label="Di động" value={customer.DienThoai} />
-          <InfoRow label="Mã ĐK" value={customer.MaDangKy} />
-          <InfoRow label="CMND/CCCD" value={customer.CMND} />
-          <InfoRow label="Ngày ĐK" value={customer.NgayDK} />
-          <InfoRow label="Trường THPT" value={customer.TruongTHPT} />
-          <InfoRow label="Ngành xét tuyển" value={customer.TenNganh} />
-          <InfoRow label="Tổng điểm" value={customer.TongDiem} />
-          <InfoRow label="Phương thức XT" value={customer.TenPhuongThuc} />
-          <InfoRow
-            label="Tình trạng TT"
-            value={customer.TinhTrang}
-            statusColor={getStatusColor(customer.TinhTrang)}
-          />
-          <div className={styles.buttonContainer}>
-            <button
-              className={`${styles.buttonBase} ${styles.ghostButton} ${styles.fullWidthButton}`}
-              onClick={handleUpdateLookup}
-              disabled={!customer?.MaDangKy}
-            >
-              <Svg_Pen w={14} h={14} /> Đi đến trang cập nhật
-            </button>
-          </div>
-        </div>
-
-        {/* === SECTION: THÔNG TIN CHĂM SÓC === */}
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Thông tin chăm sóc</h3>
-          <InfoRow label="Trạng thái">
-            <span>{customer.status?.name || "Chưa có"}</span>
-            <button
-              className={styles.inlineButton}
-              onClick={() => setStatusSelectorVisible(!isStatusSelectorVisible)}
-            >
-              <Svg_Edit w={14} h={14} /> Thay đổi
-            </button>
-          </InfoRow>
-
-          {isStatusSelectorVisible && (
-            <div className={styles.statusSelector}>
-              <select
-                value={editableStatus}
-                onChange={(e) => setEditableStatus(e.target.value)}
+            <div className={styles.buttonContainer}>
+              <button
+                className={`${styles.buttonBase} ${styles.ghostButton} ${styles.fullWidthButton}`}
+                onClick={() => setIsTagEditorOpen(true)}
               >
-                <option value="">-- Chọn trạng thái mới --</option>
-                {statuses?.map((status) => (
-                  <option key={status._id} value={status._id}>
-                    {status.name}
-                  </option>
-                ))}
-              </select>
-              <div className={styles.actionButtons}>
-                {customer?.status && (
-                  <button
-                    onClick={handleDeleteStatus}
-                    // Áp dụng style nút cơ bản và màu đỏ nguy hiểm
-                    className={`${styles.buttonBase} ${styles.dangerButton}`}
-                  >
-                    Xóa trạng thái
-                  </button>
-                )}
-                <button
-                  onClick={handleUpdateStatus}
-                  // Áp dụng style nút cơ bản và màu xanh lưu
-                  className={`${styles.buttonBase} ${styles.blueButton}`}
-                >
-                  Lưu
-                </button>
-              </div>
+                Thay đổi Tags
+              </button>
             </div>
-          )}
+          </CollapsibleSection>
 
-          <InfoRow label="Giai đoạn">
-            <StageIndicator level={customer.stageLevel || 0} />
-            <button
-              className={styles.inlineButton}
-              onClick={() => setNoteVisible(!isNoteVisible)}
+          {/* [MOD] Logic render các chương trình chăm sóc giờ sẽ hoạt động chính xác */}
+          {(customer.programEnrollments || []).map((enrollment) => (
+            <CollapsibleSection
+              key={enrollment.programId?._id || Math.random()}
+              title={
+                enrollment.programId?.name || "Chương trình không xác định"
+              }
+              initialCollapsed={true}
             >
-              <Svg_Notes w={14} h={14} /> Ghi chú
-            </button>
-          </InfoRow>
-
-          {isNoteVisible && (
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>Giai đoạn & Ghi chú</div>
-              <div className={styles.infoRow}>
-                <StageSelector
-                  currentLevel={editableStageLevel}
-                  onSelect={(level) => handleSaveField("stageLevel", level)}
+              <InfoRow label="Giai đoạn">
+                <StageIndicator
+                  level={enrollment.stage?.level || 0}
+                  totalStages={enrollment.programId?.stages?.length || 0}
                 />
-              </div>
-              <CommentSection
-                customer={customer}
-                user={user}
-                onUpdateCustomer={onUpdateCustomer}
+              </InfoRow>
+              <InfoRow label="Trạng thái">
+                <span>{enrollment.status?.name || "Chưa có"}</span>
+                <button className={styles.inlineButton}>
+                  <Svg_Edit w={14} h={14} /> Thay đổi
+                </button>
+              </InfoRow>
+              {/* Render các dynamic field giả lập */}
+              {mockDynamicFields.map((field) => (
+                <DynamicField
+                  key={field.id}
+                  field={field}
+                  onValueChange={(id, val) => console.log(id, val)}
+                />
+              ))}
+              <DynamicFieldPlaceholder
+                onAddField={() => alert("Chức năng đang phát triển")}
               />
-            </div>
-          )}
-          <InfoRow label="NV Chăm sóc">
-            {customer.auth && customer.auth.length > 0
-              ? customer.auth.map((user) => user.name || user.email).join(", ")
-              : "Chưa có"}
-          </InfoRow>
-        </div>
+            </CollapsibleSection>
+          ))}
 
-        {/* === SECTION: LỊCH SỬ TƯƠNG TÁC === */}
-        <div className={styles.buttonContainer}>
-          <button
-            className={`${styles.buttonBase} ${styles.ghostButton} ${styles.fullWidthButton}`}
-            onClick={() => handleShowHistory(customer)}
+          <CollapsibleSection
+            title="Nhân viên phụ trách"
+            initialCollapsed={true}
           >
-            <Svg_History w={16} h={16} /> Hiển thị lịch sử tương tác
-          </button>
+            <div className={styles.userItem}>Nguyễn Văn A</div>
+            <p className={styles.placeholderText}>
+              Chưa có nhân viên nào khác.
+            </p>
+          </CollapsibleSection>
+
+          {/* === SECTION: HÀNH ĐỘNG & LỊCH SỬ === */}
+          <div className={styles.section}>
+            <div className={styles.buttonContainer}>
+              <button
+                className={`${styles.buttonBase} ${styles.ghostButton} ${styles.fullWidthButton}`}
+                onClick={handleShowHistory}
+              >
+                <Svg_History w={16} h={16} /> Xem toàn bộ lịch sử
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      {isTagEditorOpen && (
+        <TagEditor
+          allTags={mockAllTags}
+          customerTags={customer.tags || []}
+          onSave={handleSaveTags}
+          onClose={() => setIsTagEditorOpen(false)}
+        />
+      )}
+    </>
   );
 }

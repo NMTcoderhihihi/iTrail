@@ -3,17 +3,17 @@
   flex-direction: column;
   height: 100%;
   background-color: #0d1b2a;
-  padding: 16px;
+  padding: 16px 12px; /* [MOD] Giảm padding ngang */
   box-sizing: border-box;
 }
 
 .logoSection {
   margin-bottom: 24px;
   padding: 0 8px;
-  display: flex; /* [ADD] */
-  justify-content: space-between; /* [ADD] */
-  align-items: center; /* [ADD] */
-  min-height: 40px; /* [ADD] Đảm bảo chiều cao không đổi */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 40px;
 }
 
 .logoText {
@@ -24,13 +24,21 @@
 
 .menuSection {
   flex-grow: 1;
+  /* [ADD] Kích hoạt cuộn và ẩn thanh cuộn */
+  overflow-y: auto;
+  padding-right: 5px; /* Thêm khoảng trống để nội dung không bị dính vào cạnh */
 }
 
-/* [DEL] Bỏ hiệu ứng highlight cũ
-.highlight { ... }
-*/
+/* [ADD] CSS để ẩn thanh cuộn trên các trình duyệt khác nhau */
+.menuSection::-webkit-scrollbar {
+  width: 0px;
+  background: transparent; /* Chrome/Safari/Opera */
+}
+.menuSection {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
 
-/* [ADD] Container cho mỗi mục menu cha */
 .navItemContainer {
   margin-bottom: 4px;
 }
@@ -40,7 +48,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 0; /* [MOD] Xóa padding ở đây */
+  padding: 0;
   height: 56px;
   border-radius: 10px;
   cursor: pointer;
@@ -73,11 +81,16 @@
   /* [ADD] Đảm bảo label chiếm hết không gian thừa */
   flex-grow: 1;
   font-size: 15px;
+  /* [ADD] Xử lý cắt chữ */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* [ADD] CSS cho Submenu */
 .subMenu {
-  padding-left: 28px; /* Thụt vào so với icon menu cha */
+  /* [MOD] Giảm thụt lề */
+  padding-left: 20px;
   margin: 4px 0 12px 0;
   display: flex;
   flex-direction: column;
@@ -95,12 +108,18 @@
 }
 
 .subNavItem {
-  padding: 10px 16px;
+  /* [MOD] Giảm padding */
+  padding: 8px 12px;
   font-size: 14px;
   color: #a0aec0;
   text-decoration: none;
   border-radius: 8px;
   transition: color 0.2s ease, background-color 0.2s ease;
+  /* [ADD] Xử lý cắt chữ */
+  display: block; /* Cần thiết cho text-overflow */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .subNavItem:hover {
@@ -114,6 +133,9 @@
   color: #a0aec0;
 }
 .chevronExpanded {
+  transform: rotate(90deg);
+}
+.chevronCollapsed {
   transform: rotate(90deg);
 }
 
@@ -159,20 +181,22 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-grow: 1; /* Đảm bảo thẻ Link chiếm hết không gian */
+  flex-grow: 1;
   text-decoration: none;
-  color: inherit; /* Thừa hưởng màu từ thẻ cha */
+  color: inherit;
+  /* [ADD] Cần thiết để overflow hoạt động */
+  overflow: hidden;
 }
 
 .navItem .navLinkContent {
-  padding: 0 16px; /* [ADD] Chuyển padding vào đây */
+  padding: 0 16px;
   height: 100%;
 }
 
 .collapseButton {
   background: rgba(255, 255, 255, 0.1);
   border: none;
-  border-radius: 8px; /* [MOD] Đổi sang bo góc vuông */
+  border-radius: 8px;
   width: 32px;
   height: 32px;
   color: #a0aec0;
@@ -187,9 +211,6 @@
   color: white;
 }
 
-/* [MOD] Xóa transform rotate ở đây, chuyển nó vào icon bên trong */
-
-/* [ADD] Thêm style cho icon bên trong nút collapse */
 .collapseButton svg {
   transition: transform 0.3s ease-in-out;
 }
@@ -206,10 +227,6 @@
 /* [MOD] Icon sẽ xoay 180 độ khi thu gọn */
 .navContainer.collapsed .collapseButton svg {
   transform: rotate(180deg);
-}
-.navContainer.collapsed .navLabel,
-.navContainer.collapsed .chevron {
-  display: none;
 }
 .navContainer.collapsed .navItem {
   justify-content: center;

@@ -1,28 +1,26 @@
+// [MOD] components/(ui)/progress/StageIndicator.js
+
 import React from "react";
 import styles from "./StageIndicator.module.css";
 
 /**
- * Component hiển thị thanh tiến trình giai đoạn
+ * Component hiển thị tiến trình giai đoạn dưới dạng số (ví dụ: 2/4).
  * @param {object} props
- * @param {number} props.level - Cấp độ hiện tại (ví dụ: 1, 2, 3)
- * @param {number} props.totalStages - Tổng số giai đoạn (mặc định là 3)
+ * @param {number} props.level - Cấp độ hiện tại (ví dụ: 1, 2, 3).
+ * @param {number} props.totalStages - Tổng số giai đoạn.
  */
-const StageIndicator = ({ level = 0, totalStages = 3 }) => {
+const StageIndicator = ({ level = 0, totalStages = 1 }) => {
+  // Đảm bảo totalStages không bao giờ là 0 để tránh lỗi chia cho 0
+  const total = Math.max(1, totalStages);
+
   return (
     <div
       className={styles.container}
-      title={`Giai đoạn ${level}/${totalStages}`}
+      title={`Giai đoạn ${level} trên tổng số ${total} giai đoạn`}
     >
-      {Array.from({ length: totalStages }).map((_, index) => {
-        // Một "viên thuốc" được coi là active nếu index của nó nhỏ hơn level hiện tại
-        const isActive = index < level;
-        return (
-          <div
-            key={index}
-            className={`${styles.pill} ${isActive ? styles.active : ""}`}
-          />
-        );
-      })}
+      <span className={styles.currentLevel}>{level}</span>
+      <span className={styles.separator}>/</span>
+      <span className={styles.totalStages}>{total}</span>
     </div>
   );
 };

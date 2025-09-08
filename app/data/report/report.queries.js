@@ -13,7 +13,11 @@ export async function getReportLayouts({ page = 1, limit = 10 } = {}) {
     await connectDB();
     const skip = (page - 1) * limit;
     const [layouts, total] = await Promise.all([
-      ReportLayout.find({}).sort({ name: 1 }).skip(skip).limit(limit).lean(),
+      ReportLayout.find({})
+        .sort({ layoutName: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
       ReportLayout.countDocuments({}),
     ]);
     return {
@@ -22,7 +26,7 @@ export async function getReportLayouts({ page = 1, limit = 10 } = {}) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   } catch (error) {
-    return { success: false, error: error.message };
+    return { success: false, error: error.message, data: [], pagination: {} };
   }
 }
 

@@ -194,6 +194,8 @@ export default function ClientPage({
   initialZaloAccounts,
   allTags,
   carePrograms = [],
+  // [ADD] Nhận prop initialStats
+  initialStats,
 }) {
   const { openPanel, allActivePanels } = usePanels();
   const router = useRouter();
@@ -223,7 +225,8 @@ export default function ClientPage({
         component: CustomerDetails,
         title: `Chi tiết: ${customer.name}`,
         props: {
-          customerData: customer,
+          // [MOD] Chỉ truyền customerId, không truyền cả object customerData nữa
+          customerId: customer._id,
           onUpdateCustomer: () => router.refresh(),
           user: user,
         },
@@ -296,8 +299,8 @@ export default function ClientPage({
         </div>
       )}
 
-      {/* [ADD] Thêm lại component Dashboard */}
-      <ProgramDashboard program={currentProgram} stats={dashboardStats} />
+      {/* [MOD] Truyền initialStats trực tiếp vào component */}
+      <ProgramDashboard program={currentProgram} stats={initialStats} />
 
       <div
         className={`${styles.filterSection} ${

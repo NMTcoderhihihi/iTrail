@@ -1,0 +1,87 @@
+/* [ADD] app/(main)/admin/components/Panel/DataSourceEditorPanel.module.css */
+.panelContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.panelBody {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.formGroup label {
+  font-size: 14px;
+  font-weight: 500;
+}
+.formGroup input,
+.formGroup textarea,
+.formGroup select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.formGroup textarea {
+  resize: vertical;
+  font-family: monospace;
+}
+.panelFooter {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+}
+.saveButton {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background-color: #3b82f6;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+}
+.saveButton:disabled {
+  opacity: 0.6;
+}
+
+.configBox {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+}
+.configTitle {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.paramRow {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.paramRow input {
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+.addButton {
+  font-size: 12px;
+  background: none;
+  border: 1px dashed #9ca3af;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
