@@ -270,16 +270,78 @@ async function migrateInitialSetup() {
     { _id: LHU_API_DATASOURCE_ID },
     {
       $setOnInsert: {
-        name: "API Tuyển sinh LHU",
+        name: "API_Tuyensinh_LHU", // Đổi tên để nhất quán
+        description:
+          "Lấy thông tin xét tuyển của thí sinh từ hệ thống của LHU.",
         connectorType: "api",
-        configParams: {
+        connectionConfig: {
+          // [FIX] Đổi tên từ configParams
           params: [
             {
               key: "url",
               value: "https://tapi.lhu.edu.vn/TS/AUTH/XetTuyen_TraCuu",
             },
+            {
+              key: "method",
+              value: "POST",
+            },
           ],
         },
+        // [ADD] Định nghĩa các tham số đầu vào và đầu ra
+        inputParams: [
+          {
+            paramName: "phone",
+            paramType: "string",
+            paramLabel: "Số điện thoại",
+          },
+        ],
+        outputSchema: [
+          {
+            fieldName: "HoTen",
+            fieldType: "string",
+            fieldLabel: "Họ Tên (từ API)",
+          },
+          {
+            fieldName: "CMND",
+            fieldType: "string",
+            fieldLabel: "CMND/CCCD (từ API)",
+          },
+          {
+            fieldName: "TenNganh",
+            fieldType: "string",
+            fieldLabel: "Ngành Xét tuyển",
+          },
+          {
+            fieldName: "TongDiem",
+            fieldType: "number",
+            fieldLabel: "Tổng Điểm",
+          },
+          {
+            fieldName: "TenPhuongThuc",
+            fieldType: "string",
+            fieldLabel: "Phương thức XT",
+          },
+          {
+            fieldName: "TinhTrang",
+            fieldType: "string",
+            fieldLabel: "Tình trạng XT",
+          },
+          {
+            fieldName: "MaDangKy",
+            fieldType: "string",
+            fieldLabel: "Mã Đăng ký",
+          },
+          {
+            fieldName: "NgayDK",
+            fieldType: "date",
+            fieldLabel: "Ngày Đăng ký",
+          },
+          {
+            fieldName: "TruongTHPT",
+            fieldType: "string",
+            fieldLabel: "Trường THPT",
+          },
+        ],
         createdBy: DEFAULT_ADMIN_ID,
       },
     },
@@ -289,11 +351,7 @@ async function migrateInitialSetup() {
 
   // 3. Định nghĩa các trường dữ liệu động cho chương trình Tuyển sinh
   const fieldDefinitions = [
-    {
-      fieldName: "DienThoai",
-      fieldLabel: "Di động (API)",
-      fieldType: "string",
-    },
+    // Bỏ "DienThoai" vì nó là input
     { fieldName: "MaDangKy", fieldLabel: "Mã Đăng ký", fieldType: "string" },
     { fieldName: "CMND", fieldLabel: "CMND/CCCD (API)", fieldType: "string" },
     { fieldName: "NgayDK", fieldLabel: "Ngày Đăng ký", fieldType: "date" },
@@ -321,8 +379,7 @@ async function migrateInitialSetup() {
       {
         $set: {
           ...field,
-          isCommonAttribute: false,
-          programIds: [DEFAULT_CARE_PROGRAM_ID],
+          programIds: [DEFAULT_CARE_PROGRAM_ID], // Chỉ gán cho chương trình tuyển sinh
           dataSourceIds: [LHU_API_DATASOURCE_ID],
           createdBy: DEFAULT_ADMIN_ID,
         },

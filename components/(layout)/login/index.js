@@ -2,12 +2,13 @@
 
 "use client";
 
-// [ADD] Import các hook mới của React và Server Action
+// [MOD] Import useActionState từ "react" và useFormStatus từ "react-dom"
 import { useEffect } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import styles from "./index.module.css";
-import { loginUser } from "@/app/data/auth/auth.actions"; // [MOD] Import server action
+import { loginUser } from "@/app/data/auth/auth.actions";
 
 // [ADD] Component con cho nút Submit để quản lý trạng thái pending
 function SubmitButton() {
@@ -23,16 +24,16 @@ function SubmitButton() {
 const LoginPage = () => {
   const router = useRouter();
 
-  // [MOD] Sử dụng useFormState để gọi action và quản lý state
-  const initialState = { error: null, success: false, role: null };
-  const [state, formAction] = useFormState(loginUser, initialState);
+  // [MOD] Sử dụng useActionState thay cho useFormState
+  const [state, formAction] = useActionState(loginUser, {
+    error: null,
+    success: false,
+    role: null,
+  });
 
-  // [DEL] Các useState cũ cho email, password, error, isPending được loại bỏ
-
-  // [ADD] useEffect để theo dõi kết quả từ server action
   useEffect(() => {
     if (state.success) {
-      router.refresh(); // Quan trọng: làm mới để session được cập nhật
+      router.refresh();
       if (state.role === "Admin") {
         router.push("/admin");
       } else {

@@ -8,7 +8,7 @@ import styles from "./PanelStyles.module.css";
 import { usePanels } from "@/contexts/PanelContext";
 import { getCustomerDetails } from "@/app/data/customer/customer.actions";
 import { removeTaskFromSchedule } from "@/app/data/schedule/schedule.actions";
-import CustomerDetails from "@/app/(main)/client/ui/details/CustomerDetails";
+import CustomerDetails from "@/app/(main)/client/ui/panel/CustomerDetails";
 
 export default function PendingQueuePanel({
   panelData: { job, onScheduleUpdate },

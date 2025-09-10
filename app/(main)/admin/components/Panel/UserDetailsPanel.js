@@ -12,7 +12,7 @@ import ZaloDisplay from "../shared/ZaloDisplay";
 import { usePanels } from "@/contexts/PanelContext";
 import AssignZaloPanel from "./AssignZaloPanel";
 import ZaloDetailsPanel from "./ZaloDetailsPanel"; // Import để mở lồng panel
-import CustomerDetails from "@/app/(main)/client/ui/details/CustomerDetails"; // Import để mở panel khách hàng
+import CustomerDetails from "@/app/(main)/client/ui/panel/CustomerDetails"; // Import để mở panel khách hàng
 import CustomerDisplay from "../shared/CustomerDisplay";
 
 // Tái sử dụng các component con từ ZaloDetailsPanel

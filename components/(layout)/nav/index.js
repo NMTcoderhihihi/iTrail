@@ -1,5 +1,4 @@
-// [MOD] components/(layout)/nav/index.js (Hoàn chỉnh)
-
+// [FIX] components/(layout)/nav/index.js (Bản sửa lỗi cuối cùng)
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -14,10 +13,11 @@ import {
 } from "@/components/(icon)/svg";
 import { logoutUser } from "@/app/data/auth/auth.actions";
 
-// Icon chevron để expand/collapse
+// --- Sub-components (Component con) ---
+
 const ChevronIcon = ({ isExpanded }) => (
   <svg
-    className={`${styles.chevron} ${isExpanded ? "" : styles.chevronCollapsed}`}
+    className={`${styles.chevron} ${isExpanded ? styles.chevronExpanded : ""}`}
     width="16"
     height="16"
     viewBox="0 0 24 24"
@@ -27,67 +27,88 @@ const ChevronIcon = ({ isExpanded }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <polyline points="6 9 12 15 18 9"></polyline>
+    <polyline points="9 18 15 12 9 6"></polyline>
   </svg>
 );
 
-// Component cho menu cha (có thể có con)
-const NavItem = ({ item, isActive, isExpanded, onToggle }) => (
-  <div
-    className={`${styles.navItemContainer} ${
-      isActive ? styles.activeParent : ""
-    }`}
-  >
-    <div
-      // [MOD] Dùng div thay Link để control event onClick, tránh load lại trang khi chỉ expand
-      className={`${styles.navItem} ${isActive ? styles.active : ""}`}
-      onClick={item.subItems ? onToggle : undefined}
-    >
-      <Link
-        href={item.href}
-        className={styles.navLinkContent}
-        title={item.label}
-      >
-        {" "}
-        {/* [ADD] Thêm title */}
-        <item.icon w={20} h={20} c={"currentColor"} />
-        <span className={styles.navLabel}>{item.label}</span>
-      </Link>
-      {item.subItems && <ChevronIcon isExpanded={isExpanded} />}
-    </div>
-  </div>
+// Component render nội dung của một mục menu (icon và label)
+const MenuItemContent = ({ item }) => (
+  <>
+    {item.icon && <item.icon w={20} h={20} c={"currentColor"} />}
+    <span className={styles.navLabel}>{item.label}</span>
+  </>
 );
 
-// Component cho menu con
-const SubNavItem = ({ item, isActive }) => (
-  <Link
-    href={item.href}
-    className={`${styles.subNavItem} ${isActive ? styles.active : ""}`}
-    title={item.label} // [ADD] Thêm title cho tooltip
-  >
-    {item.label}
-  </Link>
-);
+// Component cho một mục menu hoàn chỉnh
+const NavMenuItem = ({ item, isExpanded, onToggle, isSubmenu = false }) => {
+  const hasSubItems = item.subItems && item.subItems.length > 0;
+  const isActive =
+    item.isActive || (isExpanded && item.subItems?.some((sub) => sub.isActive));
+
+  const content = (
+    <div className={styles.navLinkContent}>
+      {/* [MOD] Đảo vị trí của ChevronIcon và MenuItemContent */}
+      {hasSubItems && <ChevronIcon isExpanded={isExpanded} />}
+      <MenuItemContent item={item} />
+    </div>
+  );
+
+  if (hasSubItems && !item.href) {
+    return (
+      <div
+        className={`${isSubmenu ? styles.subNavItem : styles.navItem} ${
+          isActive ? styles.active : ""
+        }`}
+        onClick={onToggle}
+        title={item.label}
+      >
+        {content}
+      </div>
+    );
+  }
+
+  // Nếu là mục menu con (không có subItems), nó sẽ là một Link
+  return (
+    <Link
+      href={item.href}
+      className={`${isSubmenu ? styles.subNavItem : styles.navItem} ${
+        isActive ? styles.active : ""
+      }`}
+      title={item.label}
+      onClick={hasSubItems ? onToggle : undefined}
+    >
+      {content}
+    </Link>
+  );
+};
+
+// --- Main Nav Component ---
 
 export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const activeTab = searchParams.get("tab");
 
-  // State để quản lý menu nào đang mở rộng
   const [expandedMenus, setExpandedMenus] = useState(() => {
-    if (pathname.startsWith("/admin")) return new Set(["admin"]);
-    if (pathname === "/") return new Set(["care"]);
-    return new Set();
+    const initial = new Set();
+    if (pathname.startsWith("/admin")) {
+      initial.add("admin");
+      if (["running", "archived"].includes(activeTab))
+        initial.add("admin-campaigns");
+      if (["labels", "variants"].includes(activeTab))
+        initial.add("admin-content");
+      // [ADD] Tự động mở menu tài khoản
+      if (["accounts", "users"].includes(activeTab))
+        initial.add("admin-accounts");
+    }
+    if (pathname === "/") initial.add("care");
+    return initial;
   });
 
   const toggleMenu = (key) => {
     setExpandedMenus((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
+      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
   };
@@ -108,23 +129,86 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
     ];
 
     const adminSubItems = [
-      { key: "labels", label: "🏷️ Nhãn & Mẫu tin" },
-      { key: "variants", label: "🎨 Quản lý Biến thể" },
-      { key: "programs", label: "📋 Chương trình CS" },
-      { key: "fields", label: "📝 Trường dữ liệu" },
-      { key: "datasources", label: "🔌 Nguồn dữ liệu" },
-      { key: "tags", label: "🏷️ Quản lý Tag" },
-      { key: "reports", label: "📈 Quản lý Báo cáo" },
-      { key: "statuses", label: "📊 Quản lý Trạng thái" },
-      { key: "running", label: "🚀 Đang chạy" },
-      { key: "archived", label: "🗂️ Lịch sử" },
-      { key: "accounts", label: "👤 Quản lý TK Zalo" },
-      { key: "users", label: "👥 Quản lý User" },
-    ].map((item) => ({
-      href: `/admin?tab=${item.key}`,
-      label: item.label,
-      isActive: searchParams.get("tab") === item.key,
-    }));
+      {
+        key: "admin-campaigns",
+        label: "🚀 Chiến dịch",
+        isActive: ["running", "archived"].includes(activeTab),
+        subItems: [
+          {
+            href: "/admin?tab=running",
+            label: "Đang chạy",
+            isActive: activeTab === "running",
+          },
+          {
+            href: "/admin?tab=archived",
+            label: "Lịch sử",
+            isActive: activeTab === "archived",
+          },
+        ],
+      },
+      // [ADD] Menu cha "Tài khoản" mới
+      {
+        key: "admin-accounts",
+        label: "👥 Tài khoản",
+        // icon: Svg_Accounts,
+        isActive: ["accounts", "users"].includes(activeTab),
+        subItems: [
+          {
+            href: "/admin?tab=accounts",
+            label: "Quản lý TK Zalo",
+            isActive: activeTab === "accounts",
+          },
+          {
+            href: "/admin?tab=users",
+            label: "Quản lý User",
+            isActive: activeTab === "users",
+          },
+        ],
+      },
+      {
+        key: "admin-content",
+        label: "📝 Mẫu tin nhắn & biến thể",
+        isActive: ["labels", "variants"].includes(activeTab),
+        subItems: [
+          {
+            href: "/admin?tab=labels",
+            label: "Mẫu tin nhắn",
+            isActive: activeTab === "labels",
+          },
+          {
+            href: "/admin?tab=variants",
+            label: "Biến thể",
+            isActive: activeTab === "variants",
+          },
+        ],
+      },
+      // [DEL] Xóa 2 mục đã được gộp
+      {
+        href: "/admin?tab=programs",
+        label: "📋 Chương trình CS",
+        isActive: activeTab === "programs",
+      },
+      {
+        href: "/admin?tab=fields",
+        label: "📝 Trường dữ liệu",
+        isActive: activeTab === "fields",
+      },
+      {
+        href: "/admin?tab=datasources",
+        label: "🔌 Nguồn dữ liệu",
+        isActive: activeTab === "datasources",
+      },
+      {
+        href: "/admin?tab=tags",
+        label: "🏷️ Quản lý Tag",
+        isActive: activeTab === "tags",
+      },
+      {
+        href: "/admin?tab=reports",
+        label: "📈 Quản lý Báo cáo",
+        isActive: activeTab === "reports",
+      },
+    ];
 
     return [
       {
@@ -138,7 +222,6 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
       },
       {
         key: "admin",
-        href: "/admin?tab=running",
         icon: Svg_Admin,
         label: "Admin",
         roles: ["Admin"],
@@ -154,12 +237,30 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
         isActive: pathname.startsWith("/dev"),
       },
     ];
-  }, [pathname, searchParams, navData]);
+  }, [pathname, searchParams, navData, activeTab]);
 
   const accessibleNavItems = useMemo(
     () => navConfig.filter((item) => item.roles.includes(user?.role)),
     [user?.role, navConfig],
   );
+
+  const renderMenuItems = (items, isSubmenu = false) => {
+    return items.map((item) => (
+      <div key={item.key || item.href}>
+        <NavMenuItem
+          item={item}
+          isExpanded={expandedMenus.has(item.key)}
+          onToggle={() => toggleMenu(item.key)}
+          isSubmenu={isSubmenu}
+        />
+        {!isCollapsed && item.subItems && expandedMenus.has(item.key) && (
+          <div className={styles.subMenu}>
+            {renderMenuItems(item.subItems, true)}
+          </div>
+        )}
+      </div>
+    ));
+  };
 
   return (
     <nav
@@ -170,7 +271,6 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
       <div className={styles.logoSection}>
         {!isCollapsed && <p className={styles.logoText}>iTrail</p>}
         <button onClick={onToggleCollapse} className={styles.collapseButton}>
-          {/* Icon mũi tên trái/phải */}
           <svg
             width="16"
             height="16"
@@ -190,31 +290,10 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
       </div>
 
       <div className={`${styles.menuSection} ${styles.customScroll}`}>
-        {accessibleNavItems.map((item) => (
-          <div key={item.key}>
-            <NavItem
-              item={item}
-              isActive={item.isActive}
-              isExpanded={expandedMenus.has(item.key)}
-              onToggle={() => toggleMenu(item.key)}
-            />
-            {item.subItems && expandedMenus.has(item.key) && (
-              <div className={styles.subMenu}>
-                {item.subItems.map((subItem) => (
-                  <SubNavItem
-                    key={subItem.href}
-                    item={subItem}
-                    isActive={subItem.isActive}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+        {renderMenuItems(accessibleNavItems)}
       </div>
 
       <div className={styles.userSection}>
-        {/* [MOD] Chỉ hiển thị userInfo khi không thu gọn */}
         {!isCollapsed && (
           <div className={styles.userInfo}>
             <span className={styles.userName}>{user?.name || "User"}</span>

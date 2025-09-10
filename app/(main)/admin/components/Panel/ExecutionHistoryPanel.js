@@ -5,7 +5,7 @@ import styles from "./PanelStyles.module.css";
 import HistoryDetailPanel from "./HistoryDetailPanel";
 import { getHistoryForSchedule } from "@/app/data/history/history.queries";
 import { getCustomerDetails } from "@/app/data/customer/customer.actions";
-import CustomerDetails from "@/app/(main)/client/ui/details/CustomerDetails";
+import CustomerDetails from "@/app/(main)/client/ui/panel/CustomerDetails";
 import { usePanels } from "@/contexts/PanelContext";
 
 export default function ExecutionHistoryPanel({ panelData: { jobId } }) {

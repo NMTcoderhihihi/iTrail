@@ -1,4 +1,4 @@
-// models/fieldDefinition.js
+// [MOD] models/fieldDefinition.js
 import { Schema, model, models } from "mongoose";
 
 const FieldDefinitionSchema = new Schema(
@@ -12,8 +12,9 @@ const FieldDefinitionSchema = new Schema(
     },
     description: { type: String },
     dataSourceIds: [{ type: Schema.Types.ObjectId, ref: "dataSource" }],
+    // [MOD] Thay thế isCommonAttribute bằng tagIds để linh hoạt hơn
     programIds: [{ type: Schema.Types.ObjectId, ref: "careProgram" }],
-    isCommonAttribute: { type: Boolean, default: false },
+    tagIds: [{ type: Schema.Types.ObjectId, ref: "tag" }],
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "user",

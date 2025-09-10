@@ -323,3 +323,70 @@
   padding-top: 16px;
   border-top: 1px solid #e2e8f0;
 }
+
+/* [ADD] CSS cho section Thông tin chăm sóc */
+.subSection {
+  padding: 12px 0;
+  border-bottom: 1px dashed #e5e7eb;
+}
+.subSection:last-child {
+  border-bottom: none;
+}
+.subSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+/* --- CSS cho Comment --- */
+.commentList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 250px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+.commentItem {
+  background-color: #f9fafb;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+.commentText {
+  color: #1f2937;
+  white-space: pre-wrap;
+}
+.commentMeta {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 4px;
+  text-align: right;
+}
+.commentInputContainer {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.commentTextarea {
+  flex-grow: 1;
+  resize: vertical;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.commentSubmitButton {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+}
+.commentSubmitButton:disabled {
+  opacity: 0.6;
+}

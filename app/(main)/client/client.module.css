@@ -13,19 +13,13 @@
 /* --- Khu vực Hành động & Tài khoản --- */
 .pageHeader {
   display: flex;
-  /* [MOD] Thay đổi thành flex-end để đẩy các item còn lại về bên phải */
-  justify-content: flex-end;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  /* Yêu cầu 4: Thu nhỏ nên giảm padding */
+  gap: 12px;
   padding: 8px 16px;
-  background: white;
+  background-color: #eef2ff; /* Màu nền xanh nhạt */
+  border: 1px solid #c7d2fe; /* Viền xanh */
   border-radius: 8px;
-  box-shadow: var(--boxshaw2);
-  flex-shrink: 0;
-  min-height: 50px; /* Đảm bảo header có chiều cao tối thiểu */
-  box-sizing: border-box;
+  flex-wrap: wrap; /* Cho phép các nút xuống dòng nếu không đủ chỗ */
 }
 
 .btnCampaign {
@@ -390,3 +384,76 @@
 }
 
 /* END: CẬP NHẬT TOÀN BỘ FILE CSS */
+.selectionCount {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4338ca; /* Màu chữ xanh đậm */
+  margin-right: auto; /* Đẩy các nút khác về bên phải */
+}
+
+.actionButton {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btnCampaign {
+  background-color: #16a34a; /* Green */
+  color: white;
+}
+.btnCampaign:hover {
+  background-color: #15803d;
+}
+
+.btnTag {
+  background-color: #ffffff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+.btnTag:hover {
+  background-color: #f9fafb;
+}
+
+.btnAdmin {
+  background-color: #4f46e5; /* Indigo */
+  color: white;
+}
+.btnAdmin:hover {
+  background-color: #4338ca;
+}
+
+/* --- Bộ lọc lựa chọn --- */
+.selectionFilter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px; /* Tạo khoảng cách với bảng dữ liệu */
+  padding: 4px;
+  background-color: #e5e7eb; /* Nền xám nhạt */
+  border-radius: 8px;
+  width: fit-content; /* Chỉ rộng bằng nội dung */
+}
+
+.filterButton {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  background-color: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563; /* Màu chữ xám */
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filterButton.active {
+  background-color: #ffffff; /* Nền trắng cho nút active */
+  color: #3b82f6; /* Màu chữ xanh */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}

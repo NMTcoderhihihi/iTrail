@@ -1,23 +1,17 @@
+// [FIX] app/(main)/client/ClientPage.js (Sửa lỗi ReferenceError và Initialization)
 "use client";
 
-import React, {
-  useState,
-  useMemo,
-  useCallback,
-  useRef,
-  useEffect,
-  useTransition,
-} from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useMemo, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import styles from "./client.module.css";
-import Setting from "./ui/setting";
 import { usePanels } from "@/contexts/PanelContext";
-import CustomerDetails from "./ui/details/CustomerDetails";
+import CustomerDetails from "./ui/panel/CustomerDetails";
 import MultiSelectFilter from "./ui/filters/MultiSelectFilter";
 import UidZaloFilter from "./ui/filters/UidZaloFilter";
 import CustomerTable from "./ui/table/CustomerTable";
 import PaginationControls from "@/app/(main)/admin/components/shared/PaginationControls";
 import ProgramDashboard from "./ui/dashboard/ProgramDashboard";
+import AssignUserPanel from "./ui/panel/AssignUserPanel";
 
 const CollapseIcon = ({ isCollapsed }) => (
   <svg
@@ -39,7 +33,13 @@ const CollapseIcon = ({ isCollapsed }) => (
   </svg>
 );
 
-const Filters = ({ allTags, allZaloAccounts, carePrograms }) => {
+const Filters = ({
+  allTags,
+  allZaloAccounts,
+  carePrograms,
+  selectedIds,
+  customerCount,
+}) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -68,15 +68,14 @@ const Filters = ({ allTags, allZaloAccounts, carePrograms }) => {
   const handleFilterChange = useCallback(
     (filtersToUpdate) => {
       const params = new URLSearchParams(searchParams);
-      Object.keys(filtersToUpdate).forEach((key) => params.delete(key));
-
-      for (const [key, value] of Object.entries(filtersToUpdate)) {
+      Object.entries(filtersToUpdate).forEach(([key, value]) => {
+        params.delete(key);
         if (value instanceof Set) {
           value.forEach((v) => params.append(key, v));
         } else if (value && value !== "all") {
           params.set(key, value);
         }
-      }
+      });
 
       if (filtersToUpdate.uidFilterZaloId === "all") {
         params.delete("uidFilterZaloId");
@@ -98,9 +97,8 @@ const Filters = ({ allTags, allZaloAccounts, carePrograms }) => {
           placeholder="Nhập từ khóa..."
           defaultValue={searchParams.get("query") || ""}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
+            if (e.key === "Enter")
               handleFilterChange({ query: e.target.value });
-            }
           }}
         />
       </div>
@@ -126,15 +124,10 @@ const Filters = ({ allTags, allZaloAccounts, carePrograms }) => {
           selectedUidStatus={selectedUidStatus}
           onZaloChange={(value) => {
             setSelectedZaloId(value);
-            if (value === "all") {
-              setSelectedUidStatus("all");
-              handleFilterChange({ uidFilterZaloId: "all" });
-            } else {
-              handleFilterChange({
-                uidFilterZaloId: value,
-                uidStatus: selectedUidStatus,
-              });
-            }
+            handleFilterChange({
+              uidFilterZaloId: value,
+              uidStatus: value === "all" ? "all" : selectedUidStatus,
+            });
           }}
           onStatusChange={(value) => {
             setSelectedUidStatus(value);
@@ -146,14 +139,12 @@ const Filters = ({ allTags, allZaloAccounts, carePrograms }) => {
         />
       </div>
 
-      {/* Contextual Filters */}
       {currentProgram && (
         <>
           <div className={styles.filterGroup}>
             <label>Giai đoạn</label>
             <MultiSelectFilter
               title="Chọn giai đoạn"
-              // Thêm `|| []` để phòng trường hợp stages không tồn tại
               options={(currentProgram.stages || []).map((s) => ({
                 _id: s._id,
                 name: s.name,
@@ -169,7 +160,6 @@ const Filters = ({ allTags, allZaloAccounts, carePrograms }) => {
             <label>Trạng thái</label>
             <MultiSelectFilter
               title="Chọn trạng thái"
-              // Thêm `|| []` để phòng trường hợp statuses không tồn tại
               options={(currentProgram.statuses || []).map((s) => ({
                 _id: s._id,
                 name: s.name,
@@ -183,9 +173,28 @@ const Filters = ({ allTags, allZaloAccounts, carePrograms }) => {
           </div>
         </>
       )}
+
+      <div className={styles.filterGroup}>
+        <label>Lọc theo lựa chọn</label>
+        <select
+          className={styles.filterSelect}
+          value={searchParams.get("selectionFilter") || "all"}
+          onChange={(e) =>
+            handleFilterChange({ selectionFilter: e.target.value })
+          }
+        >
+          <option value="all">Tất cả ({customerCount})</option>
+          <option value="selected">Đã chọn ({selectedIds.size})</option>
+          <option value="unselected">
+            Chưa chọn ({customerCount - selectedIds.size})
+          </option>
+        </select>
+      </div>
     </>
   );
 };
+
+// --- Main Component ---
 
 export default function ClientPage({
   initialData,
@@ -194,7 +203,6 @@ export default function ClientPage({
   initialZaloAccounts,
   allTags,
   carePrograms = [],
-  // [ADD] Nhận prop initialStats
   initialStats,
 }) {
   const { openPanel, allActivePanels } = usePanels();
@@ -202,13 +210,14 @@ export default function ClientPage({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [customers, setCustomers] = useState(initialData);
+  const customers = useMemo(() => initialData, [initialData]);
   const [selectedIds, setSelectedIds] = useState(new Set());
-  const [isFilterCollapsed, setIsFilterCollapsed] = useState(false);
+  const [isFilterCollapsed, setIsFilterCollapsed] = useState(true);
 
-  useEffect(() => {
-    setCustomers(initialData);
-  }, [initialData]);
+  const handleAssignSuccess = () => {
+    router.refresh();
+    setSelectedIds(new Set()); // Xóa lựa chọn sau khi gán thành công
+  };
 
   const activeRowIds = useMemo(() => {
     return new Set(
@@ -218,6 +227,18 @@ export default function ClientPage({
     );
   }, [allActivePanels]);
 
+  // [FIX] Khai báo `displayedCustomers` trước khi nó được sử dụng trong `handleTogglePage`
+  const displayedCustomers = useMemo(() => {
+    const selectionFilterParam = searchParams.get("selectionFilter") || "all";
+    if (selectionFilterParam === "selected") {
+      return customers.filter((c) => selectedIds.has(c._id));
+    }
+    if (selectionFilterParam === "unselected") {
+      return customers.filter((c) => !selectedIds.has(c._id));
+    }
+    return customers;
+  }, [customers, selectedIds, searchParams]);
+
   const handleRowClick = useCallback(
     (customer) => {
       openPanel({
@@ -225,7 +246,6 @@ export default function ClientPage({
         component: CustomerDetails,
         title: `Chi tiết: ${customer.name}`,
         props: {
-          // [MOD] Chỉ truyền customerId, không truyền cả object customerData nữa
           customerId: customer._id,
           onUpdateCustomer: () => router.refresh(),
           user: user,
@@ -238,23 +258,23 @@ export default function ClientPage({
   const handleToggleSelect = useCallback((id) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   }, []);
 
   const handleTogglePage = useCallback(() => {
     const allOnPage =
-      customers.length > 0 && customers.every((c) => selectedIds.has(c._id));
+      displayedCustomers.length > 0 &&
+      displayedCustomers.every((c) => selectedIds.has(c._id));
     const newSet = new Set(selectedIds);
     if (allOnPage) {
-      customers.forEach((c) => newSet.delete(c._id));
+      displayedCustomers.forEach((c) => newSet.delete(c._id));
     } else {
-      customers.forEach((c) => newSet.add(c._id));
+      displayedCustomers.forEach((c) => newSet.add(c._id));
     }
     setSelectedIds(newSet);
-  }, [customers, selectedIds]);
+  }, [displayedCustomers, selectedIds]);
 
   const handlePageChange = (page, limit) => {
     const params = new URLSearchParams(searchParams);
@@ -262,44 +282,55 @@ export default function ClientPage({
     params.set("limit", limit.toString());
     router.push(`${pathname}?${params.toString()}`);
   };
+  const handleOpenAssignUserPanel = () => {
+    openPanel({
+      id: `assign-users-${Date.now()}`, // ID động để có thể mở nhiều lần
+      title: `Gán nhân viên cho ${selectedIds.size} khách hàng`,
+      component: AssignUserPanel,
+      props: {
+        customerIds: Array.from(selectedIds),
+        onAssignSuccess: () => {
+          router.refresh();
+          setSelectedIds(new Set());
+        },
+      },
+    });
+  };
 
   const currentProgramId = searchParams.get("program");
   const currentProgram = currentProgramId
     ? carePrograms.find((p) => p._id === currentProgramId)
     : null;
 
-  // [ADD] Dữ liệu giả lập cho Dashboard
-  const dashboardStats = useMemo(() => {
-    if (currentProgram) {
-      // Dữ liệu cho tab chương trình cụ thể
-      return {
-        totalCustomers: 120,
-        byStage: ["CS: 50", "OTP: 30", "NH: 40"],
-        byStatus: ["Đã LH: 80", "K Bắt máy: 20"],
-        noStatus: 20,
-      };
-    }
-    // Dữ liệu cho tab "Tất cả"
-    return {
-      totalPrograms: carePrograms.length,
-      totalCustomers: 250,
-      totalCampaigns: 15,
-      customersPerProgram: ["TS2025: 120", "CSKH: 130"],
-    };
-  }, [currentProgram, carePrograms]);
-
   return (
     <div className={styles.container}>
-      {/* [MOD] Chỉ render header nếu có item được chọn */}
       {selectedIds.size > 0 && (
         <div className={styles.pageHeader}>
-          <button className={styles.btnCampaign}>
-            Lên chiến dịch ({selectedIds.size})
+          <span className={styles.selectionCount}>
+            Đã chọn: {selectedIds.size}
+          </span>
+          <button className={`${styles.actionButton} ${styles.btnCampaign}`}>
+            Lên chiến dịch
           </button>
+          <button className={`${styles.actionButton} ${styles.btnTag}`}>
+            Gán Tag
+          </button>
+          {user.role === "Admin" && (
+            <>
+              <button
+                onClick={handleOpenAssignUserPanel}
+                className={`${styles.actionButton} ${styles.btnAdmin}`}
+              >
+                Gán User
+              </button>
+              <button className={`${styles.actionButton} ${styles.btnAdmin}`}>
+                Gán Chương trình
+              </button>
+            </>
+          )}
         </div>
       )}
 
-      {/* [MOD] Truyền initialStats trực tiếp vào component */}
       <ProgramDashboard program={currentProgram} stats={initialStats} />
 
       <div
@@ -314,18 +345,22 @@ export default function ClientPage({
           <h3>Bộ lọc & Tìm kiếm</h3>
           <CollapseIcon isCollapsed={isFilterCollapsed} />
         </div>
-        <div className={styles.filterControls}>
-          <Filters
-            allTags={allTags}
-            allZaloAccounts={initialZaloAccounts}
-            carePrograms={carePrograms}
-          />
-        </div>
+        {!isFilterCollapsed && (
+          <div className={styles.filterControls}>
+            <Filters
+              allTags={allTags}
+              allZaloAccounts={initialZaloAccounts}
+              carePrograms={carePrograms}
+              selectedIds={selectedIds}
+              customerCount={customers.length}
+            />
+          </div>
+        )}
       </div>
 
       <div className={styles.gridWrapper}>
         <CustomerTable
-          customers={customers}
+          customers={displayedCustomers}
           zaloAccounts={initialZaloAccounts}
           pagination={initialPagination}
           currentProgram={currentProgram}
@@ -333,8 +368,8 @@ export default function ClientPage({
           selectedIds={selectedIds}
           onToggleSelect={handleToggleSelect}
           onTogglePage={handleTogglePage}
+          activeRowIds={activeRowIds}
         />
-
         <PaginationControls
           pagination={initialPagination}
           onPageChange={handlePageChange}

@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useTransition } from "react";
 import styles from "./FieldDefinitionEditorPanel.module.css";
 import LoadingSpinner from "../shared/LoadingSpinner";
-import { getFieldDefinitions } from "@/app/data/fieldDefinition/fieldDefinition.queries"; // Tạm thời, sẽ đổi sau
+import { getFieldDefinitions } from "@/app/data/fieldDefinition/fieldDefinition.queries";
 import { createOrUpdateFieldDefinition } from "@/app/data/fieldDefinition/fieldDefinition.actions";
-import { getCareProgramsForFilter } from "@/app/data/careProgram/careProgram.queries"; // Lấy chương trình
-import { getDataSources } from "@/app/data/dataSource/dataSource.queries"; // Lấy datasource
-import MultiSelect from "./MultiSelect"; // Component mới
+import { getCareProgramsForFilter } from "@/app/data/careProgram/careProgram.queries";
+import { getTagsForFilter } from "@/app/data/tag/tag.queries"; // [ADD]
+import MultiSelect from "./MultiSelect";
 
 export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
   const [field, setField] = useState({
@@ -17,9 +17,11 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
     fieldType: "string",
     programIds: [],
     dataSourceIds: [],
+    tagIds: [], // [ADD]
   });
   const [allPrograms, setAllPrograms] = useState([]);
   const [allDataSources, setAllDataSources] = useState([]);
+  const [allTags, setAllTags] = useState([]); // [ADD]
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
@@ -28,13 +30,16 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
     Promise.all([
       fieldId
         ? getFieldDefinitions({ _id: fieldId })
-        : Promise.resolve({ data: [null] }), // Sẽ phải sửa lại hàm get
+        : Promise.resolve({ data: [null] }),
       getCareProgramsForFilter(),
-      getDataSources({ limit: 0 }), // Lấy tất cả
-    ]).then(([fieldResult, programsResult, dataSourcesResult]) => {
+      // getDataSources({ limit: 0 }), // Tạm thời bỏ để tránh lỗi
+      getTagsForFilter(), // [ADD]
+    ]).then(([fieldResult, programsResult, tagsResult]) => {
+      // [MOD]
       if (fieldResult.data[0]) setField(fieldResult.data[0]);
       setAllPrograms(programsResult || []);
-      setAllDataSources(dataSourcesResult.data || []);
+      // setAllDataSources(dataSourcesResult.data || []);
+      setAllTags(tagsResult || []); // [ADD]
       setIsLoading(false);
     });
   }, [fieldId]);
@@ -108,11 +113,18 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
         />
 
         <MultiSelect
+          label="Gán cho Tags (Trường chung)"
+          options={allTags.map((t) => ({ id: t._id, name: t.name }))}
+          selectedIds={field.tagIds || []}
+          onChange={(ids) => handleMultiSelectChange("tagIds", ids)}
+        />
+
+        {/* <MultiSelect
           label="Lấy từ Nguồn Dữ liệu"
           options={allDataSources.map((ds) => ({ id: ds._id, name: ds.name }))}
           selectedIds={field.dataSourceIds || []}
           onChange={(ids) => handleMultiSelectChange("dataSourceIds", ids)}
-        />
+        /> */}
       </div>
       <div className={styles.panelFooter}>
         <button

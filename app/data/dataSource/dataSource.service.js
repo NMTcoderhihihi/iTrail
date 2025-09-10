@@ -60,6 +60,14 @@ function replacePlaceholders(obj, params) {
 }
 
 async function executeApiDataSource(config, params) {
+  if (!config) {
+    throw new Error("DataSource có kiểu 'api' nhưng thiếu 'connectionConfig'.");
+  }
+  console.log(
+    "[DataSource Service] Executing API call with config:",
+    JSON.stringify(config, null, 2),
+  );
+  console.log("[DataSource Service] Runtime params:", params);
   const configParams = new Map(
     (config.params || []).map((p) => [p.key, p.value]),
   );
@@ -73,13 +81,22 @@ async function executeApiDataSource(config, params) {
   const finalUrl = new URL(replacePlaceholders(urlString, params));
   const finalHeaders = replacePlaceholders(headers, params);
   const bodyParams = {};
+  const urlParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
-    if (!urlString.includes(`$$${key}`)) {
-      if (method === "GET") finalUrl.searchParams.append(key, value);
-      else bodyParams[key] = value;
+    // Nếu là GET, tất cả params vào URL. Nếu là POST, chỉ param nào có trong URL placeholder mới vào URL.
+    if (method === "GET" || urlString.includes(`$$${key}`)) {
+      // Gán vào URL search params nếu không phải là placeholder
+      if (!urlString.includes(`$$${key}`)) {
+        urlParams.set(key, value);
+      }
+    } else {
+      bodyParams[key] = value;
     }
   });
+
+  // Gắn các urlParams vào URL
+  finalUrl.search = urlParams.toString();
 
   const fetchOptions = {
     method,
@@ -87,11 +104,19 @@ async function executeApiDataSource(config, params) {
     cache: "no-store",
   };
 
-  if (method !== "GET" && Object.keys(bodyParams).length > 0) {
+  // [MOD] Chỉ thêm body nếu là POST và có dữ liệu
+  if (method === "POST" && Object.keys(bodyParams).length > 0) {
     fetchOptions.body = JSON.stringify(replacePlaceholders(bodyParams, params));
+    // [ADD] Log để kiểm tra body của request POST
+    console.log("[DataSource Service] POST request body:", fetchOptions.body);
   }
 
   const response = await fetch(finalUrl.toString(), fetchOptions);
+  const responseData = await response.json();
+
+  // [ADD] Log để kiểm tra kết quả trả về từ API
+  console.log("[DataSource Service] API response data:", responseData);
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`API call failed: ${response.status} ${errorText}`);

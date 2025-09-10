@@ -6,6 +6,11 @@ import Customer from "@/models/customer";
 import FieldDefinition from "@/models/fieldDefinition";
 import { executeDataSource } from "../dataSource/dataSource.service";
 import { Types } from "mongoose";
+import CareProgram from "@/models/careProgram";
+import User from "@/models/users";
+import Tag from "@/models/tag";
+import { getCurrentUser } from "@/lib/session";
+import { revalidateAndBroadcast } from "@/lib/revalidation";
 
 /**
  * Lấy chi tiết đầy đủ của một khách hàng, bao gồm cả việc "làm giàu" dữ liệu
@@ -22,88 +27,223 @@ export async function getCustomerDetails(customerId) {
     await connectDB();
 
     // --- BƯỚC 1: LẤY DỮ LIỆU GỐC & CÁC TRƯỜNG CẦN LÀM GIÀU ---
-    const customer = await Customer.findById(customerId).lean();
-    if (!customer) {
-      return null;
-    }
+    // [MOD] Thay đổi cách query để populate trực tiếp chương trình chăm sóc
+    const customer = await Customer.findById(customerId)
+      .populate("users", "name")
+      .populate("tags", "name")
+      .populate({
+        path: "programEnrollments.programId",
+        model: CareProgram,
+        select: "name stages statuses",
+      })
+      .populate({
+        // Populate thông tin user trong comment
+        path: "comments.user",
+        model: User,
+        select: "name",
+      })
+      .lean();
 
-    const enrollment = customer.programEnrollments?.[0];
-    if (!enrollment || !enrollment.programId) {
-      return JSON.parse(JSON.stringify(customer)); // Trả về dữ liệu gốc nếu không tham gia chương trình nào
-    }
+    if (!customer) return null;
 
-    const requiredFields = await FieldDefinition.find({
-      programIds: enrollment.programId,
-      dataSourceIds: { $exists: true, $ne: [] },
+    const programIds = (customer.programEnrollments || [])
+      .map((e) => e.programId?._id)
+      .filter(Boolean);
+    const tagIds = (customer.tags || []).map((t) => t._id);
+
+    const fieldDefinitions = await FieldDefinition.find({
+      $or: [{ programIds: { $in: programIds } }, { tagIds: { $in: tagIds } }],
     }).lean();
 
-    if (requiredFields.length === 0) {
-      return JSON.parse(JSON.stringify(customer)); // Trả về dữ liệu gốc nếu không có trường động nào
+    customer.fieldDefinitions = fieldDefinitions;
+
+    const dataSourcesToRun = fieldDefinitions.filter(
+      (def) => (def.dataSourceIds?.length || 0) > 0,
+    );
+    if (dataSourcesToRun.length === 0) {
+      return JSON.parse(JSON.stringify(customer));
     }
 
-    // --- BƯỚC 2: LẬP KẾ HOẠCH TRUY VẤN (TỐI ƯU HÓA) ---
-    // Gom nhóm tất cả các DataSource cần gọi để tránh gọi trùng lặp
-    const uniqueDataSourceIds = new Set();
-    requiredFields.forEach((field) => {
-      field.dataSourceIds.forEach((dsId) =>
-        uniqueDataSourceIds.add(dsId.toString()),
-      );
-    });
+    // [FIX] Logic làm giàu dữ liệu
+    const dataSourceIds = [
+      ...new Set(
+        dataSourcesToRun.flatMap((def) =>
+          def.dataSourceIds.map((id) => id.toString()),
+        ),
+      ),
+    ];
 
-    const queryPlan = Array.from(uniqueDataSourceIds);
-
-    // --- BƯỚC 3: THỰC THI KẾ HOẠCH TRUY VẤN SONG SONG ---
-    const dataSourcePromises = queryPlan.map((dsId) =>
+    const dataSourcePromises = dataSourceIds.map((id) =>
       executeDataSource({
-        dataSourceId: dsId,
-        params: {
-          phone: customer.phone,
-          citizenId: customer.citizenId,
-          customerId: customer._id.toString(),
-        },
+        dataSourceId: id,
+        params: { phone: customer.phone, citizenId: customer.citizenId },
       }),
     );
 
     const results = await Promise.all(dataSourcePromises);
-
-    // Map kết quả lại với ID của DataSource để tra cứu dễ dàng
-    const resultsByDataSourceId = queryPlan.reduce((acc, dsId, index) => {
-      const result = results[index];
-      if (result && !result.error) {
-        // Giả định kết quả luôn là một mảng chứa một object
-        acc[dsId] = Array.isArray(result) ? result[0] : result;
+    console.log("[Customer Action] Raw results from all DataSources:", results);
+    const resultsByDataSourceId = dataSourceIds.reduce((acc, id, index) => {
+      if (results[index] && !results[index].error) {
+        acc[id] = Array.isArray(results[index])
+          ? results[index][0]
+          : results[index];
       } else {
-        acc[dsId] = null; // Đánh dấu là lỗi hoặc không có dữ liệu
+        acc[id] = {};
       }
       return acc;
     }, {});
 
-    // --- BƯỚC 4: TỔNG HỢP DỮ LIỆU VỚI LOGIC ƯU TIÊN & FALLBACK ---
-    let enrichedData = {};
-    for (const field of requiredFields) {
-      // Chỉ xử lý nếu trường này chưa có trong kết quả
-      if (enrichedData[field.fieldName] === undefined) {
-        // Lặp qua các nguồn dữ liệu theo thứ tự ưu tiên
-        for (const dsId of field.dataSourceIds) {
-          const sourceResult = resultsByDataSourceId[dsId.toString()];
-          // Nếu nguồn này có kết quả VÀ có chứa trường dữ liệu ta cần
-          if (sourceResult && sourceResult[field.fieldName] !== undefined) {
-            enrichedData[field.fieldName] = sourceResult[field.fieldName];
-            break; // Dừng lại ngay khi tìm thấy dữ liệu từ nguồn ưu tiên nhất
+    // Gán giá trị từ datasource vào customer attributes
+    for (const def of fieldDefinitions) {
+      for (const dsId of def.dataSourceIds || []) {
+        const resultData = resultsByDataSourceId[dsId.toString()];
+        // [ADD] Log để kiểm tra dữ liệu làm giàu
+        console.log(
+          `[Customer Action] Enriching field '${def.fieldName}'. Data from source:`,
+          resultData,
+        );
+        if (resultData && resultData[def.fieldName] !== undefined) {
+          const existingAttrIndex = (
+            customer.customerAttributes || []
+          ).findIndex(
+            (attr) => attr.definitionId.toString() === def._id.toString(),
+          );
+          if (existingAttrIndex === -1) {
+            // Chỉ gán nếu chưa có giá trị do người dùng nhập
+            if (!customer.customerAttributes) customer.customerAttributes = [];
+            customer.customerAttributes.push({
+              definitionId: def._id,
+              value: [resultData[def.fieldName]],
+              createdBy: ADMIN_ID, // [NOTE] Tạm thời gán cho Admin
+            });
           }
+          break;
         }
       }
     }
 
-    // --- BƯỚC 5: GỘP DỮ LIỆU & TRẢ VỀ ---
-    const fullDetails = {
-      ...customer,
-      ...enrichedData,
-    };
-
-    return JSON.parse(JSON.stringify(fullDetails));
+    return JSON.parse(JSON.stringify(customer));
   } catch (error) {
     console.error(`Loi trong getCustomerDetails cho ID ${customerId}:`, error);
     return null;
+  }
+}
+
+/**
+ * Thêm hoặc cập nhật một giá trị thuộc tính động cho khách hàng.
+ */
+export async function updateCustomerAttribute({
+  customerId,
+  definitionId,
+  value,
+}) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Yêu cầu đăng nhập.");
+    await connectDB();
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) throw new Error("Không tìm thấy khách hàng.");
+
+    const attributeIndex = (customer.customerAttributes || []).findIndex(
+      (attr) => attr.definitionId.toString() === definitionId,
+    );
+
+    const newValue = {
+      definitionId,
+      value: [value], // Luôn lưu dưới dạng mảng
+      createdBy: currentUser.id,
+      createdAt: new Date(),
+    };
+
+    if (attributeIndex > -1) {
+      customer.customerAttributes[attributeIndex] = newValue;
+    } else {
+      customer.customerAttributes.push(newValue);
+    }
+
+    await customer.save();
+    revalidateAndBroadcast(`customer_details_${customerId}`);
+    return { success: true, data: JSON.parse(JSON.stringify(customer)) };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Cập nhật danh sách tags cho một khách hàng.
+ */
+export async function updateCustomerTags({ customerId, tagIds }) {
+  try {
+    await connectDB();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Yêu cầu đăng nhập.");
+
+    const updatedCustomer = await Customer.findByIdAndUpdate(
+      customerId,
+      { $set: { tags: tagIds } },
+      { new: true },
+    );
+
+    if (!updatedCustomer) {
+      throw new Error("Không tìm thấy khách hàng.");
+    }
+
+    // Ghi log hành động (tùy chọn, có thể thêm sau)
+    // await logAction({...});
+
+    revalidateAndBroadcast("customer_details");
+    revalidateAndBroadcast("customer_list"); // Cập nhật cả danh sách ngoài
+    return { success: true, data: JSON.parse(JSON.stringify(updatedCustomer)) };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function addCommentToCustomer({ customerId, detail }) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Yêu cầu đăng nhập.");
+    await connectDB();
+
+    const newComment = {
+      user: currentUser.id,
+      detail: detail,
+      time: new Date(),
+    };
+
+    const updatedCustomer = await Customer.findByIdAndUpdate(
+      customerId,
+      { $push: { comments: { $each: [newComment], $position: 0 } } },
+      { new: true },
+    );
+
+    revalidateAndBroadcast(`customer_details_${customerId}`);
+    return { success: true, data: JSON.parse(JSON.stringify(updatedCustomer)) };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+/**
+ * Gán (hoặc ghi đè) danh sách nhân viên cho nhiều khách hàng.
+ */
+export async function assignUsersToCustomers({ customerIds, userIds }) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (currentUser.role !== "Admin")
+      throw new Error("Không có quyền thực hiện.");
+    await connectDB();
+
+    const result = await Customer.updateMany(
+      { _id: { $in: customerIds } },
+      // Dùng $addToSet để tránh trùng lặp user trong một khách hàng
+      { $addToSet: { users: { $each: userIds } } },
+    );
+
+    revalidateAndBroadcast("customer_details");
+    revalidateAndBroadcast("customer_list");
+    return { success: true, modifiedCount: result.modifiedCount };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
 }
