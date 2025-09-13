@@ -64,8 +64,7 @@ export async function getCustomerDetails(customerId) {
       return JSON.parse(JSON.stringify(customer));
     }
 
-    // [FIX] Logic làm giàu dữ liệu
-    const dataSourceIds = [
+    const uniqueDataSourceIds = [
       ...new Set(
         dataSourcesToRun.flatMap((def) =>
           def.dataSourceIds.map((id) => id.toString()),
@@ -73,27 +72,39 @@ export async function getCustomerDetails(customerId) {
       ),
     ];
 
-    const dataSourcePromises = dataSourceIds.map((id) =>
+    const dataSourcePromises = uniqueDataSourceIds.map((id) =>
       executeDataSource({
         dataSourceId: id,
-        params: { phone: customer.phone, citizenId: customer.citizenId },
+        params: {
+          id: customer.phone,
+          phone: customer.phone,
+          citizenId: customer.citizenId,
+        },
       }),
     );
 
     const results = await Promise.all(dataSourcePromises);
     console.log("[Customer Action] Raw results from all DataSources:", results);
-    const resultsByDataSourceId = dataSourceIds.reduce((acc, id, index) => {
-      if (results[index] && !results[index].error) {
-        acc[id] = Array.isArray(results[index])
-          ? results[index][0]
-          : results[index];
-      } else {
-        acc[id] = {};
-      }
-      return acc;
-    }, {});
 
-    // Gán giá trị từ datasource vào customer attributes
+    const resultsByDataSourceId = uniqueDataSourceIds.reduce(
+      (acc, id, index) => {
+        if (results[index] && !results[index].error) {
+          acc[id] = Array.isArray(results[index])
+            ? results[index][0]
+            : results[index];
+        } else {
+          acc[id] = {};
+        }
+        return acc;
+      },
+      {},
+    );
+
+    console.log(
+      "[Customer Action] Processed results by DataSource ID:",
+      resultsByDataSourceId,
+    );
+
     for (const def of fieldDefinitions) {
       for (const dsId of def.dataSourceIds || []) {
         const resultData = resultsByDataSourceId[dsId.toString()];
@@ -103,20 +114,8 @@ export async function getCustomerDetails(customerId) {
           resultData,
         );
         if (resultData && resultData[def.fieldName] !== undefined) {
-          const existingAttrIndex = (
-            customer.customerAttributes || []
-          ).findIndex(
-            (attr) => attr.definitionId.toString() === def._id.toString(),
-          );
-          if (existingAttrIndex === -1) {
-            // Chỉ gán nếu chưa có giá trị do người dùng nhập
-            if (!customer.customerAttributes) customer.customerAttributes = [];
-            customer.customerAttributes.push({
-              definitionId: def._id,
-              value: [resultData[def.fieldName]],
-              createdBy: ADMIN_ID, // [NOTE] Tạm thời gán cho Admin
-            });
-          }
+          // Gán trực tiếp vào object customer để frontend hiển thị
+          customer[def.fieldName] = resultData[def.fieldName];
           break;
         }
       }
@@ -148,6 +147,7 @@ export async function updateCustomerAttribute({
     const attributeIndex = (customer.customerAttributes || []).findIndex(
       (attr) => attr.definitionId.toString() === definitionId,
     );
+    e;
 
     const newValue = {
       definitionId,

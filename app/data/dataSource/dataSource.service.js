@@ -63,11 +63,7 @@ async function executeApiDataSource(config, params) {
   if (!config) {
     throw new Error("DataSource có kiểu 'api' nhưng thiếu 'connectionConfig'.");
   }
-  console.log(
-    "[DataSource Service] Executing API call with config:",
-    JSON.stringify(config, null, 2),
-  );
-  console.log("[DataSource Service] Runtime params:", params);
+
   const configParams = new Map(
     (config.params || []).map((p) => [p.key, p.value]),
   );
@@ -80,6 +76,7 @@ async function executeApiDataSource(config, params) {
   // Thay thế placeholder trong URL, headers và body
   const finalUrl = new URL(replacePlaceholders(urlString, params));
   const finalHeaders = replacePlaceholders(headers, params);
+
   const bodyParams = {};
   const urlParams = new URLSearchParams();
 
@@ -107,21 +104,29 @@ async function executeApiDataSource(config, params) {
   // [MOD] Chỉ thêm body nếu là POST và có dữ liệu
   if (method === "POST" && Object.keys(bodyParams).length > 0) {
     fetchOptions.body = JSON.stringify(replacePlaceholders(bodyParams, params));
-    // [ADD] Log để kiểm tra body của request POST
-    console.log("[DataSource Service] POST request body:", fetchOptions.body);
   }
+
+  console.log("[DataSource Service] Sending request to:", finalUrl.toString());
+  console.log("[DataSource Service] With options:", fetchOptions);
 
   const response = await fetch(finalUrl.toString(), fetchOptions);
   const responseData = await response.json();
 
-  // [ADD] Log để kiểm tra kết quả trả về từ API
-  console.log("[DataSource Service] API response data:", responseData);
+  console.log("[DataSource Service] Raw API response:", responseData);
 
   if (!response.ok) {
-    const errorText = await response.text();
+    // [MOD] Ném lỗi từ dữ liệu đã đọc thay vì đọc lại
+    const errorText = JSON.stringify(responseData);
     throw new Error(`API call failed: ${response.status} ${errorText}`);
   }
-  return response.json();
+
+  // [MOD] Tự động "giải nén" nếu có thuộc tính 'data' và nó là một mảng
+  if (responseData && Array.isArray(responseData.data)) {
+    console.log("[DataSource Service] Unpacked .data property from response.");
+    return responseData.data;
+  }
+
+  return responseData;
 }
 
 async function getGoogleAuth() {
@@ -180,13 +185,34 @@ export async function executeDataSource({ dataSourceId, params = {} }) {
       throw new Error(`DataSource not found with ID: ${dataSourceId}`);
     }
 
-    // GIAI ĐOẠN 1: FETCH - Lấy dữ liệu thô
+    // [ADD] BƯỚC 1.5: ÁNH XẠ THAM SỐ (PARAMETER MAPPING)
+    // Ánh xạ dữ liệu từ `params` (do hệ thống cung cấp) sang `finalParams` (API thực sự cần)
+    const finalParams = {};
+    if (dataSource.inputParams && dataSource.inputParams.length > 0) {
+      for (const inputDef of dataSource.inputParams) {
+        // [NOTE] Logic ánh xạ đơn giản: Giả sử tên param trong hệ thống (phone)
+        // khớp với phần cuối của param API (ví dụ: 'customerPhone' -> 'phone').
+        // Hoặc có thể ánh xạ trực tiếp nếu tên giống nhau.
+        // Ở đây, API cần 'id', và chúng ta quy ước 'id' sẽ lấy giá trị từ 'phone' của customer.
+        // Đây là một quy ước ngầm, có thể nâng cấp sau này bằng cách thêm trường 'sourceField' vào inputParams.
+        if (inputDef.paramName === "id" && params.phone) {
+          finalParams.id = params.phone;
+        } else if (params[inputDef.paramName]) {
+          finalParams[inputDef.paramName] = params[inputDef.paramName];
+        }
+      }
+    } else {
+      // Nếu không có định nghĩa input, cứ dùng params gốc
+      Object.assign(finalParams, params);
+    }
+
+    // GIAI ĐOẠN 2: FETCH - Lấy dữ liệu thô với tham số đã được ánh xạ
     let rawData;
     switch (dataSource.connectorType) {
       case "api":
         rawData = await executeApiDataSource(
           dataSource.connectionConfig,
-          params,
+          finalParams, // [MOD] Sử dụng finalParams
         );
         break;
       case "google_sheet":
@@ -195,7 +221,7 @@ export async function executeDataSource({ dataSourceId, params = {} }) {
       case "local_mongodb":
         rawData = await executeMongoDbDataSource(
           dataSource.databasePipeline,
-          params,
+          finalParams, // [MOD] Sử dụng finalParams
         );
         break;
       default:
