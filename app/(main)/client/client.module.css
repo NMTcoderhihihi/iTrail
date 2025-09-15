@@ -16,14 +16,14 @@
   align-items: center;
   gap: 12px;
   padding: 8px 16px;
-  background-color: #eef2ff; /* Màu nền xanh nhạt */
-  border: 1px solid #c7d2fe; /* Viền xanh */
+  background-color: #eef2ff;
+  border: 1px solid #c7d2fe;
   border-radius: 8px;
-  flex-wrap: wrap; /* Cho phép các nút xuống dòng nếu không đủ chỗ */
+  flex-wrap: wrap;
 }
 
 .btnCampaign {
-  padding: 6px 14px; /* Thu nhỏ nút */
+  padding: 6px 14px;
   background: #16a34a;
   color: white;
   border: none;
@@ -48,9 +48,11 @@
   box-shadow: var(--boxshaw2);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   transition: all 0.3s ease-in-out;
   flex-shrink: 0; /* Không cho phép co lại */
+  /* [MOD] Thêm bo góc */
+  border-radius: 8px;
+  /* [DEL] Xóa bỏ overflow: hidden để không cắt xén dropdown */
 }
 
 .filterHeader {
@@ -60,6 +62,13 @@
   padding: 10px 20px; /* Thu nhỏ */
   background-color: var(--main_d);
   cursor: pointer; /* Cho phép click để thu gọn */
+  /* [MOD] Bo góc cho header khi section được mở */
+  border-radius: 8px 8px 0 0;
+}
+
+/* [MOD] Khi section bị thu gọn, header sẽ được bo tròn cả 4 góc */
+.filterSection.collapsed .filterHeader {
+  border-radius: 8px;
 }
 
 .filterHeader h3 {
@@ -85,7 +94,7 @@
   gap: 12px; /* Thu nhỏ */
   padding: 12px 20px; /* Thu nhỏ */
   transition: all 0.3s ease-in-out;
-  overflow: hidden;
+  /* [MOD] Xóa overflow: hidden ở đây */
   border-top: 1px solid var(--border-color);
 }
 
@@ -95,6 +104,8 @@
   padding-bottom: 0;
   max-height: 0;
   opacity: 0;
+  /* [MOD] Thêm overflow hidden chỉ khi bị thu gọn */
+  overflow: hidden;
 }
 
 /* Yêu cầu 1: Thu nhỏ các group filter */

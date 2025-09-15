@@ -45,6 +45,13 @@ const Filters = ({
   const searchParams = useSearchParams();
 
   const programId = searchParams.get("program");
+
+  // [LOG] Thêm log để kiểm tra dữ liệu trên CLIENT
+  console.log("--- [CLIENT LOG] Dữ liệu nhận được bởi component Filters: ---");
+  console.log("programId từ URL:", programId);
+  console.log("Mảng carePrograms nhận được:", carePrograms);
+  console.log("-------------------------------------------------------------");
+
   const currentProgram = programId
     ? (carePrograms || []).find((p) => p._id === programId)
     : null;
@@ -216,7 +223,7 @@ export default function ClientPage({
 
   const handleAssignSuccess = () => {
     router.refresh();
-    setSelectedIds(new Set()); // Xóa lựa chọn sau khi gán thành công
+    setSelectedIds(new Set());
   };
 
   const activeRowIds = useMemo(() => {
@@ -284,7 +291,7 @@ export default function ClientPage({
   };
   const handleOpenAssignUserPanel = () => {
     openPanel({
-      id: `assign-users-${Date.now()}`, // ID động để có thể mở nhiều lần
+      id: `assign-users-${Date.now()}`,
       title: `Gán nhân viên cho ${selectedIds.size} khách hàng`,
       component: AssignUserPanel,
       props: {

@@ -10,11 +10,11 @@ import { getCareProgramsForFilter } from "@/app/data/careProgram/careProgram.que
 import MainLayoutClient from "./MainLayoutClient";
 
 export default async function MainLayout({ children }) {
-  // [MOD] Lấy dữ liệu đồng thời để tối ưu
-  const [userData, carePrograms] = await Promise.all([
-    getCurrentUser(),
-    getCareProgramsForFilter(await getCurrentUser()),
-  ]);
+  // [MOD] Gọi `getCurrentUser()` một lần và lưu vào biến
+  const userData = await getCurrentUser();
+
+  // [MOD] Truyền `userData` vào hàm `getCareProgramsForFilter`
+  const carePrograms = await getCareProgramsForFilter(userData);
 
   // [ADD] Gom dữ liệu cho Nav vào một object
   const navData = {

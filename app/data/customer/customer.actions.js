@@ -22,7 +22,7 @@ export async function getCustomerDetails(customerId) {
     }
 
     await connectDB();
-    const currentUser = await getCurrentUser(); // Lấy user hiện tại để dùng sau
+    const currentUser = await getCurrentUser();
 
     // --- BƯỚC 1: LẤY BỐI CẢNH ---
     // Lấy dữ liệu thô của khách hàng và các thông tin liên quan
@@ -70,7 +70,7 @@ export async function getCustomerDetails(customerId) {
       if (def.displayCondition === "ALL") {
         return hasTags && hasPrograms;
       }
-      return hasTags || hasPrograms; // Mặc định là 'ANY'
+      return hasTags || hasPrograms;
     });
 
     // --- BƯỚC 3: LÀM GIÀU & LẮP RÁP DỮ LIỆU ---
@@ -97,7 +97,6 @@ export async function getCustomerDetails(customerId) {
       ),
     );
 
-    // Chuẩn bị các mảng để lắp ráp
     customer.customerAttributes = [];
     customer.programEnrollments = customer.programEnrollments.map((e) => ({
       ...e,
@@ -109,10 +108,24 @@ export async function getCustomerDetails(customerId) {
 
       // Ưu tiên 1: Lấy giá trị từ DataSource
       for (const dsId of def.dataSourceIds || []) {
-        const result = dataSourceResults[dsId.toString()];
-        if (result && result[def.fieldName] !== undefined) {
+        let result = dataSourceResults[dsId.toString()];
+
+        // [MOD] START: Xử lý kết quả dạng mảng
+        // Nếu kết quả là một mảng và có phần tử, hãy lấy phần tử đầu tiên.
+        if (Array.isArray(result) && result.length > 0) {
+          result = result[0];
+        }
+
+        if (
+          result &&
+          typeof result === "object" &&
+          result[def.fieldName] !== undefined
+        ) {
           finalValue = result[def.fieldName];
-          break; // Tìm thấy giá trị từ source ưu tiên cao nhất, dừng lại
+          console.log(`   => ✅ TÌM THẤY GIÁ TRỊ:`, finalValue);
+          break;
+        } else {
+          console.log(`   => ❌ KHÔNG TÌM THẤY fieldName trong kết quả.`);
         }
       }
 
@@ -127,19 +140,19 @@ export async function getCustomerDetails(customerId) {
           createdAt: new Date(),
         };
 
-        if (def.scope === "CUSTOMER") {
-          customer.customerAttributes.push(attribute);
-        } else if (def.scope === "PROGRAM") {
+        const isProgramScoped = def.programIds && def.programIds.length > 0;
+
+        if (isProgramScoped) {
+          // Gán thuộc tính này vào tất cả các chương trình chăm sóc phù hợp mà khách hàng đang tham gia
           customer.programEnrollments.forEach((enrollment) => {
-            // Chỉ thêm vào program enrollment có programId khớp
-            if (
-              (def.programIds || [])
-                .map(String)
-                .includes(enrollment.programId?._id.toString())
-            ) {
+            const enrollmentProgramId = enrollment.programId?._id.toString();
+            if (def.programIds.map(String).includes(enrollmentProgramId)) {
               enrollment.programData.push(attribute);
             }
           });
+        } else {
+          // Nếu không thuộc chương trình nào, nó là thuộc tính chung của khách hàng
+          customer.customerAttributes.push(attribute);
         }
       }
     }
@@ -187,8 +200,8 @@ export async function updateCustomerAttribute({
   customerId,
   definitionId,
   value,
-  scope, // Cần biết scope để lưu đúng chỗ
-  programId, // Cần nếu scope là PROGRAM
+  scope,
+  programId,
 }) {
   try {
     // ... logic cập nhật DB sẽ được viết ở đây trong tương lai ...
@@ -217,11 +230,8 @@ export async function updateCustomerTags({ customerId, tagIds }) {
       throw new Error("Không tìm thấy khách hàng.");
     }
 
-    // Ghi log hành động (tùy chọn, có thể thêm sau)
-    // await logAction({...});
-
     revalidateAndBroadcast("customer_details");
-    revalidateAndBroadcast("customer_list"); // Cập nhật cả danh sách ngoài
+    revalidateAndBroadcast("customer_list");
     return { success: true, data: JSON.parse(JSON.stringify(updatedCustomer)) };
   } catch (error) {
     return { success: false, error: error.message };
@@ -235,7 +245,8 @@ export async function addCommentToCustomer({ customerId, detail }) {
     await connectDB();
 
     const newComment = {
-      user: currentUser.id,
+      // [MOD] Sử dụng currentUser._id thay vì currentUser.id để nhất quán
+      user: currentUser._id,
       detail: detail,
       time: new Date(),
     };
@@ -244,7 +255,9 @@ export async function addCommentToCustomer({ customerId, detail }) {
       customerId,
       { $push: { comments: { $each: [newComment], $position: 0 } } },
       { new: true },
-    );
+    )
+      // [ADD] Thêm bước populate này để lấy thông tin user ngay lập tức
+      .populate({ path: "comments.user", model: User, select: "name" });
 
     revalidateAndBroadcast(`customer_details_${customerId}`);
     return { success: true, data: JSON.parse(JSON.stringify(updatedCustomer)) };

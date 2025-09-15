@@ -8,18 +8,12 @@ import Tag from "@/models/tag";
 import CareProgram from "@/models/careProgram";
 import { Types } from "mongoose";
 
-/**
- * Lấy danh sách khách hàng nâng cao, hỗ trợ nhiều bộ lọc phức tạp và join dữ liệu.
- * @param {object} filters - Các tham số lọc từ client (thay thế cho searchParams).
- * @param {object} currentUser - Thông tin người dùng đang đăng nhập (từ session).
- * @returns {Promise<object>} - Dữ liệu khách hàng và thông tin phân trang.
- */
-// [MOD] Thay đổi chữ ký hàm để nhận 'filters' object
+// [MOD] Chữ ký hàm thay đổi: nhận lại `filters` thay cho `searchParams`
 export async function getClientes(filters = {}, currentUser = null) {
   try {
     await connectDB();
 
-    // [MOD] Đọc giá trị từ object 'filters' thay vì 'searchParams'
+    // [MOD] Đọc và xử lý các giá trị từ object `filters` thông thường
     const page = parseInt(filters.page) || 1;
     const limit = parseInt(filters.limit) || 50;
     const skip = (page - 1) * limit;
@@ -44,9 +38,18 @@ export async function getClientes(filters = {}, currentUser = null) {
     }
 
     if (filters.tags) {
-      const tagIds = filters.tags
-        .split(",")
-        .map((id) => new Types.ObjectId(id));
+      // [FIX] Đảm bảo `tags` luôn là mảng để xử lý
+      const tagValues = Array.isArray(filters.tags)
+        ? filters.tags
+        : [filters.tags];
+      const tagIds = tagValues
+        .flatMap((tag) => tag.split(",")) // Xử lý trường hợp "tag1,tag2"
+        .map((id) =>
+          Types.ObjectId.isValid(id.trim())
+            ? new Types.ObjectId(id.trim())
+            : null,
+        )
+        .filter(Boolean);
       if (tagIds.length > 0) {
         matchStage.tags = { $in: tagIds };
       }
@@ -56,12 +59,41 @@ export async function getClientes(filters = {}, currentUser = null) {
     if (filters.programId && Types.ObjectId.isValid(filters.programId)) {
       enrollmentFilters.programId = new Types.ObjectId(filters.programId);
     }
-    if (filters.stageId && Types.ObjectId.isValid(filters.stageId)) {
-      enrollmentFilters.stageId = new Types.ObjectId(filters.stageId);
+
+    if (filters.stageId) {
+      const stageValues = Array.isArray(filters.stageId)
+        ? filters.stageId
+        : [filters.stageId];
+      const stageIds = stageValues
+        .flatMap((id) => id.split(","))
+        .map((id) =>
+          Types.ObjectId.isValid(id.trim())
+            ? new Types.ObjectId(id.trim())
+            : null,
+        )
+        .filter(Boolean);
+      if (stageIds.length > 0) {
+        enrollmentFilters.stageId = { $in: stageIds };
+      }
     }
-    if (filters.statusId && Types.ObjectId.isValid(filters.statusId)) {
-      enrollmentFilters.statusId = new Types.ObjectId(filters.statusId);
+
+    if (filters.statusId) {
+      const statusValues = Array.isArray(filters.statusId)
+        ? filters.statusId
+        : [filters.statusId];
+      const statusIds = statusValues
+        .flatMap((id) => id.split(","))
+        .map((id) =>
+          Types.ObjectId.isValid(id.trim())
+            ? new Types.ObjectId(id.trim())
+            : null,
+        )
+        .filter(Boolean);
+      if (statusIds.length > 0) {
+        enrollmentFilters.statusId = { $in: statusIds };
+      }
     }
+
     if (Object.keys(enrollmentFilters).length > 0) {
       matchStage.programEnrollments = { $elemMatch: enrollmentFilters };
     }
@@ -168,12 +200,11 @@ export async function getClientes(filters = {}, currentUser = null) {
             createdAt: { $first: "$createdAt" },
             users: { $first: "$users" },
             tags: { $first: "$tags" },
-            // Lấy thông tin status/stage đã xử lý
             status: { $first: "$statusInfo" },
             stage: { $first: "$stageInfo" },
           },
         },
-        { $sort: { createdAt: -1 } }, // Sắp xếp lại sau khi group
+        { $sort: { createdAt: -1 } },
       ]),
       Customer.countDocuments(matchStage),
     ]);

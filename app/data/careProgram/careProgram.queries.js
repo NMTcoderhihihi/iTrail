@@ -41,9 +41,8 @@ export async function getCarePrograms({ page = 1, limit = 10 } = {}) {
 export async function getCareProgramsForFilter(currentUser) {
   try {
     await connectDB();
-    // [MOD] Tự lấy thông tin người dùng từ session
-    const currentUser = await getCurrentUser();
-    if (!currentUser) return []; // Nếu không có session, trả về mảng rỗng
+    // [MOD] Sử dụng trực tiếp currentUser được truyền vào, không gọi lại `getCurrentUser()`
+    if (!currentUser) return [];
 
     const query = {};
     // [MOD] Logic phân quyền dựa trên vai trò

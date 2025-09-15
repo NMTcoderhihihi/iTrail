@@ -32,7 +32,7 @@
   margin-bottom: 12px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   border: 1px solid #e5e7eb;
-  overflow: hidden; /* Quan trọng để bo góc hoạt động đúng */
+  overflow: hidden;
 }
 
 .sectionHeader {
@@ -41,7 +41,7 @@
   align-items: center;
   padding: 12px 16px;
   cursor: pointer;
-  border-bottom: 1px solid transparent; /* Viền mờ mặc định */
+  border-bottom: 1px solid transparent;
   transition: background-color 0.2s;
 }
 
@@ -72,7 +72,7 @@
 }
 
 .sectionContent {
-  padding: 0 16px 16px 16px; /* Padding cho nội dung bên trong */
+  padding: 0 16px 16px 16px;
   animation: fadeIn 0.5s ease;
 }
 
@@ -232,12 +232,13 @@
 }
 
 .tagItem {
-  background-color: #eef2ff;
-  color: #4338ca;
-  padding: 4px 10px;
-  border-radius: 12px;
+  background-color: #eef2ff; /* indigo-100 */
+  color: #4338ca; /* indigo-800 */
+  padding: 4px 12px;
+  border-radius: 16px;
   font-size: 13px;
   font-weight: 500;
+  border: 1px solid #c7d2fe;
 }
 
 .placeholderText,
@@ -268,63 +269,6 @@
   border-radius: 4px;
 }
 
-/* =================================== */
-/* === TAG EDITOR POPUP === */
-/* =================================== */
-.tagEditorContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-}
-
-.tagSearchInput {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-.tagList {
-  max-height: 250px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-}
-
-.tagEditorItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-}
-.tagEditorItem:hover {
-  background-color: #f1f5f9;
-}
-.tagEditorItem input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #3b82f6;
-}
-
-.tagEditorActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
-}
-
-/* [ADD] CSS cho section Thông tin chăm sóc */
 .subSection {
   padding: 12px 0;
   border-bottom: 1px dashed #e5e7eb;
@@ -336,27 +280,47 @@
   font-size: 13px;
   font-weight: 600;
   color: #374151;
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
 }
 
 /* --- CSS cho Comment --- */
 .commentList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px; /* Tăng khoảng cách giữa các comment */
   max-height: 250px;
   overflow-y: auto;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  padding-right: 8px; /* Chỗ cho thanh cuộn */
 }
 .commentItem {
-  background-color: #f9fafb;
-  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+}
+.commentItem.currentUserComment {
+  align-items: flex-end; /* Đẩy comment của user hiện tại sang phải */
+}
+.commentBubble {
+  max-width: 80%;
   padding: 8px 12px;
+  border-radius: 18px;
   font-size: 14px;
+  background-color: #e5e7eb; /* Màu mặc định cho người khác */
+  color: #1f2937;
+}
+.currentUserComment .commentBubble {
+  background-color: #3b82f6; /* Màu xanh cho user hiện tại */
+  color: #ffffff;
+}
+.commentAuthor {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #4b5563;
 }
 .commentText {
-  color: #1f2937;
   white-space: pre-wrap;
+  margin: 0;
 }
 .commentMeta {
   font-size: 11px;
@@ -368,6 +332,8 @@
   display: flex;
   gap: 8px;
   align-items: flex-start;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 12px;
 }
 .commentTextarea {
   flex-grow: 1;
@@ -375,12 +341,14 @@
   min-height: 40px;
   padding: 8px 12px;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 18px; /* Bo tròn giống khung chat */
   font-size: 14px;
+  background-color: #fff;
 }
 .commentSubmitButton {
+  flex-shrink: 0;
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 18px;
   border: none;
   background-color: #2563eb;
   color: white;

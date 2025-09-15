@@ -73,8 +73,17 @@ export default function FieldDefinitionManagement() {
     { header: "Kiểu Dữ liệu", accessor: "fieldType", width: "1fr" },
     {
       header: "Chương trình",
-      width: "1fr",
-      cell: (item) => item.programIds?.length || 0,
+      width: "1.5fr", // [MOD] Tăng độ rộng cột
+      // [MOD] Sửa lại logic cell để hiển thị tên chương trình
+      cell: (item) => (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+          {(item.programIds || []).map((program) => (
+            <span key={program._id} className="chip">
+              {program.name}
+            </span>
+          ))}
+        </div>
+      ),
     },
     {
       header: "Nguồn Dữ liệu",

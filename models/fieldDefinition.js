@@ -12,7 +12,7 @@ const FieldDefinitionSchema = new Schema(
     },
     description: { type: String },
     dataSourceIds: [{ type: Schema.Types.ObjectId, ref: "dataSource" }],
-    // [MOD] Thay thế isCommonAttribute bằng tagIds để linh hoạt hơn
+
     programIds: [{ type: Schema.Types.ObjectId, ref: "careProgram" }],
     tagIds: [{ type: Schema.Types.ObjectId, ref: "tag" }],
     createdBy: {
@@ -20,14 +20,14 @@ const FieldDefinitionSchema = new Schema(
       ref: "user",
       required: true,
     },
-    // [ADD] Trường quy định phạm vi lưu trữ và truy vấn của trường dữ liệu.
+
     scope: {
       type: String,
       enum: ["CUSTOMER", "PROGRAM"],
       default: "CUSTOMER", // Mặc định là trường chung của khách hàng
       required: true,
     },
-    // [ADD] Trường quy định logic hiển thị khi có cả tagIds và programIds.
+
     displayCondition: {
       type: String,
       enum: ["ANY", "ALL"], // ANY = OR, ALL = AND

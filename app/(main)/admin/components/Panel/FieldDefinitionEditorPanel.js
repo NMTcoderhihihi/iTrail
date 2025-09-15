@@ -51,12 +51,17 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
       if (fieldId) {
         const fieldResult = await getFieldDefinitionById(fieldId);
         if (fieldResult.success) {
-          // [FIX] Đảm bảo các mảng IDs luôn là mảng, tránh lỗi undefined
+          // [FIX] Chuyển đổi mảng programIds từ object về string ID
+          const fetchedField = fieldResult.data;
+          const programStringIds = (fetchedField.programIds || []).map(
+            (p) => p._id,
+          );
+
           setField({
-            ...fieldResult.data,
-            programIds: fieldResult.data.programIds || [],
-            tagIds: fieldResult.data.tagIds || [],
-            dataSourceIds: fieldResult.data.dataSourceIds || [],
+            ...fetchedField,
+            programIds: programStringIds, // Sử dụng mảng ID chuỗi
+            tagIds: fetchedField.tagIds || [],
+            dataSourceIds: fetchedField.dataSourceIds || [],
           });
         } else {
           alert(`Lỗi tải dữ liệu trường: ${fieldResult.error}`);

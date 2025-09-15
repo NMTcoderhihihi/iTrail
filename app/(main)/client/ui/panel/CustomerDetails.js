@@ -21,7 +21,8 @@ import { Svg_History, Svg_Edit } from "@/components/(icon)/svg";
 import Loading from "@/components/(ui)/(loading)/loading";
 import StageIndicator from "@/components/(ui)/progress/StageIndicator";
 import CustomerHistoryPanel from "./CustomerHistoryPanel";
-import CenterPopup from "@/components/(features)/(popup)/popup_center";
+// [MOD] Import MultiSelectDropdown thay cho CenterPopup
+import MultiSelectDropdown from "@/app/(main)/admin/components/Panel/MultiSelectDropdown";
 
 // ================================================================================
 // --- HELPER COMPONENTS (Thành phần phụ trợ) ---
@@ -65,116 +66,24 @@ const InfoRow = ({ label, children }) => (
   </div>
 );
 
-// [MOD] Đơn giản hóa DynamicField, chỉ cần nhận và hiển thị
-const DynamicField = ({ field, onSave }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentValue, setCurrentValue] = useState(field.value?.[0] || "");
-  const [isPending, startTransition] = useTransition();
-
-  // [FIX] Xóa bỏ hook useMemo gây lỗi. Component này giờ chỉ nhận và hiển thị.
-
-  // Cập nhật lại state nội bộ khi prop `field` từ bên ngoài thay đổi
-  useEffect(() => {
-    setCurrentValue(field.value?.[0] || "");
-  }, [field.value]);
-
-  const handleSave = () => {
-    startTransition(async () => {
-      // Logic lưu vào DB sẽ được xử lý sau. Hiện tại chỉ là ví dụ.
-      // await onSave(field.fieldDefinition._id, currentValue);
-      setIsEditing(false);
-    });
-  };
-
+// [MOD] This component now takes label and value directly
+const DynamicField = ({ label, value }) => {
   return (
     <div className={styles.infoRow}>
-      <span className={styles.fieldLabel}>
-        {field.fieldDefinition.fieldLabel}
-      </span>
+      <span className={styles.fieldLabel}>{label}</span>
       <div className={styles.infoValue}>
-        {isEditing ? (
-          <div className={styles.editInputContainer}>
-            <input
-              type="text"
-              value={currentValue}
-              onChange={(e) => setCurrentValue(e.target.value)}
-              className={styles.inlineInput}
-              autoFocus
-            />
-            <button
-              onClick={handleSave}
-              className={styles.inlineSaveButton}
-              disabled={isPending}
-            >
-              {isPending ? "..." : "Lưu"}
-            </button>
-            <button
-              onClick={() => setIsEditing(false)}
-              className={styles.inlineCancelButton}
-              disabled={isPending}
-            >
-              Hủy
-            </button>
-          </div>
-        ) : (
-          <span
-            className={styles.fieldValue}
-            onClick={() => setIsEditing(true)}
-          >
-            {currentValue || "(chưa có)"}
-          </span>
-        )}
+        <span className={styles.fieldValue}>{value || "(chưa có)"}</span>
       </div>
     </div>
   );
 };
 
-const TagEditor = ({ allTags, customerTags, onSave, onClose }) => {
-  const [selectedTagIds, setSelectedTagIds] = useState(
-    () => new Set((customerTags || []).map((t) => t._id)),
-  );
-
-  const handleToggle = (tagId) => {
-    const newSet = new Set(selectedTagIds);
-    newSet.has(tagId) ? newSet.delete(tagId) : newSet.add(tagId);
-    setSelectedTagIds(newSet);
-  };
-
-  return (
-    <CenterPopup open={true} onClose={onClose} title="Chỉnh sửa Tags" size="md">
-      <div className={styles.tagEditorContainer}>
-        <div className={styles.tagList}>
-          {(allTags || []).map((tag) => (
-            <label key={tag._id} className={styles.tagEditorItem}>
-              <input
-                type="checkbox"
-                checked={selectedTagIds.has(tag._id)}
-                onChange={() => handleToggle(tag._id)}
-              />
-              <span>{tag.name}</span>
-            </label>
-          ))}
-        </div>
-        <div className={styles.tagEditorActions}>
-          <button
-            onClick={onClose}
-            className={`${styles.buttonBase} ${styles.ghostButton}`}
-          >
-            Hủy
-          </button>
-          <button
-            onClick={() => onSave(Array.from(selectedTagIds))}
-            className={`${styles.buttonBase} ${styles.blueButton}`}
-          >
-            Lưu thay đổi
-          </button>
-        </div>
-      </div>
-    </CenterPopup>
-  );
-};
-
-const CommentSection = ({ comments = [], customerId, onCommentAdded }) => {
+const CommentSection = ({
+  comments = [],
+  customerId,
+  onCommentAdded,
+  user,
+}) => {
   const [newComment, setNewComment] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -198,15 +107,37 @@ const CommentSection = ({ comments = [], customerId, onCommentAdded }) => {
     <div className={styles.subSection}>
       <h4 className={styles.subSectionTitle}>Bình luận</h4>
       <div className={styles.commentList}>
-        {(comments || []).map((comment) => (
-          <div key={comment._id} className={styles.commentItem}>
-            <p className={styles.commentText}>{comment.detail}</p>
-            <p className={styles.commentMeta}>
-              bởi <strong>{comment.user?.name || "Không rõ"}</strong> lúc{" "}
-              {new Date(comment.time).toLocaleString("vi-VN")}
-            </p>
-          </div>
-        ))}
+        {/* [MOD] Thêm .slice().reverse() để đảo ngược thứ tự hiển thị */}
+        {(comments || [])
+          .slice()
+          .reverse()
+          .map((comment) => {
+            // [FIX] So sánh ID an toàn hơn
+            const isCurrentUser =
+              comment.user?._id?.toString() === user?.id?.toString();
+            return (
+              <div
+                key={comment._id}
+                // [MOD] Thêm class 'currentUser' nếu đúng
+                className={`${styles.commentItem} ${
+                  isCurrentUser ? styles.currentUserComment : ""
+                }`}
+              >
+                <div className={styles.commentBubble}>
+                  {!isCurrentUser && (
+                    <p className={styles.commentAuthor}>
+                      {comment.user?.name || "Không rõ"}
+                    </p>
+                  )}
+                  <p className={styles.commentText}>{comment.detail}</p>
+                </div>
+                <p className={styles.commentMeta}>
+                  bởi <strong>{comment.user?.name || "Không rõ"}</strong> lúc{" "}
+                  {new Date(comment.time).toLocaleString("vi-VN")}
+                </p>
+              </div>
+            );
+          })}
       </div>
       <div className={styles.commentInputContainer}>
         <textarea
@@ -238,9 +169,19 @@ export default function CustomerDetails({
 }) {
   const [customer, setCustomer] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isTagEditorOpen, setIsTagEditorOpen] = useState(false);
   const [allSystemTags, setAllSystemTags] = useState([]);
   const { openPanel } = usePanels();
+
+  // [MOD] Create a simple map for looking up field labels
+  const fieldDefinitionMap = useMemo(() => {
+    if (!customer?.fieldDefinitions) return new Map();
+    return new Map(
+      customer.fieldDefinitions.map((def) => [
+        def._id.toString(),
+        def.fieldLabel,
+      ]),
+    );
+  }, [customer]);
 
   const fetchDetails = useCallback(async () => {
     const fullCustomerData = await getCustomerDetails(customerId);
@@ -263,56 +204,6 @@ export default function CustomerDetails({
     initialFetch();
   }, [customerId]);
 
-  // [FIX] Di chuyển useMemo lên đây, đúng vị trí trong React component
-  const { customerScopedFields, programScopedFields } = useMemo(() => {
-    if (!customer?.fieldDefinitions)
-      return { customerScopedFields: [], programScopedFields: new Map() };
-
-    const customerFields = [];
-    const programFields = new Map();
-
-    const allCustomerAttributes = customer.customerAttributes || [];
-    const allProgramData = new Map();
-    (customer.programEnrollments || []).forEach((enrollment) => {
-      allProgramData.set(
-        enrollment.programId?._id.toString(),
-        enrollment.programData || [],
-      );
-    });
-
-    customer.fieldDefinitions.forEach((def) => {
-      let valueContainer = null;
-      if (def.scope === "CUSTOMER") {
-        valueContainer = allCustomerAttributes;
-      } else if (def.scope === "PROGRAM") {
-        const relevantProgramId = (def.programIds[0] || "").toString();
-        valueContainer = allProgramData.get(relevantProgramId);
-      }
-
-      const attr = (valueContainer || []).find(
-        (a) => a.definitionId.toString() === def._id.toString(),
-      );
-
-      const fieldData = {
-        fieldDefinition: def,
-        value: attr?.value,
-      };
-
-      if (def.scope === "CUSTOMER") {
-        customerFields.push(fieldData);
-      } else if (def.scope === "PROGRAM") {
-        (def.programIds || []).forEach((pId) => {
-          const progIdStr = pId.toString();
-          if (!programFields.has(progIdStr)) {
-            programFields.set(progIdStr, []);
-          }
-          programFields.get(progIdStr).push(fieldData);
-        });
-      }
-    });
-    return { customerScopedFields, programScopedFields };
-  }, [customer]);
-
   const handleSaveTags = async (tagIds) => {
     const result = await updateCustomerTags({ customerId, tagIds });
     if (result.success) {
@@ -321,7 +212,6 @@ export default function CustomerDetails({
     } else {
       alert(`Lỗi: ${result.error}`);
     }
-    setIsTagEditorOpen(false);
   };
 
   const handleShowHistory = () => {
@@ -333,16 +223,19 @@ export default function CustomerDetails({
     });
   };
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
         <Loading content="Đang tải dữ liệu chi tiết..." />
       </div>
     );
-  if (!customer)
+  }
+
+  if (!customer) {
     return (
       <div className={styles.errorText}>Không thể tải dữ liệu khách hàng.</div>
     );
+  }
 
   return (
     <>
@@ -354,76 +247,70 @@ export default function CustomerDetails({
             </InfoRow>
             <InfoRow label="Di động">{customer.phone}</InfoRow>
             <InfoRow label="CCCD">{customer.citizenId || "Chưa có"}</InfoRow>
-            {/* [MOD] Render các trường chung */}
-            {customerScopedFields.map((field) => (
+
+            {/* [REFACTOR] Render directly from customerAttributes */}
+            {(customer.customerAttributes || []).map((attr) => (
               <DynamicField
-                key={field.fieldDefinition._id}
-                field={field}
-                onSave={() => {}}
+                key={attr.definitionId}
+                label={
+                  fieldDefinitionMap.get(attr.definitionId.toString()) ||
+                  "Trường không xác định"
+                }
+                value={attr.value?.[0]}
               />
             ))}
           </CollapsibleSection>
 
-          {(customer.programEnrollments || []).map((enrollment) => {
-            const fieldsForThisProgram =
-              programScopedFields.get(enrollment.programId?._id.toString()) ||
-              [];
-            return (
-              <CollapsibleSection
-                key={enrollment.programId?._id || Math.random()}
-                title={`Chương trình: ${
-                  enrollment.programId?.name || "Không xác định"
-                }`}
-                initialCollapsed={true}
-              >
-                <InfoRow label="Giai đoạn">
-                  <StageIndicator
-                    level={enrollment.stage?.level || 0}
-                    totalStages={enrollment.programId?.stages?.length || 1}
-                  />
-                </InfoRow>
-                <InfoRow label="Trạng thái">
-                  <span>{enrollment.status?.name || "Chưa có"}</span>
-                  <button className={styles.inlineButton}>
-                    <Svg_Edit w={14} h={14} /> Thay đổi
-                  </button>
-                </InfoRow>
-                {/* [MOD] Render các trường riêng của chương trình */}
-                {fieldsForThisProgram.map((field) => (
-                  <DynamicField
-                    key={field.fieldDefinition._id}
-                    field={field}
-                    onSave={() => {}}
-                  />
-                ))}
-              </CollapsibleSection>
-            );
-          })}
+          {(customer.programEnrollments || []).map((enrollment) => (
+            <CollapsibleSection
+              key={enrollment.programId?._id || Math.random()}
+              title={`Chương trình: ${
+                enrollment.programId?.name || "Không xác định"
+              }`}
+              initialCollapsed={true}
+            >
+              <InfoRow label="Giai đoạn">
+                <StageIndicator
+                  level={enrollment.stage?.level || 0}
+                  totalStages={enrollment.programId?.stages?.length || 1}
+                />
+              </InfoRow>
+              <InfoRow label="Trạng thái">
+                <span>{enrollment.status?.name || "Chưa có"}</span>
+                <button className={styles.inlineButton}>
+                  <Svg_Edit w={14} h={14} /> Thay đổi
+                </button>
+              </InfoRow>
 
-          {/* Section 3: Thông tin chăm sóc */}
+              {/* [REFACTOR] Render directly from programData */}
+              {(enrollment.programData || []).map((attr) => (
+                <DynamicField
+                  key={attr.definitionId}
+                  label={
+                    fieldDefinitionMap.get(attr.definitionId.toString()) ||
+                    "Trường không xác định"
+                  }
+                  value={attr.value?.[0]}
+                />
+              ))}
+            </CollapsibleSection>
+          ))}
+
           <CollapsibleSection
             title="Thông tin chăm sóc"
             initialCollapsed={true}
           >
             <div className={styles.subSection}>
-              <h4 className={styles.subSectionTitle}>Tags</h4>
-              <div className={styles.tagContainer}>
-                {(customer.tags || []).length > 0 ? (
-                  customer.tags.map((tag) => (
-                    <span key={tag._id} className={styles.tagItem}>
-                      {tag.name}
-                    </span>
-                  ))
-                ) : (
-                  <p className={styles.placeholderText}>Chưa có tag.</p>
-                )}
-              </div>
-              <button
-                className={`${styles.buttonBase} ${styles.ghostButton}`}
-                onClick={() => setIsTagEditorOpen(true)}
-              >
-                Thay đổi Tags
-              </button>
+              <MultiSelectDropdown
+                label="Tags"
+                options={allSystemTags.map((tag) => ({
+                  id: tag._id,
+                  name: tag.name,
+                }))}
+                selectedIds={(customer.tags || []).map((tag) => tag._id)}
+                onChange={handleSaveTags}
+                displayAs="chip"
+              />
             </div>
             <div className={styles.subSection}>
               <h4 className={styles.subSectionTitle}>Nhân viên phụ trách</h4>
@@ -443,6 +330,7 @@ export default function CustomerDetails({
               comments={customer.comments}
               customerId={customer._id}
               onCommentAdded={fetchDetails}
+              user={user}
             />
           </CollapsibleSection>
 
@@ -458,15 +346,6 @@ export default function CustomerDetails({
           </div>
         </div>
       </div>
-
-      {isTagEditorOpen && (
-        <TagEditor
-          allTags={allSystemTags}
-          customerTags={customer.tags || []}
-          onSave={handleSaveTags}
-          onClose={() => setIsTagEditorOpen(false)}
-        />
-      )}
     </>
   );
 }

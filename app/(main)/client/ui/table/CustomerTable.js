@@ -16,9 +16,10 @@ const Row = React.memo(
     onToggleSelect,
     // [ADD] Thêm prop index
     index,
+    isActive, // Thêm prop mới
   }) => (
     <div
-      className={`${styles.gridRow} ${isSelected ? styles.activeRow : ""}`}
+      className={`${styles.gridRow} ${isActive ? styles.activeRow : ""}`}
       onClick={() => onRowClick(customer)}
     >
       {/* Checkbox cell */}
@@ -46,11 +47,12 @@ export default function CustomerTable({
   customers = [],
   zaloAccounts = [],
   pagination,
-  currentProgram, // Nhận vào chương trình hiện tại (hoặc null)
+  currentProgram,
   onRowClick,
   selectedIds,
   onToggleSelect,
   onTogglePage,
+  activeRowIds,
 }) {
   // Logic định nghĩa các cột hiển thị
   const columns = useMemo(() => {
@@ -77,7 +79,8 @@ export default function CustomerTable({
         key: "stt",
         label: "STT",
         width: "50px",
-        render: (c, za, index) => (currentPage - 1) * currentLimit + index + 1,
+        render: (c, za, index) =>
+          (pagination?.page - 1) * pagination?.limit + index + 1,
       },
       {
         key: "phone",
@@ -120,7 +123,16 @@ export default function CustomerTable({
           key: "stage",
           label: "Giai đoạn",
           width: "1fr",
-          render: (c) => <StageIndicator level={c.stage?.level || 0} />,
+          // [FIX] Truyền totalStages chính xác
+          render: (c) => {
+            // [FIX] Sửa lại logic để lấy totalStages từ programDetails
+            return (
+              <StageIndicator
+                level={c.stage?.level || 0}
+                totalStages={c.programDetails?.stages?.length || 0}
+              />
+            );
+          },
         },
         {
           key: "status",
@@ -165,6 +177,8 @@ export default function CustomerTable({
             isSelected={selectedIds.has(customer._id)}
             onToggleSelect={onToggleSelect}
             index={index}
+            // [MOD] Truyền prop isActive xuống
+            isActive={activeRowIds.has(customer._id)}
           />
         ))}
       </div>
