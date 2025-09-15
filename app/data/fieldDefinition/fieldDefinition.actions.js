@@ -16,7 +16,8 @@ export async function createOrUpdateFieldDefinition(data) {
     if (!currentUser) throw new Error("Yêu cầu đăng nhập.");
 
     const { id, ...updateData } = data;
-    updateData.createdBy = currentUser.id;
+    // [FIX] Sử dụng currentUser._id thay vì currentUser.id
+    updateData.createdBy = currentUser._id;
 
     // Đảm bảo các mảng IDs luôn tồn tại
     updateData.programIds = updateData.programIds || [];

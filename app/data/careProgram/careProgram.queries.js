@@ -4,6 +4,8 @@
 import connectDB from "@/config/connectDB";
 import CareProgram from "@/models/careProgram";
 import { Types } from "mongoose";
+// [ADD] Import a session management utility
+import { getCurrentUser } from "@/lib/session";
 
 /**
  * Lấy danh sách các chương trình chăm sóc (có phân trang) cho trang quản trị.
@@ -34,13 +36,17 @@ export async function getCarePrograms({ page = 1, limit = 10 } = {}) {
 
 /**
  * Lấy danh sách các chương trình chăm sóc để hiển thị trong bộ lọc.
+ * Tự động xử lý phân quyền: Admin thấy tất cả, Employee chỉ thấy những gì được gán.
  */
 export async function getCareProgramsForFilter(currentUser) {
   try {
     await connectDB();
-    if (!currentUser) return [];
+    // [MOD] Tự lấy thông tin người dùng từ session
+    const currentUser = await getCurrentUser();
+    if (!currentUser) return []; // Nếu không có session, trả về mảng rỗng
 
     const query = {};
+    // [MOD] Logic phân quyền dựa trên vai trò
     if (currentUser.role !== "Admin") {
       query.users = new Types.ObjectId(currentUser.id);
     }

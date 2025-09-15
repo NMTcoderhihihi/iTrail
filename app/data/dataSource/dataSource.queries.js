@@ -47,3 +47,21 @@ export async function getDataSourceById(id) {
     return { success: false, error: error.message };
   }
 }
+
+// [ADD] Hàm mới để lấy danh sách rút gọn cho bộ lọc/chọn lựa
+/**
+ * Lấy danh sách rút gọn tất cả các DataSources.
+ */
+export async function getDataSourcesForFilter() {
+  try {
+    await connectDB();
+    const dataSources = await DataSource.find({})
+      .select("_id name")
+      .sort({ name: 1 })
+      .lean();
+    return JSON.parse(JSON.stringify(dataSources));
+  } catch (error) {
+    console.error("Loi trong getDataSourcesForFilter:", error);
+    return [];
+  }
+}

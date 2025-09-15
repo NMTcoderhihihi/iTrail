@@ -1,5 +1,4 @@
-// [MOD] app/(main)/client/ui/details/CustomerDetails.js
-
+// [FIX] app/(main)/client/ui/panel/CustomerDetails.js
 "use client";
 
 import React, {
@@ -66,55 +65,39 @@ const InfoRow = ({ label, children }) => (
   </div>
 );
 
-// [ADD] Định nghĩa lại component DynamicFieldPlaceholder đã bị xóa nhầm
-const DynamicFieldPlaceholder = ({ onAddField }) => (
-  <div className={styles.dynamicFieldPlaceholder}>
-    <button onClick={onAddField} className={styles.addFieldButton}>
-      + Thêm trường
-    </button>
-  </div>
-);
-
-const DynamicField = ({ fieldDefinition, customer, onUpdate }) => {
+// [MOD] Đơn giản hóa DynamicField, chỉ cần nhận và hiển thị
+const DynamicField = ({ field, onSave }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [currentValue, setCurrentValue] = useState(field.value?.[0] || "");
   const [isPending, startTransition] = useTransition();
 
-  // Tìm giá trị hiện có của trường này trong dữ liệu của khách hàng
-  const existingValue = useMemo(() => {
-    const attr = (customer.customerAttributes || []).find(
-      (a) => a.definitionId.toString() === fieldDefinition._id.toString(),
-    );
-    return attr ? attr.value[0] : "";
-  }, [customer.customerAttributes, fieldDefinition._id]);
+  // [FIX] Xóa bỏ hook useMemo gây lỗi. Component này giờ chỉ nhận và hiển thị.
 
-  const [value, setValue] = useState(existingValue);
+  // Cập nhật lại state nội bộ khi prop `field` từ bên ngoài thay đổi
+  useEffect(() => {
+    setCurrentValue(field.value?.[0] || "");
+  }, [field.value]);
 
   const handleSave = () => {
     startTransition(async () => {
-      const result = await updateCustomerAttribute({
-        customerId: customer._id,
-        definitionId: fieldDefinition._id,
-        value: value,
-      });
-      if (result.success) {
-        onUpdate();
-        setIsEditing(false);
-      } else {
-        alert(`Lỗi: ${result.error}`);
-      }
+      // Logic lưu vào DB sẽ được xử lý sau. Hiện tại chỉ là ví dụ.
+      // await onSave(field.fieldDefinition._id, currentValue);
+      setIsEditing(false);
     });
   };
 
   return (
     <div className={styles.infoRow}>
-      <span className={styles.fieldLabel}>{fieldDefinition.fieldLabel}</span>
+      <span className={styles.fieldLabel}>
+        {field.fieldDefinition.fieldLabel}
+      </span>
       <div className={styles.infoValue}>
         {isEditing ? (
           <div className={styles.editInputContainer}>
             <input
               type="text"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
+              value={currentValue}
+              onChange={(e) => setCurrentValue(e.target.value)}
               className={styles.inlineInput}
               autoFocus
             />
@@ -138,7 +121,7 @@ const DynamicField = ({ fieldDefinition, customer, onUpdate }) => {
             className={styles.fieldValue}
             onClick={() => setIsEditing(true)}
           >
-            {existingValue || "(chưa có)"}
+            {currentValue || "(chưa có)"}
           </span>
         )}
       </div>
@@ -204,7 +187,7 @@ const CommentSection = ({ comments = [], customerId, onCommentAdded }) => {
       });
       if (result.success) {
         setNewComment("");
-        onCommentAdded(); // Gọi lại hàm để refresh data
+        onCommentAdded();
       } else {
         alert(`Lỗi: ${result.error}`);
       }
@@ -215,7 +198,7 @@ const CommentSection = ({ comments = [], customerId, onCommentAdded }) => {
     <div className={styles.subSection}>
       <h4 className={styles.subSectionTitle}>Bình luận</h4>
       <div className={styles.commentList}>
-        {comments.map((comment) => (
+        {(comments || []).map((comment) => (
           <div key={comment._id} className={styles.commentItem}>
             <p className={styles.commentText}>{comment.detail}</p>
             <p className={styles.commentMeta}>
@@ -280,22 +263,60 @@ export default function CustomerDetails({
     initialFetch();
   }, [customerId]);
 
-  const { commonFields, programSpecificFields } = useMemo(() => {
-    const allDefs = customer?.fieldDefinitions || [];
-    const common = allDefs.filter(
-      (def) =>
-        (def.tagIds?.length || 0) > 0 && (def.programIds?.length || 0) === 0,
-    );
-    const programSpecific = allDefs.filter(
-      (def) => (def.programIds?.length || 0) > 0,
-    );
-    return { commonFields: common, programSpecificFields: programSpecific };
+  // [FIX] Di chuyển useMemo lên đây, đúng vị trí trong React component
+  const { customerScopedFields, programScopedFields } = useMemo(() => {
+    if (!customer?.fieldDefinitions)
+      return { customerScopedFields: [], programScopedFields: new Map() };
+
+    const customerFields = [];
+    const programFields = new Map();
+
+    const allCustomerAttributes = customer.customerAttributes || [];
+    const allProgramData = new Map();
+    (customer.programEnrollments || []).forEach((enrollment) => {
+      allProgramData.set(
+        enrollment.programId?._id.toString(),
+        enrollment.programData || [],
+      );
+    });
+
+    customer.fieldDefinitions.forEach((def) => {
+      let valueContainer = null;
+      if (def.scope === "CUSTOMER") {
+        valueContainer = allCustomerAttributes;
+      } else if (def.scope === "PROGRAM") {
+        const relevantProgramId = (def.programIds[0] || "").toString();
+        valueContainer = allProgramData.get(relevantProgramId);
+      }
+
+      const attr = (valueContainer || []).find(
+        (a) => a.definitionId.toString() === def._id.toString(),
+      );
+
+      const fieldData = {
+        fieldDefinition: def,
+        value: attr?.value,
+      };
+
+      if (def.scope === "CUSTOMER") {
+        customerFields.push(fieldData);
+      } else if (def.scope === "PROGRAM") {
+        (def.programIds || []).forEach((pId) => {
+          const progIdStr = pId.toString();
+          if (!programFields.has(progIdStr)) {
+            programFields.set(progIdStr, []);
+          }
+          programFields.get(progIdStr).push(fieldData);
+        });
+      }
+    });
+    return { customerScopedFields, programScopedFields };
   }, [customer]);
 
   const handleSaveTags = async (tagIds) => {
     const result = await updateCustomerTags({ customerId, tagIds });
     if (result.success) {
-      await fetchDetails(); // Fetch lại toàn bộ dữ liệu để cập nhật
+      await fetchDetails();
       onUpdateCustomer();
     } else {
       alert(`Lỗi: ${result.error}`);
@@ -333,24 +354,20 @@ export default function CustomerDetails({
             </InfoRow>
             <InfoRow label="Di động">{customer.phone}</InfoRow>
             <InfoRow label="CCCD">{customer.citizenId || "Chưa có"}</InfoRow>
-            {commonFields.map((fieldDef) => (
+            {/* [MOD] Render các trường chung */}
+            {customerScopedFields.map((field) => (
               <DynamicField
-                key={fieldDef._id}
-                fieldDefinition={fieldDef}
-                customer={customer}
-                onUpdate={fetchDetails}
+                key={field.fieldDefinition._id}
+                field={field}
+                onSave={() => {}}
               />
             ))}
           </CollapsibleSection>
 
           {(customer.programEnrollments || []).map((enrollment) => {
-            // [MOD] Lọc ra các trường chỉ thuộc về chương trình này
-            const fieldsForThisProgram = programSpecificFields.filter((def) =>
-              (def.programIds || []).includes(
-                enrollment.programId?._id.toString(),
-              ),
-            );
-
+            const fieldsForThisProgram =
+              programScopedFields.get(enrollment.programId?._id.toString()) ||
+              [];
             return (
               <CollapsibleSection
                 key={enrollment.programId?._id || Math.random()}
@@ -371,14 +388,12 @@ export default function CustomerDetails({
                     <Svg_Edit w={14} h={14} /> Thay đổi
                   </button>
                 </InfoRow>
-
-                {/* [MOD] Render các trường của riêng chương trình này */}
-                {fieldsForThisProgram.map((fieldDef) => (
+                {/* [MOD] Render các trường riêng của chương trình */}
+                {fieldsForThisProgram.map((field) => (
                   <DynamicField
-                    key={fieldDef._id}
-                    fieldDefinition={fieldDef}
-                    customer={customer}
-                    onUpdate={fetchDetails}
+                    key={field.fieldDefinition._id}
+                    field={field}
+                    onSave={() => {}}
                   />
                 ))}
               </CollapsibleSection>

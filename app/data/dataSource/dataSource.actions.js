@@ -42,7 +42,8 @@ export async function createOrUpdateDataSource(data) {
     if (!currentUser) throw new Error("Yêu cầu đăng nhập.");
 
     const { id, ...updateData } = data;
-    updateData.createdBy = currentUser.id;
+    // [FIX] Sử dụng currentUser._id thay vì currentUser.id
+    updateData.createdBy = currentUser._id;
 
     if (
       updateData.connectionConfig &&

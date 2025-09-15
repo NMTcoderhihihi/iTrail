@@ -5,13 +5,27 @@ import connectDB from "@/config/connectDB";
 import CareProgram from "@/models/careProgram";
 import { revalidateAndBroadcast } from "@/lib/revalidation";
 import { Types } from "mongoose";
+// [ADD] Import a session management utility
+import { getCurrentUser } from "@/lib/session";
 
 // --- ACTIONS FOR CARE PROGRAM ---
 
 export async function createCareProgram(data) {
   try {
     await connectDB();
-    const newProgram = await CareProgram.create(data);
+    // [ADD] Lấy thông tin người dùng hiện tại
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Yêu cầu đăng nhập để thực hiện hành động này.");
+    }
+
+    // [ADD] Thêm createdBy vào dữ liệu chương trình mới
+    const programData = {
+      ...data,
+      createdBy: currentUser._id, // Sử dụng _id từ session
+    };
+
+    const newProgram = await CareProgram.create(programData);
     revalidateAndBroadcast("care_programs");
     return { success: true, data: JSON.parse(JSON.stringify(newProgram)) };
   } catch (error) {

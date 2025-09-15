@@ -20,6 +20,12 @@ const CareProgramSchema = new Schema(
     users: [{ type: Schema.Types.ObjectId, ref: "user" }],
     stages: [StageSchema],
     statuses: [StatusSchema],
+    // [ADD] Thêm trường createdBy để theo dõi người tạo
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
+    },
   },
   { timestamps: true },
 );

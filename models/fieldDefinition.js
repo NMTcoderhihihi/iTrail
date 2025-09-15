@@ -20,6 +20,20 @@ const FieldDefinitionSchema = new Schema(
       ref: "user",
       required: true,
     },
+    // [ADD] Trường quy định phạm vi lưu trữ và truy vấn của trường dữ liệu.
+    scope: {
+      type: String,
+      enum: ["CUSTOMER", "PROGRAM"],
+      default: "CUSTOMER", // Mặc định là trường chung của khách hàng
+      required: true,
+    },
+    // [ADD] Trường quy định logic hiển thị khi có cả tagIds và programIds.
+    displayCondition: {
+      type: String,
+      enum: ["ANY", "ALL"], // ANY = OR, ALL = AND
+      default: "ANY", // Mặc định chỉ cần khớp 1 trong các điều kiện
+      required: true,
+    },
   },
   { timestamps: true },
 );

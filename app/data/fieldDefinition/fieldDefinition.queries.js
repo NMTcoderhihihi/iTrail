@@ -3,6 +3,7 @@
 
 import connectDB from "@/config/connectDB";
 import FieldDefinition from "@/models/fieldDefinition";
+import { Types } from "mongoose"; // [ADD]
 
 /**
  * Lấy danh sách các FieldDefinitions với phân trang.
@@ -31,5 +32,27 @@ export async function getFieldDefinitions({ page = 1, limit = 10 } = {}) {
     };
   } catch (error) {
     return { success: false, error: error.message, data: [], pagination: {} };
+  }
+}
+
+// [ADD] Hàm mới để lấy chi tiết một Field Definition bằng ID
+/**
+ * Lấy chi tiết một Field Definition bằng ID.
+ * @param {string} id - ID của Field Definition cần lấy.
+ * @returns {Promise<object>} - Trả về object chứa dữ liệu hoặc lỗi.
+ */
+export async function getFieldDefinitionById(id) {
+  try {
+    if (!id || !Types.ObjectId.isValid(id)) {
+      throw new Error("ID không hợp lệ.");
+    }
+    await connectDB();
+    const definition = await FieldDefinition.findById(id).lean();
+    if (!definition) {
+      return { success: false, error: "Không tìm thấy định nghĩa trường." };
+    }
+    return { success: true, data: JSON.parse(JSON.stringify(definition)) };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
 }

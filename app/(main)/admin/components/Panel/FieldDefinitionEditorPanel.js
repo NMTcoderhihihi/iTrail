@@ -4,44 +4,68 @@
 import React, { useState, useEffect, useTransition } from "react";
 import styles from "./FieldDefinitionEditorPanel.module.css";
 import LoadingSpinner from "../shared/LoadingSpinner";
-import { getFieldDefinitions } from "@/app/data/fieldDefinition/fieldDefinition.queries";
+// [MOD] Import hàm mới
+import { getFieldDefinitionById } from "@/app/data/fieldDefinition/fieldDefinition.queries";
 import { createOrUpdateFieldDefinition } from "@/app/data/fieldDefinition/fieldDefinition.actions";
 import { getCareProgramsForFilter } from "@/app/data/careProgram/careProgram.queries";
-import { getTagsForFilter } from "@/app/data/tag/tag.queries"; // [ADD]
-import MultiSelect from "./MultiSelect";
+import { getTagsForFilter } from "@/app/data/tag/tag.queries";
+// [ADD] Import hàm mới
+import { getDataSourcesForFilter } from "@/app/data/dataSource/dataSource.queries";
+// [MOD] Import component mới
+import MultiSelectDropdown from "./MultiSelectDropdown";
 
 export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
   const [field, setField] = useState({
     fieldName: "",
     fieldLabel: "",
     fieldType: "string",
+    scope: "CUSTOMER",
+    displayCondition: "ANY",
     programIds: [],
     dataSourceIds: [],
-    tagIds: [], // [ADD]
+    tagIds: [],
   });
   const [allPrograms, setAllPrograms] = useState([]);
   const [allDataSources, setAllDataSources] = useState([]);
-  const [allTags, setAllTags] = useState([]); // [ADD]
+  const [allTags, setAllTags] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     // Tải song song tất cả dữ liệu cần thiết
-    Promise.all([
-      fieldId
-        ? getFieldDefinitions({ _id: fieldId })
-        : Promise.resolve({ data: [null] }),
-      getCareProgramsForFilter(),
-      // getDataSources({ limit: 0 }), // Tạm thời bỏ để tránh lỗi
-      getTagsForFilter(), // [ADD]
-    ]).then(([fieldResult, programsResult, tagsResult]) => {
-      // [MOD]
-      if (fieldResult.data[0]) setField(fieldResult.data[0]);
+    const fetchData = async () => {
+      setIsLoading(true);
+      // [MOD] Thêm getDataSourcesForFilter vào Promise.all
+      const [programsResult, tagsResult, dataSourcesResult] = await Promise.all(
+        [
+          getCareProgramsForFilter(),
+          getTagsForFilter(),
+          getDataSourcesForFilter(),
+        ],
+      );
+
       setAllPrograms(programsResult || []);
-      // setAllDataSources(dataSourcesResult.data || []);
-      setAllTags(tagsResult || []); // [ADD]
+      setAllTags(tagsResult || []);
+      setAllDataSources(dataSourcesResult || []);
+
+      if (fieldId) {
+        const fieldResult = await getFieldDefinitionById(fieldId);
+        if (fieldResult.success) {
+          // [FIX] Đảm bảo các mảng IDs luôn là mảng, tránh lỗi undefined
+          setField({
+            ...fieldResult.data,
+            programIds: fieldResult.data.programIds || [],
+            tagIds: fieldResult.data.tagIds || [],
+            dataSourceIds: fieldResult.data.dataSourceIds || [],
+          });
+        } else {
+          alert(`Lỗi tải dữ liệu trường: ${fieldResult.error}`);
+        }
+      }
       setIsLoading(false);
-    });
+    };
+
+    fetchData();
   }, [fieldId]);
 
   const handleInputChange = (e) => {
@@ -105,26 +129,51 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
           </select>
         </div>
 
-        <MultiSelect
+        {/* [ADD] Thêm các trường cấu hình mới */}
+        <div className={styles.formGroup}>
+          <label>Phạm vi (Scope)</label>
+          <select name="scope" value={field.scope} onChange={handleInputChange}>
+            <option value="CUSTOMER">Chung cho Khách hàng</option>
+            <option value="PROGRAM">Riêng cho Chương trình</option>
+          </select>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label>Điều kiện hiển thị</label>
+          <select
+            name="displayCondition"
+            value={field.displayCondition}
+            onChange={handleInputChange}
+          >
+            <option value="ANY">
+              Khớp BẤT KỲ Tag hoặc Chương trình nào (OR)
+            </option>
+            <option value="ALL">Khớp TẤT CẢ Tags và Chương trình (AND)</option>
+          </select>
+        </div>
+
+        {/* [MOD] Thay thế MultiSelect cũ bằng MultiSelectDropdown */}
+        <MultiSelectDropdown
           label="Gán cho Chương trình CS"
           options={allPrograms.map((p) => ({ id: p._id, name: p.name }))}
-          selectedIds={field.programIds || []}
+          selectedIds={field.programIds}
           onChange={(ids) => handleMultiSelectChange("programIds", ids)}
+          displayAs="chip"
         />
-
-        <MultiSelect
+        <MultiSelectDropdown
           label="Gán cho Tags (Trường chung)"
           options={allTags.map((t) => ({ id: t._id, name: t.name }))}
-          selectedIds={field.tagIds || []}
+          selectedIds={field.tagIds}
           onChange={(ids) => handleMultiSelectChange("tagIds", ids)}
+          displayAs="chip"
         />
-
-        {/* <MultiSelect
-          label="Lấy từ Nguồn Dữ liệu"
+        <MultiSelectDropdown
+          label="Lấy từ Nguồn Dữ liệu (ưu tiên từ trên xuống)"
           options={allDataSources.map((ds) => ({ id: ds._id, name: ds.name }))}
-          selectedIds={field.dataSourceIds || []}
+          selectedIds={field.dataSourceIds}
           onChange={(ids) => handleMultiSelectChange("dataSourceIds", ids)}
-        /> */}
+          displayAs="list"
+        />
       </div>
       <div className={styles.panelFooter}>
         <button

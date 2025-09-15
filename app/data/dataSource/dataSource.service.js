@@ -185,16 +185,9 @@ export async function executeDataSource({ dataSourceId, params = {} }) {
       throw new Error(`DataSource not found with ID: ${dataSourceId}`);
     }
 
-    // [ADD] BƯỚC 1.5: ÁNH XẠ THAM SỐ (PARAMETER MAPPING)
-    // Ánh xạ dữ liệu từ `params` (do hệ thống cung cấp) sang `finalParams` (API thực sự cần)
     const finalParams = {};
     if (dataSource.inputParams && dataSource.inputParams.length > 0) {
       for (const inputDef of dataSource.inputParams) {
-        // [NOTE] Logic ánh xạ đơn giản: Giả sử tên param trong hệ thống (phone)
-        // khớp với phần cuối của param API (ví dụ: 'customerPhone' -> 'phone').
-        // Hoặc có thể ánh xạ trực tiếp nếu tên giống nhau.
-        // Ở đây, API cần 'id', và chúng ta quy ước 'id' sẽ lấy giá trị từ 'phone' của customer.
-        // Đây là một quy ước ngầm, có thể nâng cấp sau này bằng cách thêm trường 'sourceField' vào inputParams.
         if (inputDef.paramName === "id" && params.phone) {
           finalParams.id = params.phone;
         } else if (params[inputDef.paramName]) {
@@ -254,7 +247,7 @@ export async function executeDataSource({ dataSourceId, params = {} }) {
     // GIAI ĐOẠN 3: RETURN - Trả về dữ liệu
     return rawData;
   } catch (error) {
-    console.error(`Error executing DataSource "${dataSourceId}":`, error);
+    // [MOD] Xóa log cũ, chỉ giữ lại lỗi
     return { error: true, message: error.message };
   }
 }
