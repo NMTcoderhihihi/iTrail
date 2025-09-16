@@ -6,6 +6,7 @@ import { getCareProgramsForFilter } from "@/app/data/careProgram/careProgram.que
 import { getTagsForFilter } from "@/app/data/tag/tag.queries";
 import { getZaloAccountsForFilter } from "@/app/data/zalo/zalo.queries";
 import { executeReport } from "@/app/data/report/report.actions";
+import { getMessageTemplatesForFilter } from "@/app/data/messageTemplate/messageTemplate.js"; // [ADD] Import hàm mới
 import { Types } from "mongoose";
 
 export default async function Page({ searchParams }) {
@@ -31,23 +32,30 @@ export default async function Page({ searchParams }) {
     uidFilterZaloId: getSafeParam("uidFilterZaloId", null),
   };
 
-  // Log để debug
-  console.log("searchParams:", searchParams);
-  console.log("filters:", filters);
+  // // Log để debug
+  // console.log("searchParams:", searchParams);
+  // console.log("filters:", filters);
 
   const CLIENT_DASHBOARD_LAYOUT_ID = "69a3e3ebe986b54217cf1001";
 
-  // [MOD] Gọi tất cả dữ liệu song song, truyền object `filters` đã được xử lý
-  const [clientResponse, tags, zaloAccounts, carePrograms, dashboardResponse] =
-    await Promise.all([
-      getClientes(filters, currentUser),
-      getTagsForFilter(),
-      getZaloAccountsForFilter(currentUser),
-      getCareProgramsForFilter(currentUser),
-      executeReport({
-        layoutId: new Types.ObjectId(CLIENT_DASHBOARD_LAYOUT_ID),
-      }),
-    ]);
+  // [MOD] Gọi tất cả dữ liệu song song, bao gồm cả mẫu tin nhắn
+  const [
+    clientResponse,
+    tags,
+    zaloAccounts,
+    carePrograms,
+    dashboardResponse,
+    messageTemplates, // [ADD]
+  ] = await Promise.all([
+    getClientes(filters, currentUser),
+    getTagsForFilter(),
+    getZaloAccountsForFilter(currentUser),
+    getCareProgramsForFilter(currentUser),
+    executeReport({
+      layoutId: new Types.ObjectId(CLIENT_DASHBOARD_LAYOUT_ID),
+    }),
+    getMessageTemplatesForFilter(), // [ADD]
+  ]);
 
   // [ADD] Xử lý và định dạng lại dữ liệu dashboard cho component
   let dashboardStats = {};
@@ -70,6 +78,7 @@ export default async function Page({ searchParams }) {
       initialPagination={clientResponse.pagination}
       user={currentUser}
       allTags={tags}
+      allMessageTemplates={messageTemplates} // [ADD] Truyền prop mới
       initialZaloAccounts={zaloAccounts}
       carePrograms={carePrograms}
       initialStats={dashboardStats}

@@ -79,8 +79,7 @@ export default function CustomerTable({
         key: "stt",
         label: "STT",
         width: "50px",
-        render: (c, za, index) =>
-          (pagination?.page - 1) * pagination?.limit + index + 1,
+        render: (c, za, index) => (currentPage - 1) * currentLimit + index + 1,
       },
       {
         key: "phone",
@@ -123,16 +122,13 @@ export default function CustomerTable({
           key: "stage",
           label: "Giai đoạn",
           width: "1fr",
-          // [FIX] Truyền totalStages chính xác
-          render: (c) => {
-            // [FIX] Sửa lại logic để lấy totalStages từ programDetails
-            return (
-              <StageIndicator
-                level={c.stage?.level || 0}
-                totalStages={c.programDetails?.stages?.length || 0}
-              />
-            );
-          },
+          // [FIX] Sửa lại logic để lấy totalStages từ programDetails
+          render: (c) => (
+            <StageIndicator
+              level={c.stage?.level || 0}
+              totalStages={c.programDetails?.stages?.length || 0}
+            />
+          ),
         },
         {
           key: "status",

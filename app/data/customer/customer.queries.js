@@ -202,6 +202,8 @@ export async function getClientes(filters = {}, currentUser = null) {
             tags: { $first: "$tags" },
             status: { $first: "$statusInfo" },
             stage: { $first: "$stageInfo" },
+            // [ADD] Giữ lại toàn bộ thông tin chi tiết của chương trình
+            programDetails: { $first: "$programDetails" },
           },
         },
         { $sort: { createdAt: -1 } },

@@ -73,12 +73,21 @@ export default function FieldDefinitionManagement() {
     { header: "Kiểu Dữ liệu", accessor: "fieldType", width: "1fr" },
     {
       header: "Chương trình",
-      width: "1.5fr", // [MOD] Tăng độ rộng cột
+      width: "1.5fr",
       // [MOD] Sửa lại logic cell để hiển thị tên chương trình
       cell: (item) => (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
           {(item.programIds || []).map((program) => (
-            <span key={program._id} className="chip">
+            <span
+              key={program._id}
+              style={{
+                backgroundColor: "#eef2ff",
+                color: "#4338ca",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                fontSize: "12px",
+              }}
+            >
               {program.name}
             </span>
           ))}
@@ -88,7 +97,25 @@ export default function FieldDefinitionManagement() {
     {
       header: "Nguồn Dữ liệu",
       width: "1fr",
-      cell: (item) => item.dataSourceIds?.length || 0,
+      // [MOD] Sửa lại logic cell để hiển thị tên nguồn dữ liệu
+      cell: (item) => (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+          {(item.dataSourceIds || []).map((ds) => (
+            <span
+              key={ds._id}
+              style={{
+                backgroundColor: "#f0fdf4",
+                color: "#166534",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                fontSize: "12px",
+              }}
+            >
+              {ds.name}
+            </span>
+          ))}
+        </div>
+      ),
     },
   ];
 

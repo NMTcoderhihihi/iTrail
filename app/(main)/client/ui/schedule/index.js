@@ -16,13 +16,7 @@ import CenterPopup from "@/components/(features)/(popup)/popup_center";
 import RecipientList from "./RecipientList";
 import { useCampaigns } from "@/contexts/CampaignContext";
 import { getScheduleEstimation } from "@/app/data/schedule/schedule.actions";
-
-const AVAILABLE_ACTIONS = [
-  { key: "sendMessage", name: "Gửi tin" },
-  { key: "addFriend", name: "Kết bạn" },
-  { key: "findUid", name: "Tìm UID" },
-  // Thêm các hành động khác ở đây
-];
+import SearchableSelect from "./SearchableSelect";
 
 const MessageEditorPopup = ({ open, content, onSave, onClose }) => {
   const [localContent, setLocalContent] = useState(content);
@@ -118,168 +112,10 @@ const LimitInputRow = ({ label, value, onChange, min, max, disabled }) => {
   );
 };
 
-const ScheduleForm = ({
-  jobName,
-  setJobName,
-  actionType,
-  setActionType,
-  message,
-  setMessage,
-  actionsPerHour,
-  setActionsPerHour,
-  activeRecipientCount,
-  labels,
-  selectedLabelId,
-  onLabelChange,
-  onSubmit,
-  isSubmitting,
-  onEditRecipients,
-  user,
-  estimatedTime,
-  maxLimit,
-  onEstimate, // Prop mới
-  estimationResult, // Prop mới
-  isEstimating, // Prop mới
-  onOpenEditor,
-}) => (
-  <div className={styles.formContainer}>
-    <div className={styles.formGroup}>
-      <p className="text_6">Tên lịch trình</p>
-      <input
-        id="jobName"
-        type="text"
-        className="input"
-        value={jobName}
-        onChange={(e) => setJobName(e.target.value)}
-        placeholder="Ví dụ: Gửi tin khuyến mãi tháng 7"
-        disabled={isSubmitting}
-      />
-    </div>
-    <div className={styles.formGroup}>
-      <p className="text_6">Hành động</p>
-      <select
-        id="actionType"
-        className="input"
-        value={actionType}
-        onChange={(e) => setActionType(e.target.value)}
-        disabled={isSubmitting}
-      >
-        <option value="sendMessage">Gửi tin nhắn</option>
-        <option value="addFriend">Gửi lời mời kết bạn</option>
-        <option value="findUid">Tìm kiếm UID</option>
-      </select>
-    </div>
-    {actionType === "sendMessage" && (
-      <>
-        <div className={styles.formGroup}>
-          <p className="text_6">Chọn nhãn (Tùy chọn)</p>
-          <select
-            id="labelSelect"
-            className="input"
-            value={selectedLabelId}
-            onChange={onLabelChange}
-            disabled={isSubmitting}
-          >
-            <option value="">-- Chọn nhãn có sẵn --</option>
-            {(labels || []).map((label) => (
-              <option key={label._id} value={label._id}>
-                {label.title}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className={`${styles.formGroup} ${styles.messageGroup}`}>
-          <div className={styles.messageHeader}>
-            <p className="text_6">Nội dung tin nhắn</p>
-            {/* Nút mở trình soạn thảo */}
-            <button onClick={onOpenEditor} className={styles.openEditorBtn}>
-              Mở trình soạn thảo
-            </button>
-          </div>
-          <textarea
-            id="message"
-            className="input"
-            rows="5"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Nhập nội dung hoặc chọn một nhãn ở trên..."
-            disabled={isSubmitting}
-          />
-        </div>
-      </>
-    )}
-    <div className={styles.formGroup}>
-      <LimitInputRow
-        label="Số lượng gửi / giờ:"
-        value={actionsPerHour}
-        onChange={setActionsPerHour}
-        min={1}
-        max={maxLimit}
-        disabled={isSubmitting}
-      />
-    </div>
-    <div className={styles.accountDisplay}>
-      <p className="text_6_400">
-        Thực hiện bằng tài khoản:{" "}
-        <strong>{user?.zaloActive?.name || "Chưa chọn"}</strong>
-      </p>
-    </div>
-    <div className={styles.summary}>
-      <div className={styles.summaryInfo}>
-        <p className="text_6_400">
-          Số người thực hiện: <strong>{activeRecipientCount} người</strong>
-        </p>
-        <div className={styles.estimationBox}>
-          {isEstimating ? (
-            <p className="text_6_400">Đang tính toán...</p>
-          ) : estimationResult ? (
-            <>
-              <p className="text_6_400">
-                Bắt đầu: <strong>{estimationResult.estimatedStart}</strong>
-              </p>
-              <p className="text_6_400">
-                Hoàn thành:{" "}
-                <strong>~{estimationResult.estimatedCompletion}</strong>
-              </p>
-            </>
-          ) : (
-            <p className="text_6_400">Nhấn nút để ước tính thời gian.</p>
-          )}
-        </div>
-      </div>
-      <button
-        className="input"
-        onClick={onEstimate} // Gọi hàm ước tính
-        style={{ cursor: "pointer", height: "fit-content" }}
-        disabled={isSubmitting || isEstimating}
-      >
-        Ước tính
-      </button>
-    </div>
-    <button
-      onClick={onSubmit}
-      className="btn"
-      disabled={isSubmitting}
-      style={{
-        width: "100%",
-        justifyContent: "center",
-        borderRadius: 5,
-        marginTop: 16,
-      }}
-    >
-      {isSubmitting
-        ? "Đang xử lý..."
-        : activeRecipientCount > 1
-        ? "Bắt đầu lịch trình"
-        : "Gửi ngay"}
-    </button>
-  </div>
-);
-
 // --- Component Schedule Chính ---
 export default function Schedule({
   user,
-  label: labelsFromProps,
+  label: messageTemplatesFromProps,
   initialData,
 }) {
   const router = useRouter();
@@ -292,15 +128,8 @@ export default function Schedule({
   const [actionType, setActionType] = useState("sendMessage");
   const [message, setMessage] = useState("");
   const [actionsPerHour, setActionsPerHour] = useState(100);
-  const maxLimit = useMemo(() => {
-    if (actionType === "findUid") {
-      return 30; // Giới hạn cứng cho hành động tìm UID
-    }
-    // Đối với các hành động khác, lấy giới hạn từ tài khoản Zalo
-    return 9999;
-  }, [actionType]);
   const [selectedLabelId, setSelectedLabelId] = useState("");
-  const [isEstimating, startEstimation] = useTransition(); // State cho việc ước tính
+  const [isEstimating, startEstimation] = useTransition();
   const [estimationResult, setEstimationResult] = useState(null);
   const [notification, setNotification] = useState({
     open: false,
@@ -317,11 +146,7 @@ export default function Schedule({
       recipients: initialData,
     });
     setDraftId(newDraftId);
-
-    // Hàm dọn dẹp: tự hủy đăng ký khi component unmount
-    return () => {
-      removeDraft(newDraftId);
-    };
+    return () => removeDraft(newDraftId);
   }, [initialData, createDraft, removeDraft]);
 
   // useEffect để thiết lập state ban đầu khi nhận được `initialData`
@@ -331,30 +156,25 @@ export default function Schedule({
       setRemovedIds(new Set());
     }
   }, [initialData]);
+
+  const maxLimit = useMemo(() => {
+    if (actionType === "findUid") return 30;
+    return 9999;
+  }, [actionType]);
+
   useEffect(() => {
     // Khi chuyển sang Tìm UID, nếu tốc độ đang cao hơn 30 thì tự động giảm xuống 30
     if (actionType === "findUid" && actionsPerHour > 30) {
       setActionsPerHour(30);
-    }
-    // Khi chuyển sang Gửi tin nhắn, nếu tốc độ đang thấp, đặt lại về mặc định là 100
-    else if (actionType === "sendMessage" && actionsPerHour < 100) {
+    } else if (actionType === "sendMessage" && actionsPerHour < 100) {
       setActionsPerHour(100);
     }
-  }, [actionType]);
+  }, [actionType, actionsPerHour]);
 
   const activeRecipients = useMemo(
     () => currentRecipients.filter((c) => !removedIds.has(c._id)),
     [currentRecipients, removedIds],
   );
-
-  const estimatedTime = useMemo(() => {
-    if (activeRecipients.length === 0 || !actionsPerHour || actionsPerHour <= 0)
-      return "0 phút";
-    const hoursNeeded = activeRecipients.length / actionsPerHour;
-    return hoursNeeded < 1
-      ? `${Math.ceil(hoursNeeded * 60)} phút`
-      : `${Math.ceil(hoursNeeded)} giờ`;
-  }, [activeRecipients.length, actionsPerHour]);
 
   const handleToggleRecipient = useCallback((customer) => {
     setRemovedIds((prev) => {
@@ -383,15 +203,15 @@ export default function Schedule({
   }, [actionType, activeRecipients.length]);
 
   const handleLabelChange = useCallback(
-    (e) => {
-      const labelId = e.target.value;
+    (labelId) => {
+      // [MOD] Hàm này giờ nhận trực tiếp labelId
       setSelectedLabelId(labelId);
-      const selectedLabel = (labelsFromProps || []).find(
+      const selectedLabel = (messageTemplatesFromProps || []).find(
         (l) => l._id === labelId,
       );
       setMessage(selectedLabel ? selectedLabel.content || "" : "");
     },
-    [labelsFromProps],
+    [messageTemplatesFromProps],
   );
 
   const handleSubmit = useCallback(async () => {
@@ -447,34 +267,144 @@ export default function Schedule({
 
   return (
     <>
-      <ScheduleForm
-        jobName={jobName}
-        setJobName={setJobName}
-        actionType={actionType}
-        setActionType={setActionType}
-        message={message}
-        setMessage={setMessage}
-        actionsPerHour={actionsPerHour}
-        setActionsPerHour={setActionsPerHour}
-        activeRecipientCount={activeRecipients.length}
-        labels={labelsFromProps || []}
-        selectedLabelId={selectedLabelId}
-        onLabelChange={handleLabelChange}
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-        onEditRecipients={() => setIsRecipientPopupOpen(true)}
-        user={user}
-        estimatedTime={estimatedTime}
-        maxLimit={maxLimit}
-        onOpenEditor={() => setIsEditorOpen(true)}
-        onEstimate={handleEstimate} // Truyền hàm mới
-        estimationResult={estimationResult} // Truyền kết quả
-        isEstimating={isEstimating} // Truyền trạng thái loading
-      />
+      {/* [MOD] Toàn bộ JSX của form được đưa vào đây */}
+      <div className={styles.formContainer}>
+        <div className={styles.formScrollableContent}>
+          <div className={styles.formGroup}>
+            <p className="text_6">Tên lịch trình</p>
+            <input
+              id="jobName"
+              type="text"
+              className="input"
+              value={jobName}
+              onChange={(e) => setJobName(e.target.value)}
+              placeholder="Ví dụ: Gửi tin khuyến mãi tháng 7"
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <p className="text_6">Hành động</p>
+            <select
+              id="actionType"
+              className={styles.selectField}
+              value={actionType}
+              onChange={(e) => setActionType(e.target.value)}
+              disabled={isSubmitting}
+            >
+              <option value="sendMessage">Gửi tin nhắn</option>
+              <option value="addFriend">Gửi lời mời kết bạn</option>
+              <option value="findUid">Tìm kiếm UID</option>
+            </select>
+          </div>
+          {actionType === "sendMessage" && (
+            <>
+              <div className={styles.formGroup}>
+                <p className="text_6">Chọn mẫu tin nhắn (Tùy chọn)</p>
+                <SearchableSelect
+                  options={messageTemplatesFromProps || []}
+                  value={selectedLabelId}
+                  onChange={handleLabelChange}
+                  placeholder="-- Chọn hoặc tìm mẫu tin nhắn --"
+                />
+              </div>
+              <div className={`${styles.formGroup} ${styles.messageGroup}`}>
+                <div className={styles.messageHeader}>
+                  <p className="text_6">Nội dung tin nhắn</p>
+                  <button
+                    onClick={() => setIsEditorOpen(true)}
+                    className={styles.openEditorBtn}
+                  >
+                    Mở trình soạn thảo
+                  </button>
+                </div>
+                <textarea
+                  id="message"
+                  className="input"
+                  rows="5"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Nhập nội dung hoặc chọn một mẫu ở trên..."
+                  disabled={isSubmitting}
+                />
+              </div>
+            </>
+          )}
+          <div className={styles.formGroup}>
+            <LimitInputRow
+              label="Số lượng gửi / giờ:"
+              value={actionsPerHour}
+              onChange={setActionsPerHour}
+              min={1}
+              max={maxLimit}
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className={styles.accountDisplay}>
+            <p className="text_6_400">
+              Thực hiện bằng tài khoản:{" "}
+              <strong>{user?.zaloActive?.name || "Chưa chọn"}</strong>
+            </p>
+          </div>
+          <div className={styles.summary}>
+            <div className={styles.summaryInfo}>
+              <p className="text_6_400">
+                Số người thực hiện:{" "}
+                <strong>{activeRecipients.length} người</strong>
+              </p>
+              <div className={styles.estimationBox}>
+                {isEstimating ? (
+                  <p className="text_6_400">Đang tính toán...</p>
+                ) : estimationResult ? (
+                  <>
+                    <p className="text_6_400">
+                      Bắt đầu:{" "}
+                      <strong>{estimationResult.estimatedStart}</strong>
+                    </p>
+                    <p className="text_6_400">
+                      Hoàn thành:{" "}
+                      <strong>~{estimationResult.estimatedCompletion}</strong>
+                    </p>
+                  </>
+                ) : (
+                  <p className="text_6_400">Nhấn nút để ước tính thời gian.</p>
+                )}
+              </div>
+            </div>
+            <button
+              className="input"
+              onClick={handleEstimate}
+              style={{ cursor: "pointer", height: "fit-content" }}
+              disabled={isSubmitting || isEstimating}
+            >
+              Ước tính
+            </button>
+          </div>
+        </div>
+        <div className={styles.formFooter}>
+          <button
+            onClick={handleSubmit}
+            className="btn"
+            disabled={isSubmitting}
+            style={{
+              width: "100%",
+              justifyContent: "center",
+              borderRadius: 5,
+              marginTop: 0,
+            }}
+          >
+            {isSubmitting
+              ? "Đang xử lý..."
+              : activeRecipients.length > 1
+              ? "Bắt đầu lịch trình"
+              : "Gửi ngay"}
+          </button>
+        </div>
+      </div>
+
       <MessageEditorPopup
         open={isEditorOpen}
         content={message}
-        onSave={setMessage} // Hàm onSave sẽ cập nhật lại state `message`
+        onSave={setMessage}
         onClose={() => setIsEditorOpen(false)}
       />
 
@@ -487,9 +417,9 @@ export default function Schedule({
             Chỉnh sửa danh sách ({activeRecipients.length} người)
           </h3>
           <RecipientList
-            recipients={currentRecipients} // Dùng state nội bộ
-            removedIds={removedIds} // Dùng state nội bộ
-            onToggle={handleToggleRecipient} // Dùng hàm nội bộ
+            recipients={currentRecipients}
+            removedIds={removedIds}
+            onToggle={handleToggleRecipient}
           />
         </div>
       </CenterPopup>

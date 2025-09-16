@@ -1,0 +1,174 @@
+/* [ADD] app/(main)/admin/components/ReportDashboard/ReportDashboard.module.css */
+
+.container {
+  padding: 16px;
+}
+.titleContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 16px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.headerControls {
+  display: flex;
+  align-items: center;
+}
+
+.reloadButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reloadButton:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.reloadButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.reloading svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.placeholder {
+  color: #64748b;
+  font-size: 16px;
+  text-align: center;
+  padding: 48px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+}
+
+/* --- Grid Layout --- */
+.dashboardGrid {
+  display: grid;
+  gap: 24px;
+  /* [MOD] Cấu trúc grid linh hoạt hơn */
+  grid-template-columns: repeat(12, 1fr);
+}
+
+.widget {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.icon {
+  font-size: 32px;
+}
+.text {
+}
+.value {
+  font-size: 28px;
+  font-weight: 700;
+}
+.title {
+  font-size: 14px;
+  color: #64748b;
+}
+.chartCard {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  height: 400px; /* Chiều cao cố định cho các biểu đồ */
+  display: flex;
+  flex-direction: column;
+}
+
+/* [ADD] Căn chỉnh kích thước các card */
+.colSpan4 {
+  grid-column: span 4;
+}
+.colSpan6 {
+  grid-column: span 6;
+}
+.colSpan8 {
+  grid-column: span 8;
+}
+.colSpan12 {
+  grid-column: span 12;
+}
+
+/* --- Employee Dashboard --- */
+.employeeTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 24px;
+}
+
+.tabItem {
+  padding: 10px 16px;
+  border: none;
+  background-color: transparent;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+  transition: all 0.2s;
+}
+
+.tabItem.active,
+.tabItem:hover {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+.reportContent {
+  margin-top: 16px;
+}
+
+.reportTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.reportTable th,
+.reportTable td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.reportTable th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  font-size: 13px;
+}

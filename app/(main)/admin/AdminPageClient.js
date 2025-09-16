@@ -19,22 +19,19 @@ import DataSourceManagement from "./components/DataSourceManagement";
 import FieldDefinitionManagement from "./components/FieldDefinitionManagement";
 import { useSearchParams } from "next/navigation";
 import TagManagement from "./components/TagManagement";
-import ReportManagement from "./components/ReportManagement";
+import ReportDashboard from "./components/ReportDashboard"; // [ADD] Import component mới
 
 export default function AdminPageClient() {
   const searchParams = useSearchParams();
-  // [MOD] activeTab giờ chỉ đọc từ URL, không cần logic set state phức tạp
-  const activeTab = searchParams.get("tab") || "running";
-
-  // [DEL] Toàn bộ mảng menuItems và hàm handleTabChange đã được xóa
-  // [NOTE] Việc render menu giờ đã được chuyển sang Nav.js
+  const activeTab = searchParams.get("tab") || "reports-overview"; // [MOD] Mặc định là tab báo cáo
 
   const renderActiveComponent = () => {
     // ... (logic switch/case không thay đổi)
     switch (activeTab) {
-      // [ADD] Thêm case mới
-      case "reports":
-        return <ReportManagement />;
+      // [ADD] Thêm case mới cho báo cáo
+      case "reports-overview":
+      case "reports-employee":
+        return <ReportDashboard />;
       case "tags":
         return <TagManagement />;
       case "fields":
@@ -60,7 +57,7 @@ export default function AdminPageClient() {
       case "assign":
         return <AssignFromSheet />;
       default:
-        return <CampaignTable mode="running" />;
+        return <ReportDashboard />; // [MOD] Mặc định là tab báo cáo
     }
   };
 

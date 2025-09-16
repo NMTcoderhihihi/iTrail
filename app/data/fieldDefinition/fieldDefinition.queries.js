@@ -47,7 +47,12 @@ export async function getFieldDefinitionById(id) {
       throw new Error("ID không hợp lệ.");
     }
     await connectDB();
-    const definition = await FieldDefinition.findById(id).lean();
+    // [MOD] Thêm .populate() để lấy tên từ các collection liên quan
+    const definition = await FieldDefinition.findById(id)
+      .populate("programIds", "name")
+      .populate("dataSourceIds", "name")
+      .lean();
+
     if (!definition) {
       return { success: false, error: "Không tìm thấy định nghĩa trường." };
     }

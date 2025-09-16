@@ -114,7 +114,7 @@ const CommentSection = ({
           .map((comment) => {
             // [FIX] So sánh ID an toàn hơn
             const isCurrentUser =
-              comment.user?._id?.toString() === user?.id?.toString();
+              comment.user?._id?.toString() === user?._id?.toString();
             return (
               <div
                 key={comment._id}

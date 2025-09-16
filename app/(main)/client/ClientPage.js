@@ -12,6 +12,9 @@ import CustomerTable from "./ui/table/CustomerTable";
 import PaginationControls from "@/app/(main)/admin/components/shared/PaginationControls";
 import ProgramDashboard from "./ui/dashboard/ProgramDashboard";
 import AssignUserPanel from "./ui/panel/AssignUserPanel";
+import AssignTagPanel from "./ui/panel/AssignTagPanel";
+import AssignProgramPanel from "./ui/panel/AssignProgramPanel";
+import Schedule from "./ui/schedule"; // [ADD] Import a schedule component
 
 const CollapseIcon = ({ isCollapsed }) => (
   <svg
@@ -209,6 +212,7 @@ export default function ClientPage({
   user,
   initialZaloAccounts,
   allTags,
+  allMessageTemplates, // [MOD] Nhận prop mới
   carePrograms = [],
   initialStats,
 }) {
@@ -296,10 +300,49 @@ export default function ClientPage({
       component: AssignUserPanel,
       props: {
         customerIds: Array.from(selectedIds),
-        onAssignSuccess: () => {
-          router.refresh();
-          setSelectedIds(new Set());
-        },
+        onAssignSuccess: handleAssignSuccess,
+      },
+    });
+  };
+
+  // [ADD] Hàm mới để mở panel gán tag
+  const handleOpenAssignTagPanel = () => {
+    openPanel({
+      id: `assign-tags-${Date.now()}`,
+      title: `Gán Tag cho ${selectedIds.size} khách hàng`,
+      component: AssignTagPanel,
+      props: {
+        customerIds: Array.from(selectedIds),
+        onAssignSuccess: handleAssignSuccess,
+      },
+    });
+  };
+
+  // [ADD] Hàm mới để mở panel gán chương trình
+  const handleOpenAssignProgramPanel = () => {
+    openPanel({
+      id: `assign-program-${Date.now()}`,
+      title: `Gán Chương trình cho ${selectedIds.size} khách hàng`,
+      component: AssignProgramPanel,
+      props: {
+        customerIds: Array.from(selectedIds),
+        onAssignSuccess: handleAssignSuccess,
+        user: user,
+      },
+    });
+  };
+
+  // [ADD] Hàm mới để mở panel lên lịch chiến dịch
+  const handleOpenSchedulePanel = () => {
+    const selectedCustomers = initialData.filter((c) => selectedIds.has(c._id));
+    openPanel({
+      id: `schedule-campaign-${Date.now()}`,
+      title: `Lên chiến dịch cho ${selectedIds.size} khách hàng`,
+      component: Schedule,
+      props: {
+        user: user,
+        label: allMessageTemplates, // [MOD] Truyền đúng dữ liệu mẫu tin nhắn
+        initialData: selectedCustomers,
       },
     });
   };
@@ -316,10 +359,18 @@ export default function ClientPage({
           <span className={styles.selectionCount}>
             Đã chọn: {selectedIds.size}
           </span>
-          <button className={`${styles.actionButton} ${styles.btnCampaign}`}>
+          {/* [MOD] Gắn sự kiện onClick vào nút "Lên chiến dịch" */}
+          <button
+            onClick={handleOpenSchedulePanel}
+            className={`${styles.actionButton} ${styles.btnCampaign}`}
+          >
             Lên chiến dịch
           </button>
-          <button className={`${styles.actionButton} ${styles.btnTag}`}>
+          {/* [MOD] Gắn sự kiện onClick cho nút Gán Tag */}
+          <button
+            onClick={handleOpenAssignTagPanel}
+            className={`${styles.actionButton} ${styles.btnTag}`}
+          >
             Gán Tag
           </button>
           {user.role === "Admin" && (
@@ -330,7 +381,11 @@ export default function ClientPage({
               >
                 Gán User
               </button>
-              <button className={`${styles.actionButton} ${styles.btnAdmin}`}>
+              {/* [MOD] Gắn sự kiện onClick cho nút Gán Chương trình */}
+              <button
+                onClick={handleOpenAssignProgramPanel}
+                className={`${styles.actionButton} ${styles.btnAdmin}`}
+              >
                 Gán Chương trình
               </button>
             </>

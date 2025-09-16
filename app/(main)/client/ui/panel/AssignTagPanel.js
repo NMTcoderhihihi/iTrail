@@ -1,63 +1,60 @@
-// [MOD] app/(main)/client/ui/panel/AssignUserPanel.js
+// [MOD] app/(main)/client/ui/panel/AssignTagPanel.js
 "use client";
 
 import React, { useState, useEffect, useTransition, useMemo } from "react";
-import styles from "./AssignPanel.module.css"; // [MOD] Sử dụng file CSS mới
+import styles from "./AssignPanel.module.css"; // [MOD] Sử dụng file CSS chung
 import Loading from "@/components/(ui)/(loading)/loading";
-import { getUsersForFilter } from "@/app/data/user/user.queries";
-import { assignUsersToCustomers } from "@/app/data/customer/customer.actions";
+import { getTagsForFilter } from "@/app/data/tag/tag.queries";
+import { addTagsToCustomers } from "@/app/data/customer/customer.actions";
 import { usePanels } from "@/contexts/PanelContext";
-import UserTag from "@/app/(main)/admin/components/shared/UserTag"; // [ADD] Import UserTag
 
-export default function AssignUserPanel({ customerIds, onAssignSuccess }) {
+export default function AssignTagPanel({ customerIds, onAssignSuccess }) {
   const { closePanel } = usePanels();
 
-  const [allUsers, setAllUsers] = useState([]);
-  const [selectedUserIds, setSelectedUserIds] = useState(new Set());
+  const [allTags, setAllTags] = useState([]);
+  const [selectedTagIds, setSelectedTagIds] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState(""); // [ADD] State cho tìm kiếm
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    getUsersForFilter().then((users) => {
-      setAllUsers(users);
+    getTagsForFilter().then((tags) => {
+      setAllTags(tags);
       setIsLoading(false);
     });
   }, []);
 
-  // [ADD] Logic để lọc danh sách user
-  const filteredUsers = useMemo(() => {
+  // [ADD] Logic để lọc danh sách tag
+  const filteredTags = useMemo(() => {
     if (!searchTerm) {
-      return allUsers;
+      return allTags;
     }
-    return allUsers.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()),
+    return allTags.filter((tag) =>
+      tag.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-  }, [allUsers, searchTerm]);
+  }, [allTags, searchTerm]);
 
-  const handleToggleUser = (userId) => {
-    setSelectedUserIds((prev) => {
+  const handleToggleTag = (tagId) => {
+    setSelectedTagIds((prev) => {
       const next = new Set(prev);
-      if (next.has(userId)) next.delete(userId);
-      else next.add(userId);
+      if (next.has(tagId)) next.delete(tagId);
+      else next.add(tagId);
       return next;
     });
   };
 
   const handleAssign = () => {
-    if (selectedUserIds.size === 0) {
-      alert("Vui lòng chọn ít nhất một nhân viên.");
+    if (selectedTagIds.size === 0) {
+      alert("Vui lòng chọn ít nhất một tag.");
       return;
     }
     startTransition(async () => {
-      const result = await assignUsersToCustomers({
+      const result = await addTagsToCustomers({
         customerIds,
-        userIds: Array.from(selectedUserIds),
+        tagIds: Array.from(selectedTagIds),
       });
       if (result.success) {
-        alert(`Gán thành công cho ${result.modifiedCount} khách hàng!`);
+        alert(`Gán tag thành công cho ${result.modifiedCount} khách hàng!`);
         onAssignSuccess();
         closePanel();
       } else {
@@ -76,25 +73,25 @@ export default function AssignUserPanel({ customerIds, onAssignSuccess }) {
       <div className={styles.controls}>
         <input
           type="text"
-          placeholder="Tìm kiếm theo tên hoặc email..."
+          placeholder="Tìm kiếm theo tên tag..."
           className={styles.searchInput}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <p className={styles.stats}>
-          Đã chọn: {selectedUserIds.size} / {allUsers.length}
+          Đã chọn: {selectedTagIds.size} / {allTags.length}
         </p>
       </div>
       <div className={styles.listContainer}>
-        {filteredUsers.map((user) => {
-          const isSelected = selectedUserIds.has(user._id);
+        {filteredTags.map((tag) => {
+          const isSelected = selectedTagIds.has(tag._id);
           return (
             <div
-              key={user._id}
+              key={tag._id}
               className={`${styles.listItem} ${
                 isSelected ? styles.selected : ""
               }`}
-              onClick={() => handleToggleUser(user._id)}
+              onClick={() => handleToggleTag(tag._id)}
             >
               <input
                 type="checkbox"
@@ -103,7 +100,7 @@ export default function AssignUserPanel({ customerIds, onAssignSuccess }) {
                 className={styles.checkbox}
               />
               <div className={styles.listItemContent}>
-                <UserTag user={user} />
+                <span>{tag.name}</span>
               </div>
             </div>
           );
@@ -120,9 +117,9 @@ export default function AssignUserPanel({ customerIds, onAssignSuccess }) {
         <button
           onClick={handleAssign}
           className={`${styles.buttonBase} ${styles.blueButton}`}
-          disabled={isPending || selectedUserIds.size === 0}
+          disabled={isPending || selectedTagIds.size === 0}
         >
-          {isPending ? "Đang gán..." : `Gán (${selectedUserIds.size})`}
+          {isPending ? "Đang gán..." : `Gán (${selectedTagIds.size})`}
         </button>
       </div>
     </div>

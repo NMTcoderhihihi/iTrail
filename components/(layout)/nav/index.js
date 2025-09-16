@@ -10,6 +10,7 @@ import {
   Svg_Dev,
   Svg_Admin,
   Svg_Logout,
+  Svg_Chart, // [ADD] Import icon mới
 } from "@/components/(icon)/svg";
 import { logoutUser } from "@/app/data/auth/auth.actions";
 
@@ -100,6 +101,9 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
       // [ADD] Tự động mở menu tài khoản
       if (["accounts", "users"].includes(activeTab))
         initial.add("admin-accounts");
+      // [ADD] Tự động mở menu báo cáo
+      if (["reports-overview", "reports-employee"].includes(activeTab))
+        initial.add("admin-reports");
     }
     if (pathname === "/") initial.add("care");
     return initial;
@@ -129,6 +133,25 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
     ];
 
     const adminSubItems = [
+      // [ADD] Thêm mục menu Báo cáo mới
+      {
+        key: "admin-reports",
+        label: "📈 Báo cáo",
+        isActive:
+          activeTab === "reports-overview" || activeTab === "reports-employee",
+        subItems: [
+          {
+            href: "/admin?tab=reports-overview",
+            label: "Báo cáo tổng thể",
+            isActive: activeTab === "reports-overview",
+          },
+          {
+            href: "/admin?tab=reports-employee",
+            label: "Báo cáo nhân viên",
+            isActive: activeTab === "reports-employee",
+          },
+        ],
+      },
       {
         key: "admin-campaigns",
         label: "🚀 Chiến dịch",
@@ -215,7 +238,7 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
         key: "care",
         href: "/",
         icon: Svg_Student,
-        label: "Chăm sóc",
+        label: "Khách hàng",
         roles: ["Admin", "Employee"],
         subItems: careSubItems,
         isActive: pathname === "/",
@@ -223,7 +246,7 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
       {
         key: "admin",
         icon: Svg_Admin,
-        label: "Admin",
+        label: "Quản lý",
         roles: ["Admin"],
         subItems: adminSubItems,
         isActive: pathname.startsWith("/admin"),

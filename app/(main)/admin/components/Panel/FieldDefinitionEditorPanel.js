@@ -4,14 +4,11 @@
 import React, { useState, useEffect, useTransition } from "react";
 import styles from "./FieldDefinitionEditorPanel.module.css";
 import LoadingSpinner from "../shared/LoadingSpinner";
-// [MOD] Import hàm mới
 import { getFieldDefinitionById } from "@/app/data/fieldDefinition/fieldDefinition.queries";
 import { createOrUpdateFieldDefinition } from "@/app/data/fieldDefinition/fieldDefinition.actions";
 import { getCareProgramsForFilter } from "@/app/data/careProgram/careProgram.queries";
 import { getTagsForFilter } from "@/app/data/tag/tag.queries";
-// [ADD] Import hàm mới
 import { getDataSourcesForFilter } from "@/app/data/dataSource/dataSource.queries";
-// [MOD] Import component mới
 import MultiSelectDropdown from "./MultiSelectDropdown";
 
 export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
@@ -32,10 +29,8 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    // Tải song song tất cả dữ liệu cần thiết
     const fetchData = async () => {
       setIsLoading(true);
-      // [MOD] Thêm getDataSourcesForFilter vào Promise.all
       const [programsResult, tagsResult, dataSourcesResult] = await Promise.all(
         [
           getCareProgramsForFilter(),
@@ -51,15 +46,10 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
       if (fieldId) {
         const fieldResult = await getFieldDefinitionById(fieldId);
         if (fieldResult.success) {
-          // [FIX] Chuyển đổi mảng programIds từ object về string ID
           const fetchedField = fieldResult.data;
-          const programStringIds = (fetchedField.programIds || []).map(
-            (p) => p._id,
-          );
-
           setField({
             ...fetchedField,
-            programIds: programStringIds, // Sử dụng mảng ID chuỗi
+            programIds: fetchedField.programIds || [],
             tagIds: fetchedField.tagIds || [],
             dataSourceIds: fetchedField.dataSourceIds || [],
           });
@@ -79,15 +69,37 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
   };
 
   const handleMultiSelectChange = (name, selectedIds) => {
-    setField((prev) => ({ ...prev, [name]: selectedIds }));
+    let fullObjects = [];
+    if (name === "programIds") {
+      fullObjects = allPrograms.filter((p) => selectedIds.includes(p._id));
+    } else if (name === "dataSourceIds") {
+      fullObjects = allDataSources.filter((ds) => selectedIds.includes(ds._id));
+    } else {
+      // tagIds đã là mảng ID chuỗi sẵn, giữ nguyên
+      fullObjects = selectedIds;
+    }
+
+    setField((prev) => ({
+      ...prev,
+      [name]: fullObjects,
+    }));
   };
 
   const handleSave = () => {
     startTransition(async () => {
+      // [MOD] Trước khi lưu, chuyển đổi lại mảng object về mảng ID
+      const dataToSave = {
+        ...field,
+        programIds: field.programIds.map((p) => p._id),
+        dataSourceIds: field.dataSourceIds.map((ds) => ds._id),
+        // tagIds đã là mảng ID sẵn rồi
+      };
+
       const result = await createOrUpdateFieldDefinition({
         id: fieldId,
-        ...field,
+        ...dataToSave,
       });
+
       if (result.success) {
         onSaveSuccess();
       } else {
@@ -157,11 +169,11 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
           </select>
         </div>
 
-        {/* [MOD] Thay thế MultiSelect cũ bằng MultiSelectDropdown */}
+        {/* [FIX] Chuyển đổi mảng object thành mảng ID trước khi truyền vào prop */}
         <MultiSelectDropdown
           label="Gán cho Chương trình CS"
           options={allPrograms.map((p) => ({ id: p._id, name: p.name }))}
-          selectedIds={field.programIds}
+          selectedIds={(field.programIds || []).map((p) => p._id)}
           onChange={(ids) => handleMultiSelectChange("programIds", ids)}
           displayAs="chip"
         />
@@ -175,7 +187,7 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
         <MultiSelectDropdown
           label="Lấy từ Nguồn Dữ liệu (ưu tiên từ trên xuống)"
           options={allDataSources.map((ds) => ({ id: ds._id, name: ds.name }))}
-          selectedIds={field.dataSourceIds}
+          selectedIds={(field.dataSourceIds || []).map((ds) => ds._id)}
           onChange={(ids) => handleMultiSelectChange("dataSourceIds", ids)}
           displayAs="list"
         />

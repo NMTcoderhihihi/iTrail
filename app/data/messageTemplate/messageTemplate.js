@@ -38,6 +38,34 @@ export async function getMessageTemplates({ page = 1, limit = 10 } = {}) {
     return { success: false, error: error.message, data: [], pagination: {} };
   }
 }
+/**
+ * Lấy danh sách tất cả các mẫu tin nhắn cho dropdown.
+ * @returns {Promise<Array>}
+ */
+export async function getMessageTemplatesForFilter() {
+  try {
+    await connectDB();
+    const templates = await MessageTemplate.aggregate([
+      {
+        $project: {
+          _id: 1,
+          content: 1,
+          // Sử dụng $ifNull: nếu 'description' tồn tại, dùng nó. Nếu không, dùng 'title'.
+          description: { $ifNull: ["$description", "$title"] },
+        },
+      },
+      {
+        $sort: {
+          description: 1,
+        },
+      },
+    ]);
+    return JSON.parse(JSON.stringify(templates));
+  } catch (error) {
+    console.error("Loi trong getMessageTemplatesForFilter:", error);
+    return [];
+  }
+}
 
 /**
  * Tạo mới hoặc cập nhật một mẫu tin nhắn.

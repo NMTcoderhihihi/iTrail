@@ -237,6 +237,67 @@ export async function updateCustomerTags({ customerId, tagIds }) {
     return { success: false, error: error.message };
   }
 }
+export async function addTagsToCustomers({ customerIds, tagIds }) {
+  try {
+    await connectDB();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Yêu cầu đăng nhập.");
+
+    // Sử dụng $addToSet để thêm các tag vào mảng mà không tạo ra bản sao
+    const result = await Customer.updateMany(
+      { _id: { $in: customerIds } },
+      { $addToSet: { tags: { $each: tagIds } } },
+    );
+
+    revalidateAndBroadcast("customer_details");
+    revalidateAndBroadcast("customer_list");
+    revalidateAndBroadcast("tags"); // Thêm revalidate cho tags
+    return { success: true, modifiedCount: result.modifiedCount };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+export async function enrollCustomersInProgram({
+  customerIds,
+  programId,
+  stageId,
+  statusId,
+}) {
+  try {
+    await connectDB();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Yêu cầu đăng nhập.");
+
+    if (!programId || !customerIds || customerIds.length === 0) {
+      throw new Error("Thiếu thông tin chương trình hoặc khách hàng.");
+    }
+
+    const newEnrollment = {
+      programId,
+      stageId: stageId || null,
+      statusId: statusId || null,
+      enrolledAt: new Date(),
+      dataStatus: "assigned",
+    };
+
+    // Chỉ thêm enrollment cho những khách hàng chưa tham gia chương trình này
+    const result = await Customer.updateMany(
+      {
+        _id: { $in: customerIds },
+        "programEnrollments.programId": { $ne: programId },
+      },
+      {
+        $push: { programEnrollments: newEnrollment },
+      },
+    );
+
+    revalidateAndBroadcast("customer_details");
+    revalidateAndBroadcast("customer_list");
+    return { success: true, modifiedCount: result.modifiedCount };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
 
 export async function addCommentToCustomer({ customerId, detail }) {
   try {

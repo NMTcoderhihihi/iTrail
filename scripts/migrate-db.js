@@ -290,9 +290,9 @@ async function migrateInitialSetup() {
         // [ADD] Định nghĩa các tham số đầu vào và đầu ra
         inputParams: [
           {
-            paramName: "phone",
-            paramType: "string",
+            paramName: "id",
             paramLabel: "Số điện thoại",
+            paramType: "string",
           },
         ],
         outputSchema: [
