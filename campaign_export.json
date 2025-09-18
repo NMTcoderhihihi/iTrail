@@ -1,0 +1,33 @@
+{
+  "source": "archivedjobs",
+  "campaign": {
+    "_id": "68819359e3f17326675e9fda",
+    "jobName": "Lịch trình ngày 24/7/2025",
+    "status": "completed",
+    "actionType": "sendMessage",
+    "zaloAccount": {
+      "_id": "686f85c1f50c8b0342c928c6",
+      "name": "Khắc Hoàng",
+      "phone": "0946784625"
+    },
+    "config": {
+      "messageTemplate": "Chào em\nMình thấy em có đăng ký tại ĐH Lạc Hồng",
+      "actionsPerHour": 50
+    },
+    "statistics": {
+      "total": 1,
+      "completed": 0,
+      "failed": 1
+    },
+    "createdAt": "2025-07-24T01:58:49.858Z",
+    "completedAt": "2025-07-24T01:59:08.825Z",
+    "estimatedCompletionTime": "2025-07-24T01:58:49.849Z",
+    "createdBy": {
+      "_id": "686dedf919abba5d454c47ce",
+      "name": "Nguyen Minh Long Long",
+      "email": "longnhoz240603@gmail.com"
+    },
+    "updatedAt": "2025-07-24T01:59:08.827Z",
+    "__v": 0
+  }
+}

@@ -99,10 +99,18 @@ export async function getCustomerDetails(customerId) {
           .filter((id) => id !== INTERNAL_DB_DATASOURCE_ID),
       ),
     ];
+
+    // [MOD] Thay thế `params` bằng một object linh hoạt hơn
+    const executionParams = {
+      phone: customer.phone,
+      sdt: customer.phone, // Thêm 'sdt' để khớp với Google Sheet
+      citizenId: customer.citizenId,
+    };
+
     const dataSourcePromises = externalDataSourceIds.map((id) =>
       executeDataSource({
         dataSourceId: id,
-        params: { phone: customer.phone, citizenId: customer.citizenId },
+        params: executionParams, // [MOD] Sử dụng object params mới
       }),
     );
     const externalDataSourceResults = Object.fromEntries(
@@ -132,10 +140,19 @@ export async function getCustomerDetails(customerId) {
           result = externalDataSourceResults[dsId.toString()];
         }
 
-        if (Array.isArray(result) && result.length > 0) result = result[0];
+        // [ADD] Bắt đầu logic lọc kết quả từ DataSource ngoài
+        let specificResult = result;
+        if (Array.isArray(result)) {
+          // Tìm đúng dòng dữ liệu cho khách hàng này dựa trên SĐT
+          specificResult = result.find((item) => item.sdt === customer.phone);
+        }
+        // [ADD] Kết thúc logic lọc
 
-        // [MOD] Sửa lại logic trích xuất giá trị
-        const valueFromDs = result?.result ?? result?.[def.fieldName];
+        if (Array.isArray(specificResult) && specificResult.length > 0)
+          specificResult = specificResult[0];
+
+        const valueFromDs =
+          specificResult?.result ?? specificResult?.[def.fieldName];
 
         if (valueFromDs !== undefined) {
           finalValue = valueFromDs;

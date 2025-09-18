@@ -1,0 +1,2086 @@
+{
+  "customer": {
+    "_id": "68a3e3ebe986b54217cf1981",
+    "name": "NGUYỄN MINH TUẤN",
+    "phone": "0337439462",
+    "citizenId": null,
+    "tags": [
+      "68c542b57d8007c6741ecc1a"
+    ],
+    "users": [],
+    "uid": [
+      {
+        "zaloId": "686f85c1f50c8b0342c928c6",
+        "uid": "5734744402560134961"
+      },
+      {
+        "zaloId": "6878b6e9df65cb4a19d3364f",
+        "uid": "Lỗi: UID cung cấp không hợp lệ"
+      },
+      {
+        "zaloId": "686b7f18262f8a3ef136e71d",
+        "uid": "4279058896685063079"
+      },
+      {
+        "zaloId": "686b46a8262f8a3ef136e715",
+        "uid": "6774669002751032836"
+      },
+      {
+        "zaloId": "686b4683262f8a3ef136e714",
+        "uid": "7475356474272352142"
+      }
+    ],
+    "comments": [
+      {
+        "user": "6865fe3ccdec836f29fabe4f",
+        "detail": "test",
+        "time": "2025-09-15T06:51:16.315Z",
+        "_id": "68c7b764e4bb2db178d6f3d7"
+      },
+      {
+        "user": "686dedef19abba5d454c47ca",
+        "detail": "xét trường khác",
+        "time": "2025-09-04T01:48:37.515Z",
+        "_id": "68bfd9a8e2d199381ec199e8"
+      },
+      {
+        "user": "686dedce19abba5d454c47b9",
+        "detail": "kh thêm OTP đc",
+        "time": "2025-08-19T07:45:15.386Z",
+        "_id": "68bfd9a8e2d199381ec199e9"
+      },
+      {
+        "user": "6865fe3ccdec836f29fabe4f",
+        "detail": "Số điện thoại phụ từ Sheet: 0865043342",
+        "time": "2025-08-19T02:39:39.738Z",
+        "_id": "68bfd9a8e2d199381ec199ea"
+      }
+    ],
+    "action": [],
+    "customerAttributes": [],
+    "programEnrollments": [
+      {
+        "programId": {
+          "_id": "68bfd99ce2d199381ec03bf1",
+          "name": "Chương trình Tuyển sinh Mặc định",
+          "stages": [
+            {
+              "_id": "68bfd99ce2d199381ec03bf3",
+              "name": "Chưa có",
+              "level": 0
+            },
+            {
+              "_id": "68bfd99ce2d199381ec03bf4",
+              "name": "Chăm sóc",
+              "level": 1
+            },
+            {
+              "_id": "68bfd99ce2d199381ec03bf5",
+              "name": "OTP",
+              "level": 2
+            },
+            {
+              "_id": "68bfd99ce2d199381ec03bf6",
+              "name": "Nhập học",
+              "level": 3
+            }
+          ],
+          "statuses": [
+            {
+              "_id": "686dcc7d6691e74aec2be44b",
+              "name": "QT01| Xác nhận nhập học & ấn định ngày NH",
+              "description": ""
+            },
+            {
+              "_id": "686dcc8d6691e74aec2be454",
+              "name": "QT02| Xác định NH, nhưng không ấn định ngày NH",
+              "description": ""
+            },
+            {
+              "_id": "686dcc996691e74aec2be463",
+              "name": "QT03| Hỏi nhiều thông tin về LHU (3 câu trở lên)",
+              "description": ""
+            },
+            {
+              "_id": "686dcca16691e74aec2be466",
+              "name": "QT04| Phân vân học ở SG hay ĐN, học ĐH hay CĐ",
+              "description": ""
+            },
+            {
+              "_id": "686dcca96691e74aec2be46f",
+              "name": "QT05| Báo chờ NV1 mới xác định nhập học được",
+              "description": ""
+            },
+            {
+              "_id": "686e5ed7a344d2546872dfef",
+              "name": "QT06| Hỏi ít về LHU (dưới 3 câu)",
+              "description": ""
+            },
+            {
+              "_id": "686e5eefa344d2546872dff8",
+              "name": "QT07| Chỉ nghe CTV tư vấn và trả lời cho có",
+              "description": ""
+            },
+            {
+              "_id": "686e5f00a344d2546872e001",
+              "name": "QT08| Báo bận không nghe máy, hẹn gọi lại lúc khác",
+              "description": ""
+            },
+            {
+              "_id": "686e5f1ca344d2546872e00d",
+              "name": "QT09| Báo bạn không nghe máy hoặc tắt máy ngang",
+              "description": ""
+            },
+            {
+              "_id": "686e5f2fa344d2546872e016",
+              "name": "QT10| Báo học trường khác hoặc không có nhu cầu học",
+              "description": ""
+            },
+            {
+              "_id": "686e5f3aa344d2546872e01c",
+              "name": "QT11| Không nghe máy",
+              "description": ""
+            },
+            {
+              "_id": "6895618d30f41ef79ef402e1",
+              "name": "QT12| Kiểm thử",
+              "description": "Dùng để kiểm thử các logic cron"
+            },
+            {
+              "_id": "68a3dee83990c11a2632e310",
+              "name": "QT13| Đăng ký NV LHU",
+              "description": ""
+            }
+          ]
+        },
+        "stageId": "68bfd99ce2d199381ec03bf4",
+        "statusId": "68a3dee83990c11a2632e310",
+        "dataStatus": "migrated",
+        "programData": [],
+        "enrolledAt": "2025-08-19T02:39:39.921Z",
+        "stage": {
+          "_id": "68bfd99ce2d199381ec03bf4",
+          "name": "Chăm sóc",
+          "level": 1
+        },
+        "status": {
+          "_id": "68a3dee83990c11a2632e310",
+          "name": "QT13| Đăng ký NV LHU",
+          "description": ""
+        }
+      }
+    ],
+    "createdAt": "2025-08-19T02:39:39.921Z",
+    "updatedAt": "2025-09-15T07:31:37.315Z",
+    "__v": 0
+  },
+  "history": [
+    {
+      "_id": "68b8eff5954bc2bd404567a8",
+      "actionTypeId": "68bfd99d1fdcef3a710781c9",
+      "actorId": {
+        "_id": "686dedef19abba5d454c47ca",
+        "name": "Nguyễn Phi Hùng",
+        "email": "phihung.tgdd2003@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        }
+      ],
+      "detail": [
+        {
+          "key": "commentId",
+          "value": "68b8eff5954bc2bd404567a4"
+        }
+      ],
+      "time": "2025-09-04T01:48:37.628Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b2d05f954bc2bd4043e04c",
+      "actionTypeId": "68bfd99d1fdcef3a710781c8",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "programId",
+          "value": "68bfd99ce2d199381ec03bf1"
+        }
+      ],
+      "detail": [
+        {
+          "key": "fieldName",
+          "value": "stageId"
+        },
+        {
+          "key": "oldValue",
+          "value": "68bfd99ce2d199381ec03bf3"
+        },
+        {
+          "key": "newValue",
+          "value": "68bfd99ce2d199381ec03bf4"
+        }
+      ],
+      "time": "2025-08-30T10:20:15.515Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b2d05d954bc2bd4043e043",
+      "actionTypeId": "68bfd99d1fdcef3a710781c8",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "programId",
+          "value": "68bfd99ce2d199381ec03bf1"
+        }
+      ],
+      "detail": [
+        {
+          "key": "fieldName",
+          "value": "stageId"
+        },
+        {
+          "key": "oldValue",
+          "value": "68bfd99ce2d199381ec03bf4"
+        },
+        {
+          "key": "newValue",
+          "value": "68bfd99ce2d199381ec03bf3"
+        }
+      ],
+      "time": "2025-08-30T10:20:13.303Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b127e5954bc2bd404146f9",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68b124da954bc2bd404133dc"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "6774669002751032836",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Em nhập học chưa há? Có vướng chỗ nào thì nói anh hỗ trợ liền nheng, từ học phí tới học bổng đều có cách hết đó"
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Em nhập học chưa há? Có vướng chỗ nào thì nói anh hỗ trợ liền nheng, từ học phí tới học bổng đều có cách hết đó"
+        }
+      ],
+      "time": "2025-08-29T04:09:09.712Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b125d4954bc2bd40413ba6",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b4683262f8a3ef136e714"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68b1230b954bc2bd40412a7c"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "7475356474272352142",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Em nhập học chưa nhee? Có vướng chỗ nào thì nói cô hỗ trợ liền nhé, từ học phí tới học bổng đều có cách hết đó"
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Em nhập học chưa nhee? Có vướng chỗ nào thì nói cô hỗ trợ liền nhé, từ học phí tới học bổng đều có cách hết đó"
+        }
+      ],
+      "time": "2025-08-29T04:00:20.841Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b124db954bc2bd404134dd",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68b124da954bc2bd404133dc"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-29T04:08:15.898Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Em nhập học chưa {cuoi_cau}? Có vướng chỗ nào thì nói anh hỗ trợ liền {cuoi_cau}, từ học phí tới học bổng đều có cách hết đó"
+        }
+      ],
+      "time": "2025-08-29T03:56:11.467Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b12430954bc2bd40413254",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686f85c1f50c8b0342c928c6"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68b121fb954bc2bd40412160"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "5734744402560134961",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Em nhập học chưa nhaa? Có vướng chỗ nào thì nói anh hỗ trợ liền nhaaa, từ học phí tới học bổng đều có cách hết đó"
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Em nhập học chưa nhaa? Có vướng chỗ nào thì nói anh hỗ trợ liền nhaaa, từ học phí tới học bổng đều có cách hết đó"
+        }
+      ],
+      "time": "2025-08-29T03:53:20.773Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b1236f954bc2bd40412e05",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68b12130954bc2bd40411e69"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "4279058896685063079",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Em nhập học chưa luôn? Có vướng chỗ nào thì nói anh hỗ trợ liền nghen, từ học phí tới học bổng đều có cách hết đó"
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Em nhập học chưa luôn? Có vướng chỗ nào thì nói anh hỗ trợ liền nghen, từ học phí tới học bổng đều có cách hết đó"
+        }
+      ],
+      "time": "2025-08-29T03:50:07.592Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b1230b954bc2bd40412b91",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b4683262f8a3ef136e714"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68b1230b954bc2bd40412a7c"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-29T04:00:01.310Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Em nhập học chưa {cuoi_cau}? Có vướng chỗ nào thì nói cô hỗ trợ liền {cuoi_cau}, từ học phí tới học bổng đều có cách hết đó"
+        }
+      ],
+      "time": "2025-08-29T03:48:27.827Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b121fc954bc2bd4041238f",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686f85c1f50c8b0342c928c6"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68b121fb954bc2bd40412160"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-29T03:52:33.994Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Em nhập học chưa {cuoi_cau}? Có vướng chỗ nào thì nói anh hỗ trợ liền {cuoi_cau}, từ học phí tới học bổng đều có cách hết đó"
+        }
+      ],
+      "time": "2025-08-29T03:43:56.605Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b12130954bc2bd40411f56",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68b12130954bc2bd40411e69"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-29T03:49:08.352Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Em nhập học chưa {cuoi_cau}? Có vướng chỗ nào thì nói anh hỗ trợ liền {cuoi_cau}, từ học phí tới học bổng đều có cách hết đó"
+        }
+      ],
+      "time": "2025-08-29T03:40:32.811Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b120f4954bc2bd40411b95",
+      "actionTypeId": "68bfd99d1fdcef3a710781cd",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686f85c1f50c8b0342c928c6"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68b11d39954bc2bd4040f64d"
+        }
+      ],
+      "detail": [],
+      "time": "2025-08-29T03:39:32.840Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b11dd7954bc2bd4040ff9d",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686f85c1f50c8b0342c928c6"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68b11d39954bc2bd4040f64d"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "5734744402560134961",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Em nhập học chưa nhaaa? Có vướng chỗ nào thì nói anh hỗ trợ liền nhe, từ học phí tới học bổng đều có cách hết đó"
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Em nhập học chưa nhaaa? Có vướng chỗ nào thì nói anh hỗ trợ liền nhe, từ học phí tới học bổng đều có cách hết đó"
+        }
+      ],
+      "time": "2025-08-29T03:26:15.697Z",
+      "__v": 0
+    },
+    {
+      "_id": "68b11d3a954bc2bd4040f880",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686f85c1f50c8b0342c928c6"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68b11d39954bc2bd4040f64d"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-29T03:25:25.510Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Em nhập học chưa {cuoi_cau}? Có vướng chỗ nào thì nói anh hỗ trợ liền {cuoi_cau}, từ học phí tới học bổng đều có cách hết đó"
+        }
+      ],
+      "time": "2025-08-29T03:23:38.219Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad82e5954bc2bd402f8c1f",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad8083954bc2bd402f5360"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "6774669002751032836",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao luôn.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho nhe."
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao luôn.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho nhe."
+        }
+      ],
+      "time": "2025-08-26T09:48:21.373Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad82d8954bc2bd402f8a02",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad7f57954bc2bd402f3b68"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "4279058896685063079",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nhaa.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho nà."
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nhaa.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho nà."
+        }
+      ],
+      "time": "2025-08-26T09:48:08.517Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad8084954bc2bd402f578d",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad8083954bc2bd402f5360"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-26T09:47:10.495Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao {cuoi_cau}.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho {cuoi_cau}."
+        }
+      ],
+      "time": "2025-08-26T09:38:12.714Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad7f59954bc2bd402f3ee1",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad7f57954bc2bd402f3b68"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-26T09:47:09.400Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao {cuoi_cau}.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho {cuoi_cau}."
+        }
+      ],
+      "time": "2025-08-26T09:33:13.476Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad7f59954bc2bd402f3edc",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b4683262f8a3ef136e714"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad7d5a954bc2bd402ef6ea"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "7475356474272352142",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Các em nhập học chưa?? cô nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nè.\nAi chưa nhập học thì nhắn lại cô liền, chỉ cách cho nhaaa."
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Các em nhập học chưa?? cô nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nè.\nAi chưa nhập học thì nhắn lại cô liền, chỉ cách cho nhaaa."
+        }
+      ],
+      "time": "2025-08-26T09:33:13.411Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad7f05954bc2bd402f31da",
+      "actionTypeId": "68bfd99d1fdcef3a710781cd",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad7ed4954bc2bd402f1f96"
+        }
+      ],
+      "detail": [],
+      "time": "2025-08-26T09:31:49.607Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad7ef1954bc2bd402f2aae",
+      "actionTypeId": "68bfd99d1fdcef3a710781cd",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad7e59954bc2bd402f0e24"
+        }
+      ],
+      "detail": [],
+      "time": "2025-08-26T09:31:29.147Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad7ed6954bc2bd402f2524",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad7ed4954bc2bd402f1f96"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-26T09:35:14.945Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao {cuoi_cau}.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho {cuoi_cau}."
+        }
+      ],
+      "time": "2025-08-26T09:31:02.402Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad7ea3954bc2bd402f18d7",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad7e59954bc2bd402f0e24"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "6774669002751032836",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nhee.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho nhe."
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nhee.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho nhe."
+        }
+      ],
+      "time": "2025-08-26T09:30:11.894Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad7e5a954bc2bd402f1249",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad7e59954bc2bd402f0e24"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-26T09:28:57.046Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao {cuoi_cau}.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho {cuoi_cau}."
+        }
+      ],
+      "time": "2025-08-26T09:28:58.039Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad7d5b954bc2bd402efc53",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b4683262f8a3ef136e714"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad7d5a954bc2bd402ef6ea"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-26T09:32:11.444Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Các em nhập học chưa?? cô nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao {cuoi_cau}.\nAi chưa nhập học thì nhắn lại cô liền, chỉ cách cho {cuoi_cau}."
+        }
+      ],
+      "time": "2025-08-26T09:24:43.337Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad1a60954bc2bd402e2cf4",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686f85c1f50c8b0342c928c6"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad198c954bc2bd402e27f0"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "5734744402560134961",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nhaa.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho luôn nha."
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nhaa.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho luôn nha."
+        }
+      ],
+      "time": "2025-08-26T02:22:24.889Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad1a54954bc2bd402e2cba",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad1940954bc2bd402e253a"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "4279058896685063079",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nhe.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho luôn nha."
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nhe.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho luôn nha."
+        }
+      ],
+      "time": "2025-08-26T02:22:12.134Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad1a0c954bc2bd402e2c69",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad18d4954bc2bd402e2234"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "6774669002751032836",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nhé.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho hén."
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nhé.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho hén."
+        }
+      ],
+      "time": "2025-08-26T02:21:00.988Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad198c954bc2bd402e285d",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686f85c1f50c8b0342c928c6"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad198c954bc2bd402e27f0"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-26T02:20:07.965Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao {cuoi_cau}.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho {cuoi_cau}."
+        }
+      ],
+      "time": "2025-08-26T02:18:52.479Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad1941954bc2bd402e25a9",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad1940954bc2bd402e253a"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-26T02:20:03.272Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao {cuoi_cau}.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho {cuoi_cau}."
+        }
+      ],
+      "time": "2025-08-26T02:17:37.163Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad18fe954bc2bd402e241c",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b4683262f8a3ef136e714"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad1851954bc2bd402e1f60"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "7475356474272352142",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Các em nhập học chưa?? cô nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nheng.\nAi chưa nhập học thì nhắn lại cô liền, chỉ cách cho luôn."
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Các em nhập học chưa?? cô nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao nheng.\nAi chưa nhập học thì nhắn lại cô liền, chỉ cách cho luôn."
+        }
+      ],
+      "time": "2025-08-26T02:16:30.775Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad18d5954bc2bd402e22a9",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad18d4954bc2bd402e2234"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-26T02:20:01.331Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Các em nhập học chưa?? anh nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao {cuoi_cau}.\nAi chưa nhập học thì nhắn lại anh liền, chỉ cách cho {cuoi_cau}."
+        }
+      ],
+      "time": "2025-08-26T02:15:49.597Z",
+      "__v": 0
+    },
+    {
+      "_id": "68ad1851954bc2bd402e1fcf",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b4683262f8a3ef136e714"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68ad1851954bc2bd402e1f60"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-26T02:16:00.466Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Các em nhập học chưa?? cô nghe bên trường báo có 50 suất bây giờ nhập học là nhận được \"ÁO KHOA LIMITED FREE\" đó. Áo thun chất lượng cao {cuoi_cau}.\nAi chưa nhập học thì nhắn lại cô liền, chỉ cách cho {cuoi_cau}."
+        }
+      ],
+      "time": "2025-08-26T02:13:37.450Z",
+      "__v": 0
+    },
+    {
+      "_id": "68abdc05954bc2bd402bb6fa",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b4683262f8a3ef136e714"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68abdaad954bc2bd402ba2bd"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "7475356474272352142",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Kết quả sao ròi há\nNếu có gì thắc mắc nhắn cô liền, kh là hết quà đó hén"
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Kết quả sao ròi há\nNếu có gì thắc mắc nhắn cô liền, kh là hết quà đó hén"
+        }
+      ],
+      "time": "2025-08-25T03:44:05.232Z",
+      "__v": 0
+    },
+    {
+      "_id": "68abdab7954bc2bd402ba3ce",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68abd9d8954bc2bd402b925b"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "6774669002751032836",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Kết quả sao ròi nhó\nNếu có gì thắc mắc nhắn anh liền, kh là hết quà đó nhoo"
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Kết quả sao ròi nhó\nNếu có gì thắc mắc nhắn anh liền, kh là hết quà đó nhoo"
+        }
+      ],
+      "time": "2025-08-25T03:38:31.695Z",
+      "__v": 0
+    },
+    {
+      "_id": "68abdaad954bc2bd402ba330",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b4683262f8a3ef136e714"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68abdaad954bc2bd402ba2bd"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-25T03:41:59.934Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Kết quả sao ròi {cuoi_cau}\nNếu có gì thắc mắc nhắn cô liền, kh là hết quà đó {cuoi_cau}"
+        }
+      ],
+      "time": "2025-08-25T03:38:21.973Z",
+      "__v": 0
+    },
+    {
+      "_id": "68abd9d8954bc2bd402b92cc",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68abd9d8954bc2bd402b925b"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-25T03:37:49.352Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Kết quả sao ròi {cuoi_cau}\nNếu có gì thắc mắc nhắn anh liền, kh là hết quà đó {cuoi_cau}"
+        }
+      ],
+      "time": "2025-08-25T03:34:48.660Z",
+      "__v": 0
+    },
+    {
+      "_id": "68abd854954bc2bd402b7e4f",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68abd7e0954bc2bd402b793d"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "4279058896685063079",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Kết quả sao ròi hen.\nNếu có gì thắc mắc nhắn anh liền, kh là hết quà đó nhó"
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Kết quả sao ròi hen.\nNếu có gì thắc mắc nhắn anh liền, kh là hết quà đó nhó"
+        }
+      ],
+      "time": "2025-08-25T03:28:20.516Z",
+      "__v": 0
+    },
+    {
+      "_id": "68abd7e0954bc2bd402b79a8",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68abd7e0954bc2bd402b793d"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-25T03:27:31.311Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Kết quả sao ròi {cuoi_cau}.\nNếu có gì thắc mắc nhắn anh liền, kh là hết quà đó {cuoi_cau}"
+        }
+      ],
+      "time": "2025-08-25T03:26:24.626Z",
+      "__v": 0
+    },
+    {
+      "_id": "68abd6e3954bc2bd402b6c8a",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686f85c1f50c8b0342c928c6"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68abd6ad954bc2bd402b69f7"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "5734744402560134961",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "Kết quả sao ròi nhé\nNếu có gì thắc mắc nhắn anh liền, kh là hết quà đó nè"
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "Kết quả sao ròi nhé\nNếu có gì thắc mắc nhắn anh liền, kh là hết quà đó nè"
+        }
+      ],
+      "time": "2025-08-25T03:22:11.735Z",
+      "__v": 0
+    },
+    {
+      "_id": "68abd6ad954bc2bd402b6a5e",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686f85c1f50c8b0342c928c6"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68abd6ad954bc2bd402b69f7"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-25T03:21:15.268Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "Kết quả sao ròi {cuoi_cau}\nNếu có gì thắc mắc nhắn anh liền, kh là hết quà đó {cuoi_cau}"
+        }
+      ],
+      "time": "2025-08-25T03:21:17.926Z",
+      "__v": 0
+    },
+    {
+      "_id": "68a9748e954bc2bd40285065",
+      "actionTypeId": "68bfd99d1fdcef3a710781d1",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b4683262f8a3ef136e714"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68a97037954bc2bd402836ca"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "found_new",
+            "targetUid": "7475356474272352142",
+            "actionStatus": "success",
+            "actionMessage": "Đã tìm thấy UID mới.",
+            "finalMessage": null
+          }
+        }
+      ],
+      "time": "2025-08-23T07:58:06.547Z",
+      "__v": 0
+    },
+    {
+      "_id": "68a97367954bc2bd402849aa",
+      "actionTypeId": "68bfd99d1fdcef3a710781d1",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68a97179954bc2bd40283ced"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "4279058896685063079",
+            "actionStatus": "success",
+            "actionMessage": "UID đã được cung cấp.",
+            "finalMessage": null
+          }
+        }
+      ],
+      "time": "2025-08-23T07:53:11.626Z",
+      "__v": 0
+    },
+    {
+      "_id": "68a97275954bc2bd4028446c",
+      "actionTypeId": "68bfd99d1fdcef3a710781d1",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68a97064954bc2bd40283908"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "found_new",
+            "targetUid": "6774669002751032836",
+            "actionStatus": "success",
+            "actionMessage": "Đã tìm thấy UID mới.",
+            "finalMessage": null
+          }
+        }
+      ],
+      "time": "2025-08-23T07:49:09.643Z",
+      "__v": 0
+    },
+    {
+      "_id": "68a9717a954bc2bd40283dc0",
+      "actionTypeId": "68bfd99d1fdcef3a710781cc",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68a97179954bc2bd40283ced"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-23T07:52:51.877Z"
+        }
+      ],
+      "time": "2025-08-23T07:44:58.310Z",
+      "__v": 0
+    },
+    {
+      "_id": "68a97064954bc2bd402839db",
+      "actionTypeId": "68bfd99d1fdcef3a710781cc",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b46a8262f8a3ef136e715"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68a97064954bc2bd40283908"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-23T07:48:29.711Z"
+        }
+      ],
+      "time": "2025-08-23T07:40:20.737Z",
+      "__v": 0
+    },
+    {
+      "_id": "68a97038954bc2bd402837a7",
+      "actionTypeId": "68bfd99d1fdcef3a710781cc",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b4683262f8a3ef136e714"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68a97037954bc2bd402836ca"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-23T07:57:18.589Z"
+        }
+      ],
+      "time": "2025-08-23T07:39:36.704Z",
+      "__v": 0
+    },
+    {
+      "_id": "68a83c9e954bc2bd402801f6",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "6878b6e9df65cb4a19d3364f"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68a83b6d954bc2bd4027fe38"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "FAILED"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "3632180876969726679",
+            "actionStatus": "error",
+            "actionMessage": "Zalo: Bạn đang bị cấm nhắn tin cho người lạ.",
+            "finalMessage": "📢 Hé lô 2k7 hen!\n17h00 chiều 22/8/2025 Trường Đại học Lạc Hồng sẽ chính thức công bố điểm chuẩn trúng tuyển rồi đó \nChuẩn bị tinh thần đón tin vui để trở thành tân sinh viên LHU há – mái nhà tuổi trẻ rực rỡ, ước mơ bay cao 💙\n👉 Xem thông tin ngành học ở đây: https://tuyensinh.lhu.edu.vn/467/Cac-nganh-hoc.html\n🎬 Clip dành riêng cho 2k7: https://www.facebook.com/share/v/19WJjSeBYw/?mibextid=WC7FNe"
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "📢 Hé lô 2k7 hen!\n17h00 chiều 22/8/2025 Trường Đại học Lạc Hồng sẽ chính thức công bố điểm chuẩn trúng tuyển rồi đó \nChuẩn bị tinh thần đón tin vui để trở thành tân sinh viên LHU há – mái nhà tuổi trẻ rực rỡ, ước mơ bay cao 💙\n👉 Xem thông tin ngành học ở đây: https://tuyensinh.lhu.edu.vn/467/Cac-nganh-hoc.html\n🎬 Clip dành riêng cho 2k7: https://www.facebook.com/share/v/19WJjSeBYw/?mibextid=WC7FNe"
+        }
+      ],
+      "time": "2025-08-22T09:47:10.303Z",
+      "__v": 0
+    },
+    {
+      "_id": "68a83b6e954bc2bd4027feaf",
+      "actionTypeId": "68bfd99d1fdcef3a710781ca",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "6878b6e9df65cb4a19d3364f"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68a83b6d954bc2bd4027fe38"
+        }
+      ],
+      "detail": [
+        {
+          "key": "scheduledFor",
+          "value": "2025-08-22T09:46:50.089Z"
+        },
+        {
+          "key": "messageTemplate",
+          "value": "📢 Hé lô 2k7 {cuoi_cau}!\n17h00 chiều 22/8/2025 Trường Đại học Lạc Hồng sẽ chính thức công bố điểm chuẩn trúng tuyển rồi đó \nChuẩn bị tinh thần đón tin vui để trở thành tân sinh viên LHU {cuoi_cau} – mái nhà tuổi trẻ rực rỡ, ước mơ bay cao 💙\n👉 Xem thông tin ngành học ở đây: https://tuyensinh.lhu.edu.vn/467/Cac-nganh-hoc.html\n🎬 Clip dành riêng cho 2k7: https://www.facebook.com/share/v/19WJjSeBYw/?mibextid=WC7FNe"
+        }
+      ],
+      "time": "2025-08-22T09:42:06.371Z",
+      "__v": 0
+    },
+    {
+      "_id": "68a81724954bc2bd40279afd",
+      "actionTypeId": "68bfd99d1fdcef3a710781cf",
+      "actorId": {
+        "_id": "6865fe3ccdec836f29fabe4f",
+        "name": "Admin",
+        "email": "test@gmail.com"
+      },
+      "context": [
+        {
+          "key": "customerId",
+          "value": "68a3e3ebe986b54217cf1981"
+        },
+        {
+          "key": "zaloAccountId",
+          "value": "686b7f18262f8a3ef136e71d"
+        },
+        {
+          "key": "scheduleId",
+          "value": "68a811fe954bc2bd40277245"
+        }
+      ],
+      "detail": [
+        {
+          "key": "status",
+          "value": "SUCCESS"
+        },
+        {
+          "key": "scriptResult",
+          "value": {
+            "uidStatus": "provided",
+            "targetUid": "4279058896685063079",
+            "actionStatus": "success",
+            "actionMessage": "Successful.",
+            "finalMessage": "📢 Hé lô 2k7 luôn nha!\n17h00 chiều 22/8/2025 Trường Đại học Lạc Hồng sẽ chính thức công bố điểm chuẩn trúng tuyển rồi đó \nChuẩn bị tinh thần đón tin vui để trở thành tân sinh viên LHU nha – mái nhà tuổi trẻ rực rỡ, ước mơ bay cao 💙\n👉 Xem thông tin ngành học ở đây: https://tuyensinh.lhu.edu.vn/467/Cac-nganh-hoc.html\n🎬 Clip dành riêng cho 2k7: https://www.facebook.com/share/v/19WJjSeBYw/?mibextid=WC7FNe"
+          }
+        },
+        {
+          "key": "finalMessage",
+          "value": "📢 Hé lô 2k7 luôn nha!\n17h00 chiều 22/8/2025 Trường Đại học Lạc Hồng sẽ chính thức công bố điểm chuẩn trúng tuyển rồi đó \nChuẩn bị tinh thần đón tin vui để trở thành tân sinh viên LHU nha – mái nhà tuổi trẻ rực rỡ, ước mơ bay cao 💙\n👉 Xem thông tin ngành học ở đây: https://tuyensinh.lhu.edu.vn/467/Cac-nganh-hoc.html\n🎬 Clip dành riêng cho 2k7: https://www.facebook.com/share/v/19WJjSeBYw/?mibextid=WC7FNe"
+        }
+      ],
+      "time": "2025-08-22T07:07:16.703Z",
+      "__v": 0
+    }
+  ]
+}
