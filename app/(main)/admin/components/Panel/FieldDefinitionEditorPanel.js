@@ -10,17 +10,89 @@ import { getCareProgramsForFilter } from "@/app/data/careProgram/careProgram.que
 import { getTagsForFilter } from "@/app/data/tag/tag.queries";
 import { getDataSourcesForFilter } from "@/app/data/dataSource/dataSource.queries";
 import MultiSelectDropdown from "./MultiSelectDropdown";
+import { Svg_Plus, Svg_Trash } from "@/components/(icon)/svg";
+
+// [ADD] Component con để quản lý một quy tắc hiển thị
+const DisplayRule = ({
+  rule,
+  index,
+  updateRule,
+  removeRule,
+  allTags,
+  allPrograms,
+}) => {
+  const handleConditionChange = (key, value) => {
+    const newConditions = { ...rule.conditions, [key]: value };
+    updateRule(index, { ...rule, conditions: newConditions });
+  };
+
+  const handlePlacementChange = (e) => {
+    updateRule(index, { ...rule, placement: e.target.value });
+  };
+
+  return (
+    <div className={styles.ruleContainer}>
+      <div className={styles.ruleHeader}>
+        <span className={styles.ruleTitle}>Quy tắc #{index + 1}</span>
+        <button
+          type="button"
+          onClick={() => removeRule(index)}
+          className={styles.removeRuleBtn}
+        >
+          <Svg_Trash w={14} h={14} />
+        </button>
+      </div>
+      <div className={styles.ruleBody}>
+        <div className={styles.formGroup}>
+          <label>Hiển thị tại</label>
+          <select value={rule.placement} onChange={handlePlacementChange}>
+            <option value="COMMON">Thông tin chung (Customer)</option>
+            <option value="PROGRAM">Bên trong Chương trình</option>
+          </select>
+        </div>
+        <div className={styles.conditionsBox}>
+          <div
+            className={styles.formGroup}
+            style={{ border: "none", padding: 0 }}
+          >
+            <label>Khi các điều kiện sau được thỏa mãn</label>
+            <select
+              value={rule.conditions.operator}
+              onChange={(e) =>
+                handleConditionChange("operator", e.target.value)
+              }
+            >
+              <option value="AND">Thỏa mãn TẤT CẢ (AND)</option>
+              <option value="OR">Thỏa mãn BẤT KỲ (OR)</option>
+            </select>
+          </div>
+          <MultiSelectDropdown
+            label="Khách hàng phải có Tags"
+            options={allTags.map((t) => ({ id: t._id, name: t.name }))}
+            selectedIds={rule.conditions.requiredTags || []}
+            onChange={(ids) => handleConditionChange("requiredTags", ids)}
+            displayAs="chip"
+          />
+          <MultiSelectDropdown
+            label="Khách hàng phải tham gia Programs"
+            options={allPrograms.map((p) => ({ id: p._id, name: p.name }))}
+            selectedIds={rule.conditions.requiredPrograms || []}
+            onChange={(ids) => handleConditionChange("requiredPrograms", ids)}
+            displayAs="chip"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
   const [field, setField] = useState({
     fieldName: "",
     fieldLabel: "",
     fieldType: "string",
-    scope: "CUSTOMER",
-    displayCondition: "ANY",
-    programIds: [],
     dataSourceIds: [],
-    tagIds: [],
+    displayRules: [],
   });
   const [allPrograms, setAllPrograms] = useState([]);
   const [allDataSources, setAllDataSources] = useState([]);
@@ -31,17 +103,13 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      const [programsResult, tagsResult, dataSourcesResult] = await Promise.all(
-        [
-          getCareProgramsForFilter(),
-          getTagsForFilter(),
-          getDataSourcesForFilter(),
-        ],
-      );
+      const [programsResult, tagsResult] = await Promise.all([
+        getCareProgramsForFilter(),
+        getTagsForFilter(),
+      ]);
 
       setAllPrograms(programsResult || []);
       setAllTags(tagsResult || []);
-      setAllDataSources(dataSourcesResult || []);
 
       if (fieldId) {
         const fieldResult = await getFieldDefinitionById(fieldId);
@@ -49,9 +117,8 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
           const fetchedField = fieldResult.data;
           setField({
             ...fetchedField,
-            programIds: fetchedField.programIds || [],
-            tagIds: fetchedField.tagIds || [],
             dataSourceIds: fetchedField.dataSourceIds || [],
+            displayRules: fetchedField.displayRules || [],
           });
         } else {
           alert(`Lỗi tải dữ liệu trường: ${fieldResult.error}`);
@@ -59,7 +126,6 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
       }
       setIsLoading(false);
     };
-
     fetchData();
   }, [fieldId]);
 
@@ -68,36 +134,39 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
     setField((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleMultiSelectChange = (name, selectedIds) => {
-    let fullObjects = [];
-    if (name === "programIds") {
-      fullObjects = allPrograms.filter((p) => selectedIds.includes(p._id));
-    } else if (name === "dataSourceIds") {
-      fullObjects = allDataSources.filter((ds) => selectedIds.includes(ds._id));
-    } else {
-      // tagIds đã là mảng ID chuỗi sẵn, giữ nguyên
-      fullObjects = selectedIds;
-    }
-
+  // --- [ADD] Các hàm quản lý displayRules ---
+  const addRule = () => {
+    const newRule = {
+      placement: "COMMON",
+      conditions: {
+        operator: "AND",
+        requiredTags: [],
+        requiredPrograms: [],
+      },
+    };
     setField((prev) => ({
       ...prev,
-      [name]: fullObjects,
+      displayRules: [...prev.displayRules, newRule],
     }));
   };
 
+  const updateRule = (index, updatedRule) => {
+    const newRules = [...field.displayRules];
+    newRules[index] = updatedRule;
+    setField((prev) => ({ ...prev, displayRules: newRules }));
+  };
+
+  const removeRule = (index) => {
+    const newRules = field.displayRules.filter((_, i) => i !== index);
+    setField((prev) => ({ ...prev, displayRules: newRules }));
+  };
+  // --- Kết thúc hàm quản lý ---
+
   const handleSave = () => {
     startTransition(async () => {
-      // [MOD] Trước khi lưu, chuyển đổi lại mảng object về mảng ID
-      const dataToSave = {
-        ...field,
-        programIds: field.programIds.map((p) => p._id),
-        dataSourceIds: field.dataSourceIds.map((ds) => ds._id),
-        // tagIds đã là mảng ID sẵn rồi
-      };
-
       const result = await createOrUpdateFieldDefinition({
         id: fieldId,
-        ...dataToSave,
+        ...field,
       });
 
       if (result.success) {
@@ -146,51 +215,37 @@ export default function FieldDefinitionEditorPanel({ fieldId, onSaveSuccess }) {
           </select>
         </div>
 
-        {/* [ADD] Thêm các trường cấu hình mới */}
-        <div className={styles.formGroup}>
-          <label>Phạm vi (Scope)</label>
-          <select name="scope" value={field.scope} onChange={handleInputChange}>
-            <option value="CUSTOMER">Chung cho Khách hàng</option>
-            <option value="PROGRAM">Riêng cho Chương trình</option>
-          </select>
+        {/* [MOD] Giao diện quản lý Rules mới */}
+        <div className={styles.rulesManagementSection}>
+          <div className={styles.rulesHeader}>
+            <h4>Quy tắc Hiển thị ({field.displayRules.length})</h4>
+            <button
+              type="button"
+              onClick={addRule}
+              className={styles.addRuleBtn}
+            >
+              <Svg_Plus w={16} h={16} /> Thêm Quy tắc
+            </button>
+          </div>
+          <div className={styles.rulesList}>
+            {field.displayRules.map((rule, index) => (
+              <DisplayRule
+                key={index}
+                index={index}
+                rule={rule}
+                updateRule={updateRule}
+                removeRule={removeRule}
+                allTags={allTags}
+                allPrograms={allPrograms}
+              />
+            ))}
+            {field.displayRules.length === 0 && (
+              <p className={styles.noRulesText}>
+                Chưa có quy tắc nào. Trường này sẽ không hiển thị ở đâu.
+              </p>
+            )}
+          </div>
         </div>
-
-        <div className={styles.formGroup}>
-          <label>Điều kiện hiển thị</label>
-          <select
-            name="displayCondition"
-            value={field.displayCondition}
-            onChange={handleInputChange}
-          >
-            <option value="ANY">
-              Khớp BẤT KỲ Tag hoặc Chương trình nào (OR)
-            </option>
-            <option value="ALL">Khớp TẤT CẢ Tags và Chương trình (AND)</option>
-          </select>
-        </div>
-
-        {/* [FIX] Chuyển đổi mảng object thành mảng ID trước khi truyền vào prop */}
-        <MultiSelectDropdown
-          label="Gán cho Chương trình CS"
-          options={allPrograms.map((p) => ({ id: p._id, name: p.name }))}
-          selectedIds={(field.programIds || []).map((p) => p._id)}
-          onChange={(ids) => handleMultiSelectChange("programIds", ids)}
-          displayAs="chip"
-        />
-        <MultiSelectDropdown
-          label="Gán cho Tags (Trường chung)"
-          options={allTags.map((t) => ({ id: t._id, name: t.name }))}
-          selectedIds={field.tagIds}
-          onChange={(ids) => handleMultiSelectChange("tagIds", ids)}
-          displayAs="chip"
-        />
-        <MultiSelectDropdown
-          label="Lấy từ Nguồn Dữ liệu (ưu tiên từ trên xuống)"
-          options={allDataSources.map((ds) => ({ id: ds._id, name: ds.name }))}
-          selectedIds={(field.dataSourceIds || []).map((ds) => ds._id)}
-          onChange={(ids) => handleMultiSelectChange("dataSourceIds", ids)}
-          displayAs="list"
-        />
       </div>
       <div className={styles.panelFooter}>
         <button

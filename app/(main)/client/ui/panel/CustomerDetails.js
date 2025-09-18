@@ -1,4 +1,4 @@
-// [FIX] app/(main)/client/ui/panel/CustomerDetails.js
+// [MOD] app/(main)/client/ui/panel/CustomerDetails.js
 "use client";
 
 import React, {
@@ -7,29 +7,95 @@ import React, {
   useCallback,
   useMemo,
   useTransition,
+  useRef,
 } from "react";
 import styles from "./CustomerDetails.module.css";
 import {
   getCustomerDetails,
   updateCustomerTags,
-  updateCustomerAttribute,
   addCommentToCustomer,
+  createAndAssignManualField,
 } from "@/app/data/customer/customer.actions";
 import { getTagsForFilter } from "@/app/data/tag/tag.queries";
 import { usePanels } from "@/contexts/PanelContext";
-import { Svg_History, Svg_Edit } from "@/components/(icon)/svg";
+import { Svg_History, Svg_Edit, Svg_Plus } from "@/components/(icon)/svg";
 import Loading from "@/components/(ui)/(loading)/loading";
 import StageIndicator from "@/components/(ui)/progress/StageIndicator";
 import CustomerHistoryPanel from "./CustomerHistoryPanel";
-// [MOD] Import MultiSelectDropdown thay cho CenterPopup
 import MultiSelectDropdown from "@/app/(main)/admin/components/Panel/MultiSelectDropdown";
+// [ADD] Import UserTag để hiển thị nhân viên
+import UserTag from "@/app/(main)/admin/components/shared/UserTag";
 
 // ================================================================================
-// --- HELPER COMPONENTS (Thành phần phụ trợ) ---
+// --- HELPER COMPONENTS ---
 // ================================================================================
 
-// [ADD] Component đa dụng cho các section có thể thu gọn/mở rộng
-const CollapsibleSection = ({ title, initialCollapsed = false, children }) => {
+// [ADD] Form thêm trường dữ liệu inline
+const AddFieldInlineForm = ({ onSave, onCancel, programId = null }) => {
+  const [fieldLabel, setFieldLabel] = useState("");
+  const [fieldValue, setFieldValue] = useState("");
+  const [isPending, startTransition] = useTransition();
+
+  const handleSave = () => {
+    if (!fieldLabel.trim() || !fieldValue.trim()) {
+      alert("Vui lòng nhập cả Tên trường và Giá trị.");
+      return;
+    }
+    startTransition(async () => {
+      await onSave({ fieldLabel, fieldValue, programId });
+    });
+  };
+
+  return (
+    <div className={styles.inlineAddFieldForm}>
+      <div className={styles.formGroup}>
+        <label>Tên Trường Mới</label>
+        <input
+          type="text"
+          value={fieldLabel}
+          onChange={(e) => setFieldLabel(e.target.value)}
+          placeholder="Ví dụ: Link Facebook..."
+          className={styles.input}
+          disabled={isPending}
+        />
+      </div>
+      <div className={styles.formGroup}>
+        <label>Giá trị</label>
+        <textarea
+          value={fieldValue}
+          onChange={(e) => setFieldValue(e.target.value)}
+          placeholder="Nhập giá trị..."
+          className={styles.textarea}
+          rows={3}
+          disabled={isPending}
+        />
+      </div>
+      <div className={styles.popupActions}>
+        <button
+          onClick={onCancel}
+          className={styles.cancelButton}
+          disabled={isPending}
+        >
+          Hủy
+        </button>
+        <button
+          onClick={handleSave}
+          className={styles.saveButton}
+          disabled={isPending}
+        >
+          {isPending ? "..." : "Lưu"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const CollapsibleSection = ({
+  title,
+  initialCollapsed = false,
+  onAddClick,
+  children,
+}) => {
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
   const Icon = () => (
     <svg
@@ -51,33 +117,27 @@ const CollapsibleSection = ({ title, initialCollapsed = false, children }) => {
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         <h3 className={styles.sectionTitle}>{title}</h3>
-        <Icon />
+        <div className={styles.sectionHeaderActions}>
+          {onAddClick && !isCollapsed && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddClick();
+              }}
+              className={styles.addFieldButtonSmall}
+            >
+              <Svg_Plus w={14} h={14} /> Thêm
+            </button>
+          )}
+          <Icon />
+        </div>
       </div>
       {!isCollapsed && <div className={styles.sectionContent}>{children}</div>}
     </div>
   );
 };
 
-// [MOD] InfoRow được giữ lại và đơn giản hóa
-const InfoRow = ({ label, children }) => (
-  <div className={styles.infoRow}>
-    <span className={styles.infoLabel}>{label}</span>
-    <div className={styles.infoValue}>{children}</div>
-  </div>
-);
-
-// [MOD] This component now takes label and value directly
-const DynamicField = ({ label, value }) => {
-  return (
-    <div className={styles.infoRow}>
-      <span className={styles.fieldLabel}>{label}</span>
-      <div className={styles.infoValue}>
-        <span className={styles.fieldValue}>{value || "(chưa có)"}</span>
-      </div>
-    </div>
-  );
-};
-
+// [MOD] Nâng cấp CommentSection
 const CommentSection = ({
   comments = [],
   customerId,
@@ -86,6 +146,17 @@ const CommentSection = ({
 }) => {
   const [newComment, setNewComment] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const commentsEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    // Tự cuộn khi component được mở hoặc có comment mới
+    scrollToBottom();
+  }, [comments, isExpanded]);
 
   const handleAddComment = () => {
     if (!newComment.trim()) return;
@@ -103,22 +174,25 @@ const CommentSection = ({
     });
   };
 
+  const displayedComments = isExpanded
+    ? comments.slice().reverse()
+    : comments.slice(-3).reverse();
+
   return (
-    <div className={styles.subSection}>
-      <h4 className={styles.subSectionTitle}>Bình luận</h4>
-      <div className={styles.commentList}>
-        {/* [MOD] Thêm .slice().reverse() để đảo ngược thứ tự hiển thị */}
-        {(comments || [])
-          .slice()
-          .reverse()
-          .map((comment) => {
-            // [FIX] So sánh ID an toàn hơn
+    <CollapsibleSection
+      title={`Bình luận (${comments.length})`}
+      initialCollapsed={false}
+    >
+      <div
+        className={`${styles.commentList} ${isExpanded ? styles.expanded : ""}`}
+      >
+        {displayedComments.length > 0 ? (
+          displayedComments.map((comment) => {
             const isCurrentUser =
               comment.user?._id?.toString() === user?._id?.toString();
             return (
               <div
                 key={comment._id}
-                // [MOD] Thêm class 'currentUser' nếu đúng
                 className={`${styles.commentItem} ${
                   isCurrentUser ? styles.currentUserComment : ""
                 }`}
@@ -137,8 +211,30 @@ const CommentSection = ({
                 </p>
               </div>
             );
-          })}
+          })
+        ) : (
+          <p className={styles.placeholderText}>Chưa có bình luận.</p>
+        )}
+        <div ref={commentsEndRef} />
       </div>
+
+      {!isExpanded && comments.length > 3 && (
+        <button
+          onClick={() => setIsExpanded(true)}
+          className={styles.inlineButton}
+        >
+          Xem thêm...
+        </button>
+      )}
+      {isExpanded && (
+        <button
+          onClick={() => setIsExpanded(false)}
+          className={styles.inlineButton}
+        >
+          Thu gọn
+        </button>
+      )}
+
       <div className={styles.commentInputContainer}>
         <textarea
           value={newComment}
@@ -156,12 +252,28 @@ const CommentSection = ({
           {isPending ? "..." : "Gửi"}
         </button>
       </div>
-    </div>
+    </CollapsibleSection>
   );
 };
 
+// ... Các component InfoRow, DynamicField không đổi ...
+const InfoRow = ({ label, children }) => (
+  <div className={styles.infoRow}>
+    <span className={styles.infoLabel}>{label}</span>
+    <div className={styles.infoValue}>{children}</div>
+  </div>
+);
+const DynamicField = ({ label, value }) => {
+  return (
+    <div className={styles.infoRow}>
+      <span className={styles.fieldLabel}>{label}</span>
+      <div className={styles.infoValue}>
+        <span className={styles.fieldValue}>{value || "(chưa có)"}</span>
+      </div>
+    </div>
+  );
+};
 // --- Main Component ---
-
 export default function CustomerDetails({
   customerId,
   onUpdateCustomer,
@@ -172,7 +284,9 @@ export default function CustomerDetails({
   const [allSystemTags, setAllSystemTags] = useState([]);
   const { openPanel } = usePanels();
 
-  // [MOD] Create a simple map for looking up field labels
+  // [MOD] State cho form inline thay vì popup
+  const [addingFieldScope, setAddingFieldScope] = useState(null); // null, 'COMMON', or a programId
+
   const fieldDefinitionMap = useMemo(() => {
     if (!customer?.fieldDefinitions) return new Map();
     return new Map(
@@ -188,7 +302,8 @@ export default function CustomerDetails({
     if (fullCustomerData) {
       setCustomer(fullCustomerData);
     }
-  }, [customerId]);
+    onUpdateCustomer();
+  }, [customerId, onUpdateCustomer]);
 
   useEffect(() => {
     const initialFetch = async () => {
@@ -208,7 +323,6 @@ export default function CustomerDetails({
     const result = await updateCustomerTags({ customerId, tagIds });
     if (result.success) {
       await fetchDetails();
-      onUpdateCustomer();
     } else {
       alert(`Lỗi: ${result.error}`);
     }
@@ -223,84 +337,107 @@ export default function CustomerDetails({
     });
   };
 
-  if (isLoading) {
+  const handleSaveNewField = async ({ fieldLabel, fieldValue, programId }) => {
+    const result = await createAndAssignManualField({
+      customerId,
+      fieldLabel,
+      fieldValue,
+      programId,
+    });
+    if (result.success) {
+      setAddingFieldScope(null); // Đóng form inline
+      await fetchDetails();
+    } else {
+      alert(`Lỗi: ${result.error}`);
+    }
+  };
+
+  if (isLoading)
     return (
       <div className={styles.loadingContainer}>
-        <Loading content="Đang tải dữ liệu chi tiết..." />
+        <Loading content="Đang tải..." />
       </div>
     );
-  }
-
-  if (!customer) {
-    return (
-      <div className={styles.errorText}>Không thể tải dữ liệu khách hàng.</div>
-    );
-  }
+  if (!customer)
+    return <div className={styles.errorText}>Không thể tải dữ liệu.</div>;
 
   return (
-    <>
-      <div className={styles.container}>
-        <div className={styles.content}>
-          <CollapsibleSection title="Thông tin chung" initialCollapsed={false}>
-            <InfoRow label="Tên khách hàng">
-              {customer.name || "(chưa có tên)"}
-            </InfoRow>
-            <InfoRow label="Di động">{customer.phone}</InfoRow>
-            <InfoRow label="CCCD">{customer.citizenId || "Chưa có"}</InfoRow>
+    <div className={styles.container}>
+      <div className={styles.content}>
+        {/* [MOD] Mặc định mở */}
+        <CollapsibleSection
+          title="Thông tin chung"
+          initialCollapsed={false}
+          onAddClick={() => setAddingFieldScope("COMMON")}
+        >
+          <InfoRow label="Tên khách hàng">
+            {customer.name || "(chưa có tên)"}
+          </InfoRow>
+          <InfoRow label="Di động">{customer.phone}</InfoRow>
+          <InfoRow label="CCCD">{customer.citizenId || "Chưa có"}</InfoRow>
+          {(customer.customerAttributes || []).map((attr) => (
+            <DynamicField
+              key={attr.definitionId}
+              label={
+                fieldDefinitionMap.get(attr.definitionId.toString()) || "..."
+              }
+              value={attr.value?.[0]}
+            />
+          ))}
+          {/* [MOD] Form inline được render tại đây */}
+          {addingFieldScope === "COMMON" && (
+            <AddFieldInlineForm
+              onSave={handleSaveNewField}
+              onCancel={() => setAddingFieldScope(null)}
+            />
+          )}
+        </CollapsibleSection>
 
-            {/* [REFACTOR] Render directly from customerAttributes */}
-            {(customer.customerAttributes || []).map((attr) => (
+        {(customer.programEnrollments || []).map((enrollment) => (
+          <CollapsibleSection
+            key={enrollment.programId?._id || Math.random()}
+            title={`Chương trình: ${enrollment.programId?.name || "..."}`}
+            initialCollapsed={true}
+            onAddClick={() => setAddingFieldScope(enrollment.programId?._id)}
+          >
+            <InfoRow label="Giai đoạn">
+              <StageIndicator
+                level={enrollment.stage?.level || 0}
+                totalStages={enrollment.programId?.stages?.length || 1}
+              />
+            </InfoRow>
+            <InfoRow label="Trạng thái">
+              <span>{enrollment.status?.name || "Chưa có"}</span>
+              <button className={styles.inlineButton}>
+                <Svg_Edit w={14} h={14} /> Thay đổi
+              </button>
+            </InfoRow>
+            {(enrollment.programData || []).map((attr) => (
               <DynamicField
                 key={attr.definitionId}
                 label={
-                  fieldDefinitionMap.get(attr.definitionId.toString()) ||
-                  "Trường không xác định"
+                  fieldDefinitionMap.get(attr.definitionId.toString()) || "..."
                 }
                 value={attr.value?.[0]}
               />
             ))}
+            {addingFieldScope === enrollment.programId?._id && (
+              <AddFieldInlineForm
+                onSave={handleSaveNewField}
+                onCancel={() => setAddingFieldScope(null)}
+                programId={enrollment.programId?._id}
+              />
+            )}
           </CollapsibleSection>
+        ))}
 
-          {(customer.programEnrollments || []).map((enrollment) => (
+        {/* [MOD] Section lớn mặc định mở, chứa các section con */}
+        <CollapsibleSection title="Thông tin chăm sóc" initialCollapsed={false}>
+          <div className={styles.subSectionContainer}>
             <CollapsibleSection
-              key={enrollment.programId?._id || Math.random()}
-              title={`Chương trình: ${
-                enrollment.programId?.name || "Không xác định"
-              }`}
+              title={`Tags (${(customer.tags || []).length})`}
               initialCollapsed={true}
             >
-              <InfoRow label="Giai đoạn">
-                <StageIndicator
-                  level={enrollment.stage?.level || 0}
-                  totalStages={enrollment.programId?.stages?.length || 1}
-                />
-              </InfoRow>
-              <InfoRow label="Trạng thái">
-                <span>{enrollment.status?.name || "Chưa có"}</span>
-                <button className={styles.inlineButton}>
-                  <Svg_Edit w={14} h={14} /> Thay đổi
-                </button>
-              </InfoRow>
-
-              {/* [REFACTOR] Render directly from programData */}
-              {(enrollment.programData || []).map((attr) => (
-                <DynamicField
-                  key={attr.definitionId}
-                  label={
-                    fieldDefinitionMap.get(attr.definitionId.toString()) ||
-                    "Trường không xác định"
-                  }
-                  value={attr.value?.[0]}
-                />
-              ))}
-            </CollapsibleSection>
-          ))}
-
-          <CollapsibleSection
-            title="Thông tin chăm sóc"
-            initialCollapsed={true}
-          >
-            <div className={styles.subSection}>
               <MultiSelectDropdown
                 label="Tags"
                 options={allSystemTags.map((tag) => ({
@@ -311,41 +448,43 @@ export default function CustomerDetails({
                 onChange={handleSaveTags}
                 displayAs="chip"
               />
-            </div>
-            <div className={styles.subSection}>
-              <h4 className={styles.subSectionTitle}>Nhân viên phụ trách</h4>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title={`Nhân viên phụ trách (${(customer.users || []).length})`}
+              initialCollapsed={true}
+            >
               {(customer.users || []).length > 0 ? (
-                customer.users.map((user) => (
-                  <div key={user._id} className={styles.userItem}>
-                    {user.name}
-                  </div>
-                ))
+                <div className={styles.userGrid}>
+                  {customer.users.map((user) => (
+                    <UserTag key={user._id} user={user} displayMode="card" />
+                  ))}
+                </div>
               ) : (
                 <p className={styles.placeholderText}>
                   Chưa có nhân viên phụ trách.
                 </p>
               )}
-            </div>
+            </CollapsibleSection>
+
             <CommentSection
               comments={customer.comments}
               customerId={customer._id}
               onCommentAdded={fetchDetails}
               user={user}
             />
-          </CollapsibleSection>
-
-          {/* Section 4: Hành động */}
-
-          <div className={styles.buttonContainer}>
-            <button
-              className={`${styles.buttonBase} ${styles.ghostButton} ${styles.fullWidthButton}`}
-              onClick={handleShowHistory}
-            >
-              <Svg_History w={16} h={16} /> Xem toàn bộ lịch sử
-            </button>
           </div>
+        </CollapsibleSection>
+
+        <div className={styles.buttonContainer}>
+          <button
+            className={`${styles.buttonBase} ${styles.ghostButton} ${styles.fullWidthButton}`}
+            onClick={handleShowHistory}
+          >
+            <Svg_History w={16} h={16} /> Xem toàn bộ lịch sử
+          </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -3,10 +3,10 @@
 
 import connectDB from "@/config/connectDB";
 import FieldDefinition from "@/models/fieldDefinition";
-import { Types } from "mongoose"; // [ADD]
+import { Types } from "mongoose";
 
 /**
- * Lấy danh sách các FieldDefinitions với phân trang.
+ * Lấy danh sách các FieldDefinitions với phân trang. (Sử dụng Aggregation)
  */
 export async function getFieldDefinitions({ page = 1, limit = 10 } = {}) {
   try {
@@ -14,14 +14,41 @@ export async function getFieldDefinitions({ page = 1, limit = 10 } = {}) {
     const skip = (page - 1) * limit;
 
     const [definitions, total] = await Promise.all([
-      FieldDefinition.find({})
-        .populate("createdBy", "name")
-        .populate("programIds", "name")
-        .populate("dataSourceIds", "name")
-        .sort({ fieldName: 1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+      FieldDefinition.aggregate([
+        { $sort: { fieldName: 1 } },
+        { $skip: skip },
+        { $limit: limit }, // Populate createdBy
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        { $unwind: { path: "$createdBy", preserveNullAndEmptyArrays: true } },
+        {
+          $addFields: {
+            allProgramIds: {
+              $reduce: {
+                input: "$displayRules.conditions.requiredPrograms",
+                initialValue: [],
+                in: { $setUnion: ["$$value", "$$this"] },
+              },
+            },
+          },
+        },
+        // Populate programs và tags dựa trên các mảng ID đã gộp
+        {
+          $lookup: {
+            from: "careprograms",
+            localField: "allProgramIds",
+            foreignField: "_id",
+            as: "programs", // Đổi tên thành programs để dễ hiểu
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+      ]),
       FieldDefinition.countDocuments({}),
     ]);
 
@@ -49,7 +76,8 @@ export async function getFieldDefinitionById(id) {
     await connectDB();
     // [MOD] Thêm .populate() để lấy tên từ các collection liên quan
     const definition = await FieldDefinition.findById(id)
-      .populate("programIds", "name")
+      .populate("displayRules.conditions.requiredPrograms", "name")
+      .populate("displayRules.conditions.requiredTags", "name")
       .populate("dataSourceIds", "name")
       .lean();
 

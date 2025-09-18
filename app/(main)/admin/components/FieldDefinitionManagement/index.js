@@ -28,6 +28,9 @@ export default function FieldDefinitionManagement() {
     if (result.success) {
       setFields(result.data);
       setPagination(result.pagination);
+    } else {
+      // [ADD] Thêm log lỗi để dễ debug
+      console.error("Failed to fetch field definitions:", result.error);
     }
     setIsLoading(false);
   }, []);
@@ -72,46 +75,19 @@ export default function FieldDefinitionManagement() {
     },
     { header: "Kiểu Dữ liệu", accessor: "fieldType", width: "1fr" },
     {
-      header: "Chương trình",
-      width: "1.5fr",
-      // [MOD] Sửa lại logic cell để hiển thị tên chương trình
+      header: "Chương trình & Tags",
+      width: "2fr", // Tăng độ rộng
       cell: (item) => (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-          {(item.programIds || []).map((program) => (
-            <span
-              key={program._id}
-              style={{
-                backgroundColor: "#eef2ff",
-                color: "#4338ca",
-                padding: "2px 8px",
-                borderRadius: "12px",
-                fontSize: "12px",
-              }}
-            >
+          {/* [FIX] Sửa lại logic cell để đọc từ 'programs' và 'tags' */}
+          {(item.programs || []).map((program) => (
+            <span key={program._id} className="program-chip">
               {program.name}
             </span>
           ))}
-        </div>
-      ),
-    },
-    {
-      header: "Nguồn Dữ liệu",
-      width: "1fr",
-      // [MOD] Sửa lại logic cell để hiển thị tên nguồn dữ liệu
-      cell: (item) => (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-          {(item.dataSourceIds || []).map((ds) => (
-            <span
-              key={ds._id}
-              style={{
-                backgroundColor: "#f0fdf4",
-                color: "#166534",
-                padding: "2px 8px",
-                borderRadius: "12px",
-                fontSize: "12px",
-              }}
-            >
-              {ds.name}
+          {(item.tags || []).map((tag) => (
+            <span key={tag._id} className="tag-chip">
+              {tag.name}
             </span>
           ))}
         </div>
@@ -123,6 +99,22 @@ export default function FieldDefinitionManagement() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <style jsx global>{`
+        .program-chip {
+          background-color: #eef2ff;
+          color: #4338ca;
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+        }
+        .tag-chip {
+          background-color: #f0fdf4;
+          color: #166534;
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+        }
+      `}</style>
       <div style={{ flexGrow: 1, minHeight: 0 }}>
         <DataTable
           columns={columns}

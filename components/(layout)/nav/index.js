@@ -4,13 +4,15 @@
 import React, { useState, useMemo } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
+// [ADD] Import a Next.js Image component
+import Image from "next/image";
 import styles from "./index.module.css";
 import {
   Svg_Student,
   Svg_Dev,
   Svg_Admin,
   Svg_Logout,
-  Svg_Chart, // [ADD] Import icon mới
+  Svg_Chart,
 } from "@/components/(icon)/svg";
 import { logoutUser } from "@/app/data/auth/auth.actions";
 
@@ -292,7 +294,20 @@ export default function Nav({ user, navData, isCollapsed, onToggleCollapse }) {
       }`}
     >
       <div className={styles.logoSection}>
-        {!isCollapsed && <p className={styles.logoText}>iTrail</p>}
+        {/* [MOD] Add the logo and wrap in a Link */}
+        {!isCollapsed && (
+          <Link href="/" className={styles.logoLink}>
+            <Image
+              // [MOD] Using a placeholder that is already configured
+              src="https://lh3.googleusercontent.com/pw/AP1GczNorcbWe9KUeU2RvFHH_qc6kRByYrzCRCGWugJ_sWno-XDFYSOHCjdgs6SOIp0GBd9ljnqIfl0uFRHZAxImj6rJTA-lUNqMeYwck4mFgAhzdq-lyFQmSocR1L2avbvHlotbE2QQYYoxHVVJR_2Dk7qp=w500-h500-s-no-gm"
+              alt="iTrail Logo"
+              width={40}
+              height={40}
+              className={styles.logoImage}
+            />
+            <p className={styles.logoText}>iTrail</p>
+          </Link>
+        )}
         <button onClick={onToggleCollapse} className={styles.collapseButton}>
           <svg
             width="16"

@@ -268,6 +268,12 @@
   padding: 2px 4px;
   border-radius: 4px;
 }
+.userItem {
+  padding: 12px 0;
+  font-size: 14px;
+  color: #6b7280;
+  font-style: normal;
+}
 
 .subSection {
   padding: 12px 0;
@@ -341,7 +347,7 @@
   min-height: 40px;
   padding: 8px 12px;
   border: 1px solid #d1d5db;
-  border-radius: 18px; /* Bo tròn giống khung chat */
+  border-radius: 18px;
   font-size: 14px;
   background-color: #fff;
 }
@@ -357,4 +363,160 @@
 }
 .commentSubmitButton:disabled {
   opacity: 0.6;
+}
+
+/* [ADD] Nâng cấp cho Yêu cầu mới */
+
+/* --- Tách Section con --- */
+.subSectionContainer {
+  padding-top: 8px; /* Thêm khoảng đệm trên cùng */
+}
+.sectionHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.addFieldButtonSmall {
+  background: none;
+  border: 1px dashed #9ca3af;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.addFieldButtonSmall:hover {
+  background-color: #f1f5f9;
+  border-style: solid;
+}
+
+/* --- Giao diện Thêm trường Inline --- */
+.inlineAddFieldForm {
+  padding: 12px;
+  margin-top: 8px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.3s;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroup label {
+  font-size: 13px;
+  font-weight: 500;
+}
+.input,
+.textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.popupActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+.cancelButton,
+.saveButton {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.cancelButton {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.saveButton {
+  background-color: #3b82f6;
+  color: white;
+}
+.saveButton:disabled {
+  opacity: 0.6;
+}
+
+/* --- Hiển thị Nhân viên --- */
+.userGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  padding-top: 8px;
+}
+
+/* --- Hiển thị Comment --- */
+.commentList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-right: 8px;
+  overflow-y: auto;
+  max-height: 120px;
+  transition: max-height 0.4s ease-in-out;
+}
+.commentList.expanded {
+  /* [MOD] Tăng chiều cao tối đa khi mở rộng */
+  max-height: 500px;
+}
+.commentItem {
+  display: flex;
+  flex-direction: column;
+}
+.commentItem.currentUserComment {
+  align-items: flex-end;
+}
+.commentBubble {
+  max-width: 80%;
+  padding: 8px 12px;
+  border-radius: 18px;
+  font-size: 14px;
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+.currentUserComment .commentBubble {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+.commentAuthor {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #4b5563;
+}
+.commentText {
+  white-space: pre-wrap;
+  margin: 0;
+}
+.commentMeta {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 4px;
+  text-align: right;
 }

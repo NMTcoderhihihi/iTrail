@@ -11,6 +11,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "s75-ava-talk.zadn.vn",
       },
+      // [ADD] Thêm cấu hình cho tên miền Google Drive (sửa lỗi)
+      {
+        protocol: "https",
+        hostname: "drive.google.com",
+      },
     ],
   },
   output: "standalone",

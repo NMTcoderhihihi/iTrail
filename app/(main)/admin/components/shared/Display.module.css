@@ -9,8 +9,8 @@
 .avatar {
   width: 32px;
   height: 32px;
-  border-radius: 50%; /* Bo tròn ảnh */
-  object-fit: cover; /* Đảm bảo ảnh không bị méo */
+  border-radius: 50%;
+  object-fit: cover;
   flex-shrink: 0;
 }
 
@@ -38,9 +38,9 @@
   width: 100%;
 }
 .userTagContainer > div:first-child {
-  flex-grow: 1; /* Cho phép khối này co giãn để chiếm không gian thừa */
-  flex-shrink: 1; /* Cho phép khối này co lại nếu cần */
-  min-width: 0; /* Cần thiết để flexbox co lại đúng cách khi có overflow */
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .roleTag {
@@ -48,16 +48,33 @@
   font-weight: 500;
   padding: 2px 8px;
   border-radius: 10px;
-  white-space: nowrap; /* Đảm bảo tag không bị xuống dòng */
+  white-space: nowrap;
   flex-shrink: 0;
 }
 
 .roleAdmin {
-  background-color: #dcfce7; /* green-100 */
-  color: #166534; /* green-800 */
+  background-color: #dcfce7;
+  color: #166534;
 }
 
 .roleEmployee {
-  background-color: #f1f5f9; /* slate-100 */
-  color: #475569; /* slate-600 */
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+/* [ADD] Styles for User Card in Customer Details */
+.userCard {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: #f8fafc;
+}
+.userCard .mainText {
+  font-size: 13px;
+  font-weight: 600;
+}
+.userCard .subText {
+  font-size: 11px;
 }

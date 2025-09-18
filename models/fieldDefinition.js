@@ -1,6 +1,30 @@
 // [MOD] models/fieldDefinition.js
 import { Schema, model, models } from "mongoose";
 
+// [ADD] Schema con để định nghĩa một quy tắc hiển thị
+const DisplayRuleSchema = new Schema(
+  {
+    // NƠI HIỂN THỊ: Quy định vị trí trường sẽ xuất hiện
+    placement: {
+      type: String,
+      required: true,
+      enum: ["COMMON", "PROGRAM"], // COMMON: Thông tin chung, PROGRAM: Bên trong chương trình
+    },
+    // BỘ ĐIỀU KIỆN: Định nghĩa các điều kiện cần thỏa mãn
+    conditions: {
+      operator: {
+        type: String,
+        required: true,
+        enum: ["AND", "OR"],
+        default: "AND",
+      },
+      requiredTags: [{ type: Schema.Types.ObjectId, ref: "tag" }],
+      requiredPrograms: [{ type: Schema.Types.ObjectId, ref: "careProgram" }],
+    },
+  },
+  { _id: false },
+);
+
 const FieldDefinitionSchema = new Schema(
   {
     fieldName: { type: String, required: true, unique: true, trim: true },
@@ -12,28 +36,13 @@ const FieldDefinitionSchema = new Schema(
     },
     description: { type: String },
     dataSourceIds: [{ type: Schema.Types.ObjectId, ref: "dataSource" }],
-
-    programIds: [{ type: Schema.Types.ObjectId, ref: "careProgram" }],
-    tagIds: [{ type: Schema.Types.ObjectId, ref: "tag" }],
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "user",
       required: true,
     },
-
-    scope: {
-      type: String,
-      enum: ["CUSTOMER", "PROGRAM"],
-      default: "CUSTOMER", // Mặc định là trường chung của khách hàng
-      required: true,
-    },
-
-    displayCondition: {
-      type: String,
-      enum: ["ANY", "ALL"], // ANY = OR, ALL = AND
-      default: "ANY", // Mặc định chỉ cần khớp 1 trong các điều kiện
-      required: true,
-    },
+    // [MOD] Thay thế các trường cũ bằng mảng displayRules mới
+    displayRules: [DisplayRuleSchema],
   },
   { timestamps: true },
 );

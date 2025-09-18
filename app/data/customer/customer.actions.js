@@ -12,9 +12,8 @@ import Tag from "@/models/tag";
 import { getCurrentUser } from "@/lib/session";
 import { revalidateAndBroadcast } from "@/lib/revalidation";
 
-/**
- * Lấy chi tiết đầy đủ của một khách hàng, bao gồm việc lắp ráp và làm giàu dữ liệu động.
- */
+const INTERNAL_DB_DATASOURCE_ID = "69a3e3ebe986b54217cfdead";
+
 export async function getCustomerDetails(customerId) {
   try {
     if (!customerId || !Types.ObjectId.isValid(customerId)) {
@@ -45,52 +44,70 @@ export async function getCustomerDetails(customerId) {
       .map((e) => e.programId?._id.toString())
       .filter(Boolean);
 
-    // --- BƯỚC 2: XÁC ĐỊNH CÁC TRƯỜNG DỮ LIỆU CẦN HIỂN THỊ ---
-    const allPossibleDefs = await FieldDefinition.find({
-      $or: [
-        { tagIds: { $in: customerTagIds.map((id) => new Types.ObjectId(id)) } },
-        {
-          programIds: {
-            $in: customerProgramIds.map((id) => new Types.ObjectId(id)),
-          },
-        },
-      ],
-    }).lean();
+    // --- BƯỚC 2: LỌC RA CÁC FIELD DEFINITION CẦN HIỂN THỊ ---
+    const allDefs = await FieldDefinition.find({}).lean();
+    const definitionsToDisplay = new Map();
 
-    const definitionsToDisplay = allPossibleDefs.filter((def) => {
-      const requiredTags = (def.tagIds || []).map((t) => t.toString());
-      const requiredPrograms = (def.programIds || []).map((p) => p.toString());
-      const hasTags =
-        requiredTags.length === 0 ||
-        requiredTags.some((rt) => customerTagIds.includes(rt));
-      const hasPrograms =
-        requiredPrograms.length === 0 ||
-        requiredPrograms.some((rp) => customerProgramIds.includes(rp));
+    for (const def of allDefs) {
+      if (!def.displayRules || def.displayRules.length === 0) continue;
 
-      if (def.displayCondition === "ALL") {
-        return hasTags && hasPrograms;
+      for (const rule of def.displayRules) {
+        const { conditions } = rule;
+        const requiredTags = (conditions.requiredTags || []).map(String);
+        const requiredPrograms = (conditions.requiredPrograms || []).map(
+          String,
+        );
+
+        let tagsMatch =
+          requiredTags.length === 0 ||
+          (conditions.operator === "AND"
+            ? requiredTags.every((rt) => customerTagIds.includes(rt))
+            : requiredTags.some((rt) => customerTagIds.includes(rt)));
+
+        let programsMatch =
+          requiredPrograms.length === 0 ||
+          (conditions.operator === "AND"
+            ? requiredPrograms.every((rp) => customerProgramIds.includes(rp))
+            : requiredPrograms.some((rp) => customerProgramIds.includes(rp)));
+
+        const ruleMatched =
+          conditions.operator === "AND"
+            ? tagsMatch && programsMatch
+            : tagsMatch || programsMatch;
+
+        if (ruleMatched) {
+          if (!definitionsToDisplay.has(def._id.toString())) {
+            definitionsToDisplay.set(def._id.toString(), {
+              ...def,
+              matchedPlacements: new Set(),
+              matchedRules: [],
+            });
+          }
+          definitionsToDisplay.get(def._id.toString()).matchedRules.push(rule);
+        }
       }
-      return hasTags || hasPrograms;
-    });
+    }
 
-    // --- BƯỚC 3: LÀM GIÀU & LẮP RÁP DỮ LIỆU ---
-    const allDataSourceIds = [
+    const finalDefs = Array.from(definitionsToDisplay.values());
+
+    const externalDataSourceIds = [
       ...new Set(
-        definitionsToDisplay.flatMap((def) =>
-          (def.dataSourceIds || []).map((id) => id.toString()),
-        ),
+        finalDefs
+          .flatMap((def) =>
+            (def.dataSourceIds || []).map((id) => id.toString()),
+          )
+          .filter((id) => id !== INTERNAL_DB_DATASOURCE_ID),
       ),
     ];
-
-    const dataSourcePromises = allDataSourceIds.map((id) =>
+    const dataSourcePromises = externalDataSourceIds.map((id) =>
       executeDataSource({
         dataSourceId: id,
         params: { phone: customer.phone, citizenId: customer.citizenId },
       }),
     );
-    const dataSourceResults = Object.fromEntries(
+    const externalDataSourceResults = Object.fromEntries(
       await Promise.all(
-        allDataSourceIds.map(async (id, index) => [
+        externalDataSourceIds.map(async (id, index) => [
           id,
           await dataSourcePromises[index],
         ]),
@@ -98,80 +115,85 @@ export async function getCustomerDetails(customerId) {
     );
 
     customer.customerAttributes = [];
-    customer.programEnrollments = customer.programEnrollments.map((e) => ({
-      ...e,
-      programData: [],
-    }));
+    customer.programEnrollments.forEach((e) => {
+      e.programData = [];
+    });
 
-    for (const def of definitionsToDisplay) {
+    for (const def of finalDefs) {
       let finalValue = undefined;
-
-      // Ưu tiên 1: Lấy giá trị từ DataSource
       for (const dsId of def.dataSourceIds || []) {
-        let result = dataSourceResults[dsId.toString()];
-
-        // [MOD] START: Xử lý kết quả dạng mảng
-        // Nếu kết quả là một mảng và có phần tử, hãy lấy phần tử đầu tiên.
-        if (Array.isArray(result) && result.length > 0) {
-          result = result[0];
+        let result;
+        if (dsId.toString() === INTERNAL_DB_DATASOURCE_ID) {
+          result = await executeDataSource({
+            dataSourceId: dsId.toString(),
+            params: { customerId: customer._id, definitionId: def._id },
+          });
+        } else {
+          result = externalDataSourceResults[dsId.toString()];
         }
 
-        if (
-          result &&
-          typeof result === "object" &&
-          result[def.fieldName] !== undefined
-        ) {
-          finalValue = result[def.fieldName];
-          console.log(`   => ✅ TÌM THẤY GIÁ TRỊ:`, finalValue);
+        if (Array.isArray(result) && result.length > 0) result = result[0];
+
+        // [MOD] Sửa lại logic trích xuất giá trị
+        const valueFromDs = result?.result ?? result?.[def.fieldName];
+
+        if (valueFromDs !== undefined) {
+          finalValue = valueFromDs;
           break;
-        } else {
-          console.log(`   => ❌ KHÔNG TÌM THẤY fieldName trong kết quả.`);
         }
       }
 
-      // Nếu không tìm thấy từ DataSource, bỏ qua (theo yêu cầu của bạn)
-      // Nếu có giá trị, lắp nó vào đúng scope
       if (finalValue !== undefined) {
         const attribute = {
           definitionId: def._id,
-          value: [finalValue],
-          // Gán tạm createdBy/createdAt, có thể bỏ nếu không cần
+          value: Array.isArray(finalValue) ? finalValue : [finalValue],
           createdBy: currentUser.id,
           createdAt: new Date(),
         };
 
-        const isProgramScoped = def.programIds && def.programIds.length > 0;
-
-        if (isProgramScoped) {
-          // Gán thuộc tính này vào tất cả các chương trình chăm sóc phù hợp mà khách hàng đang tham gia
-          customer.programEnrollments.forEach((enrollment) => {
-            const enrollmentProgramId = enrollment.programId?._id.toString();
-            if (def.programIds.map(String).includes(enrollmentProgramId)) {
-              enrollment.programData.push(attribute);
+        // [FIX] Logic gán giá trị đã được sửa lại hoàn toàn
+        for (const rule of def.matchedRules) {
+          if (rule.placement === "COMMON") {
+            if (
+              !customer.customerAttributes.some((a) =>
+                a.definitionId.equals(def._id),
+              )
+            ) {
+              customer.customerAttributes.push(attribute);
             }
-          });
-        } else {
-          // Nếu không thuộc chương trình nào, nó là thuộc tính chung của khách hàng
-          customer.customerAttributes.push(attribute);
+          } else if (rule.placement === "PROGRAM") {
+            const programsInRule = (rule.conditions.requiredPrograms || []).map(
+              String,
+            );
+            customer.programEnrollments.forEach((enrollment) => {
+              const enrollmentProgramId = enrollment.programId?._id.toString();
+              if (
+                programsInRule.includes(enrollmentProgramId) &&
+                !enrollment.programData.some((a) =>
+                  a.definitionId.equals(def._id),
+                )
+              ) {
+                enrollment.programData.push(attribute);
+              }
+            });
+          }
         }
       }
     }
 
-    // --- BƯỚC 4: HOÀN THIỆN DỮ LIỆU TRẢ VỀ ---
-    // Gắn thông tin stage/status vào enrollment sau khi đã xử lý xong
+    // --- BƯỚC 4: HOÀN THIỆN ---
+    // (Gắn thông tin stage/status vào enrollment)
     if (customer.programEnrollments && customer.programEnrollments.length > 0) {
       customer.programEnrollments = customer.programEnrollments.map(
         (enrollment) => {
           const program = enrollment.programId;
           if (!program) return enrollment;
-
           const stage = (program.stages || []).find((s) =>
             s._id.equals(enrollment.stageId),
           );
           const status = (program.statuses || []).find((s) =>
             s._id.equals(enrollment.statusId),
           );
-
           return {
             ...enrollment,
             stage: stage || null,
@@ -181,9 +203,7 @@ export async function getCustomerDetails(customerId) {
       );
     }
 
-    // Thêm lại fieldDefinitions để frontend biết cần render những gì
-    customer.fieldDefinitions = definitionsToDisplay;
-
+    customer.fieldDefinitions = finalDefs;
     return JSON.parse(JSON.stringify(customer));
   } catch (error) {
     console.error(`Loi trong getCustomerDetails cho ID ${customerId}:`, error);
@@ -191,6 +211,109 @@ export async function getCustomerDetails(customerId) {
   }
 }
 
+// [ADD] Server Action để tạo và gán trường dữ liệu thủ công
+export async function createAndAssignManualField({
+  customerId,
+  fieldLabel,
+  fieldValue,
+  programId = null,
+}) {
+  try {
+    await connectDB();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Yêu cầu đăng nhập.");
+
+    // 1. Kiểm tra Tag đã tồn tại chưa
+    const existingTag = await Tag.findOne({ name: fieldLabel }).lean();
+    if (existingTag) {
+      throw new Error(
+        `Tên trường "${fieldLabel}" đã tồn tại dưới dạng Tag. Vui lòng chọn tên khác.`,
+      );
+    }
+
+    // 2. Chuẩn hóa fieldName
+    const fieldName = fieldLabel
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "");
+
+    const existingFieldDef = await FieldDefinition.findOne({
+      fieldName,
+    }).lean();
+    if (existingFieldDef) {
+      throw new Error(
+        `Tên trường "${fieldLabel}" sau khi chuẩn hóa (${fieldName}) đã tồn tại. Vui lòng chọn tên khác.`,
+      );
+    }
+
+    // 3. Tạo Tag
+    const newTag = await Tag.create({
+      name: fieldLabel,
+      detail: `Tag hệ thống cho trường dữ liệu thủ công '${fieldLabel}'`,
+      createdBy: currentUser._id,
+    });
+
+    const newFieldDefData = {
+      fieldName,
+      fieldLabel,
+      fieldType: "string",
+      dataSourceIds: [new Types.ObjectId(INTERNAL_DB_DATASOURCE_ID)],
+      createdBy: currentUser._id,
+      displayRules: [
+        {
+          placement: programId ? "PROGRAM" : "COMMON",
+          conditions: {
+            operator: "AND",
+            requiredTags: [newTag._id],
+            requiredPrograms: programId ? [new Types.ObjectId(programId)] : [],
+          },
+        },
+      ],
+    };
+    const newFieldDef = await FieldDefinition.create(newFieldDefData); // 5. Cập nhật Customer
+
+    const newAttribute = {
+      definitionId: newFieldDef._id,
+      value: [fieldValue],
+      createdBy: currentUser._id,
+      createdAt: new Date(),
+    };
+
+    let updateQuery;
+    let arrayFilters = [];
+
+    if (programId) {
+      updateQuery = {
+        $push: {
+          "programEnrollments.$[elem].programData": newAttribute,
+          tags: newTag._id,
+        },
+      };
+      arrayFilters = [{ "elem.programId": new Types.ObjectId(programId) }];
+    } else {
+      updateQuery = {
+        $push: { customerAttributes: newAttribute, tags: newTag._id },
+      };
+    }
+
+    await Customer.updateOne({ _id: customerId }, updateQuery, {
+      arrayFilters,
+    });
+
+    revalidateAndBroadcast(`customer_details_${customerId}`);
+    revalidateAndBroadcast("field_definitions");
+    revalidateAndBroadcast("tags");
+
+    return { success: true, message: "Thêm trường dữ liệu thành công." };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// ... (Các hàm updateCustomerTags, addTagsToCustomers, v.v... giữ nguyên không đổi)
 /**
  * Thêm hoặc cập nhật một giá trị thuộc tính động cho khách hàng.
  * [LƯU Ý] Hàm này sẽ cần được điều chỉnh lại sau nếu bạn muốn cho phép
@@ -251,7 +374,7 @@ export async function addTagsToCustomers({ customerIds, tagIds }) {
 
     revalidateAndBroadcast("customer_details");
     revalidateAndBroadcast("customer_list");
-    revalidateAndBroadcast("tags"); // Thêm revalidate cho tags
+    revalidateAndBroadcast("tags");
     return { success: true, modifiedCount: result.modifiedCount };
   } catch (error) {
     return { success: false, error: error.message };
@@ -316,9 +439,7 @@ export async function addCommentToCustomer({ customerId, detail }) {
       customerId,
       { $push: { comments: { $each: [newComment], $position: 0 } } },
       { new: true },
-    )
-      // [ADD] Thêm bước populate này để lấy thông tin user ngay lập tức
-      .populate({ path: "comments.user", model: User, select: "name" });
+    ).populate({ path: "comments.user", model: User, select: "name" });
 
     revalidateAndBroadcast(`customer_details_${customerId}`);
     return { success: true, data: JSON.parse(JSON.stringify(updatedCustomer)) };

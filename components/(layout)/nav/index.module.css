@@ -2,29 +2,43 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #0d1b2a;
-  padding: 16px 12px; /* [MOD] Giảm padding ngang */
+  /* [MOD] Change background color for the main body */
+  background-color: #051b32; /* Dark Blue */
+  padding: 0; /* [MOD] Remove padding to allow sections to control it */
   box-sizing: border-box;
 }
 
 .logoSection {
-  margin-bottom: 24px;
-  padding: 0 8px;
+  /* [MOD] Add a distinct, darker background for the header */
+  background-color: #0a1421;
+  padding: 16px;
+  margin-bottom: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   min-height: 40px;
+  flex-shrink: 0;
 }
 
+/* [ADD] Styles for the new logo elements */
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+.logoImage {
+  border-radius: 8px; /* Optional: make the logo slightly rounded */
+}
 .logoText {
   font-size: 28px;
   font-weight: 700;
   color: #ffffff;
+  margin: 0; /* Remove default margin from <p> */
 }
 
 .menuSection {
   flex-grow: 1;
-  /* [ADD] Kích hoạt cuộn và ẩn thanh cuộn */
   overflow-y: auto;
   padding-right: 5px; /* Thêm khoảng trống để nội dung không bị dính vào cạnh */
 }
@@ -115,8 +129,7 @@
   text-decoration: none;
   border-radius: 8px;
   transition: color 0.2s ease, background-color 0.2s ease;
-  /* [ADD] Xử lý cắt chữ */
-  display: block; /* Cần thiết cho text-overflow */
+  display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -146,6 +159,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 .userInfo {
   display: flex;
@@ -194,7 +208,8 @@
 }
 
 .collapseButton {
-  background: rgba(255, 255, 255, 0.1);
+  /* [MOD] Make the button background transparent */
+  background: transparent;
   border: none;
   border-radius: 8px;
   width: 32px;
@@ -207,7 +222,8 @@
   transition: transform 0.3s ease, background-color 0.2s ease;
 }
 .collapseButton:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  /* [MOD] Keep the background transparent on hover */
+  background-color: rgba(255, 255, 255, 0.1);
   color: white;
 }
 
@@ -218,9 +234,12 @@
 /* [MOD] Sửa lại logic ẩn hiện khi thu gọn */
 .navContainer.collapsed .logoText,
 .navContainer.collapsed .navLabel,
-.navContainer.collapsed .chevron {
+.navContainer.collapsed .chevron,
+/* [ADD] Hide the logo image when collapsed */
+.navContainer.collapsed .logoImage {
   display: none;
 }
+
 .navContainer.collapsed .logoSection {
   justify-content: center;
 }
