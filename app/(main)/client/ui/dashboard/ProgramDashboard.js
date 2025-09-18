@@ -66,13 +66,13 @@ export default function ProgramDashboard({ program, stats }) {
               icon="👥"
             />
             <Widget
-              title="Tổng số Chiến dịch"
+              title="Chiến dịch đang chạy"
               value={stats.totalCampaigns || 0}
               icon="🚀"
             />
             <Widget
               title="Khách hàng/Chương trình"
-              value={stats.customersPerProgram?.join(" | ") || ""}
+              value={(stats.customersPerProgram || []).join(" | ") || "N/A"}
               icon="📊"
             />
           </>
@@ -85,12 +85,12 @@ export default function ProgramDashboard({ program, stats }) {
             />
             <Widget
               title="Theo Giai đoạn"
-              value={stats.byStage?.join(" | ") || ""}
+              value={stats.byStage || "N/A"}
               icon="📈"
             />
             <Widget
               title="Theo Trạng thái"
-              value={stats.byStatus?.join(" | ") || ""}
+              value={stats.byStatus || "N/A"}
               icon="🔖"
             />
             <Widget

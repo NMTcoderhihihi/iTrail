@@ -38,10 +38,12 @@ export async function getCarePrograms({ page = 1, limit = 10 } = {}) {
  * Lấy danh sách các chương trình chăm sóc để hiển thị trong bộ lọc.
  * Tự động xử lý phân quyền: Admin thấy tất cả, Employee chỉ thấy những gì được gán.
  */
-export async function getCareProgramsForFilter(currentUser) {
+// [MOD] Xóa tham số currentUser, hàm sẽ tự lấy từ session
+export async function getCareProgramsForFilter() {
   try {
     await connectDB();
-    // [MOD] Sử dụng trực tiếp currentUser được truyền vào, không gọi lại `getCurrentUser()`
+    // [MOD] Tự gọi getCurrentUser bên trong hàm
+    const currentUser = await getCurrentUser();
     if (!currentUser) return [];
 
     const query = {};

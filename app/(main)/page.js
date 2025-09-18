@@ -5,8 +5,9 @@ import { getClientes } from "@/app/data/customer/customer.queries";
 import { getCareProgramsForFilter } from "@/app/data/careProgram/careProgram.queries";
 import { getTagsForFilter } from "@/app/data/tag/tag.queries";
 import { getZaloAccountsForFilter } from "@/app/data/zalo/zalo.queries";
-import { executeReport } from "@/app/data/report/report.actions";
-import { getMessageTemplatesForFilter } from "@/app/data/messageTemplate/messageTemplate.js"; // [ADD] Import hàm mới
+// [MOD] Import hàm mới
+import { getDashboardStats } from "@/app/data/report/report.queries";
+import { getMessageTemplatesForFilter } from "@/app/data/messageTemplate/messageTemplate.js";
 import { Types } from "mongoose";
 
 export default async function Page({ searchParams }) {
@@ -32,11 +33,7 @@ export default async function Page({ searchParams }) {
     uidFilterZaloId: getSafeParam("uidFilterZaloId", null),
   };
 
-  // // Log để debug
-  // console.log("searchParams:", searchParams);
-  // console.log("filters:", filters);
-
-  const CLIENT_DASHBOARD_LAYOUT_ID = "69a3e3ebe986b54217cf1001";
+  const programId = getSafeParam("program", null);
 
   // [MOD] Gọi tất cả dữ liệu song song, bao gồm cả mẫu tin nhắn
   const [
@@ -44,33 +41,17 @@ export default async function Page({ searchParams }) {
     tags,
     zaloAccounts,
     carePrograms,
-    dashboardResponse,
-    messageTemplates, // [ADD]
+    dashboardStats, // [MOD] Thay thế dashboardResponse
+    messageTemplates,
   ] = await Promise.all([
     getClientes(filters, currentUser),
     getTagsForFilter(),
     getZaloAccountsForFilter(currentUser),
     getCareProgramsForFilter(currentUser),
-    executeReport({
-      layoutId: new Types.ObjectId(CLIENT_DASHBOARD_LAYOUT_ID),
-    }),
-    getMessageTemplatesForFilter(), // [ADD]
+    // [MOD] Gọi hàm mới với tham số tương ứng
+    getDashboardStats(programId, await getCareProgramsForFilter(currentUser)),
+    getMessageTemplatesForFilter(),
   ]);
-
-  // [ADD] Xử lý và định dạng lại dữ liệu dashboard cho component
-  let dashboardStats = {};
-  if (dashboardResponse.success) {
-    const data = dashboardResponse.data;
-    dashboardStats = {
-      totalCustomers: data.totalCustomers,
-      customersPerProgram: (data.customersPerProgram || []).map(
-        (p) => `${p.programName}: ${p.count}`,
-      ),
-      // Các số liệu khác sẽ được thêm vào sau
-      totalPrograms: carePrograms.length,
-      totalCampaigns: 15,
-    };
-  }
 
   return (
     <ClientPage

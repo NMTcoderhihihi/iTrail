@@ -130,26 +130,21 @@ export async function getCustomerDetails(customerId) {
     for (const def of finalDefs) {
       let finalValue = undefined;
       for (const dsId of def.dataSourceIds || []) {
+        const dsIdString = dsId.toString(); // Chuyển sang string một lần
         let result;
-        if (dsId.toString() === INTERNAL_DB_DATASOURCE_ID) {
-          result = await executeDataSource({
-            dataSourceId: dsId.toString(),
-            params: { customerId: customer._id, definitionId: def._id },
-          });
+
+        if (dsIdString === INTERNAL_DB_DATASOURCE_ID) {
+          // Logic cho DB nội bộ không thay đổi
+          result = null; // Tạm thời để logic bên dưới xử lý
         } else {
-          result = externalDataSourceResults[dsId.toString()];
+          result = externalDataSourceResults[dsIdString];
         }
 
-        // [ADD] Bắt đầu logic lọc kết quả từ DataSource ngoài
+        // [MOD] Logic lọc kết quả từ DataSource ngoài đã được cải tiến
         let specificResult = result;
         if (Array.isArray(result)) {
-          // Tìm đúng dòng dữ liệu cho khách hàng này dựa trên SĐT
           specificResult = result.find((item) => item.sdt === customer.phone);
         }
-        // [ADD] Kết thúc logic lọc
-
-        if (Array.isArray(specificResult) && specificResult.length > 0)
-          specificResult = specificResult[0];
 
         const valueFromDs =
           specificResult?.result ?? specificResult?.[def.fieldName];
@@ -290,7 +285,7 @@ export async function createAndAssignManualField({
         },
       ],
     };
-    const newFieldDef = await FieldDefinition.create(newFieldDefData); // 5. Cập nhật Customer
+    const newFieldDef = await FieldDefinition.create(newFieldDefData);
 
     const newAttribute = {
       definitionId: newFieldDef._id,

@@ -29,6 +29,12 @@ const DisplayRule = ({
   const handlePlacementChange = (e) => {
     updateRule(index, { ...rule, placement: e.target.value });
   };
+  const requiredTagIds = (rule.conditions.requiredTags || []).map(
+    (tag) => tag._id || tag,
+  );
+  const requiredProgramIds = (rule.conditions.requiredPrograms || []).map(
+    (program) => program._id || program,
+  );
 
   return (
     <div className={styles.ruleContainer}>
@@ -69,14 +75,16 @@ const DisplayRule = ({
           <MultiSelectDropdown
             label="Khách hàng phải có Tags"
             options={allTags.map((t) => ({ id: t._id, name: t.name }))}
-            selectedIds={rule.conditions.requiredTags || []}
+            // [MOD] Truyền vào mảng ID đã được chuyển đổi
+            selectedIds={requiredTagIds}
             onChange={(ids) => handleConditionChange("requiredTags", ids)}
             displayAs="chip"
           />
           <MultiSelectDropdown
             label="Khách hàng phải tham gia Programs"
             options={allPrograms.map((p) => ({ id: p._id, name: p.name }))}
-            selectedIds={rule.conditions.requiredPrograms || []}
+            // [MOD] Truyền vào mảng ID đã được chuyển đổi
+            selectedIds={requiredProgramIds}
             onChange={(ids) => handleConditionChange("requiredPrograms", ids)}
             displayAs="chip"
           />

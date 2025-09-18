@@ -287,6 +287,12 @@ export default function CustomerDetails({
   // [MOD] State cho form inline thay vì popup
   const [addingFieldScope, setAddingFieldScope] = useState(null); // null, 'COMMON', or a programId
 
+  // [LOG] 3.1: Kiểm tra toàn bộ dữ liệu customer mà component nhận được
+  console.log(
+    "[LOG-Frontend] Dữ liệu đầy đủ của khách hàng trong panel:",
+    customer,
+  );
+
   const fieldDefinitionMap = useMemo(() => {
     if (!customer?.fieldDefinitions) return new Map();
     return new Map(
@@ -302,7 +308,10 @@ export default function CustomerDetails({
     if (fullCustomerData) {
       setCustomer(fullCustomerData);
     }
-    onUpdateCustomer();
+    // [MOD] Gọi onUpdateCustomer để refresh cả bảng ClientPage
+    if (onUpdateCustomer) {
+      onUpdateCustomer();
+    }
   }, [customerId, onUpdateCustomer]);
 
   useEffect(() => {
@@ -345,7 +354,7 @@ export default function CustomerDetails({
       programId,
     });
     if (result.success) {
-      setAddingFieldScope(null); // Đóng form inline
+      setAddingFieldScope(null);
       await fetchDetails();
     } else {
       alert(`Lỗi: ${result.error}`);

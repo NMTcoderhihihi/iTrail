@@ -158,12 +158,21 @@ async function readFromGoogleSheet(config) {
   if (!rows || rows.length < 2) return [];
 
   const headers = rows[0];
-  return rows.slice(1).map((row) =>
+  const rawJsonData = rows.slice(1).map((row) =>
     headers.reduce((obj, header, index) => {
       obj[header] = row[index];
       return obj;
     }, {}),
   );
+
+  // [ADD] Tự động chuẩn hóa số điện thoại nếu có cột 'sdt'
+  if (headers.includes("sdt")) {
+    return processingFunctions.normalize_phone(rawJsonData, {
+      phoneField: "sdt",
+    });
+  }
+
+  return rawJsonData;
 }
 
 async function executeMongoDbDataSource(pipeline, params) {

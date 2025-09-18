@@ -17,7 +17,7 @@ export async function getFieldDefinitions({ page = 1, limit = 10 } = {}) {
       FieldDefinition.aggregate([
         { $sort: { fieldName: 1 } },
         { $skip: skip },
-        { $limit: limit }, // Populate createdBy
+        { $limit: limit },
         {
           $lookup: {
             from: "users",
@@ -38,13 +38,35 @@ export async function getFieldDefinitions({ page = 1, limit = 10 } = {}) {
             },
           },
         },
+        // [ADD] Gộp tất cả các tag ID từ các quy tắc lại
+        {
+          $addFields: {
+            allTagIds: {
+              $reduce: {
+                input: "$displayRules.conditions.requiredTags",
+                initialValue: [],
+                in: { $setUnion: ["$$value", "$$this"] },
+              },
+            },
+          },
+        },
         // Populate programs và tags dựa trên các mảng ID đã gộp
         {
           $lookup: {
             from: "careprograms",
             localField: "allProgramIds",
             foreignField: "_id",
-            as: "programs", // Đổi tên thành programs để dễ hiểu
+            as: "programs",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        // [ADD] Thêm lookup cho tags
+        {
+          $lookup: {
+            from: "tags",
+            localField: "allTagIds",
+            foreignField: "_id",
+            as: "tags",
             pipeline: [{ $project: { name: 1 } }],
           },
         },
